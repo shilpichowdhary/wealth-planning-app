@@ -34,6 +34,9 @@ app.include_router(chat_router.router)
 from backend.routers import reports as reports_router
 app.include_router(reports_router.router)
 
+from backend.routers import documents
+app.include_router(documents.router)
+
 @app.get("/health")
 async def health():
     return {"status": "ok"}
