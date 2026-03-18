@@ -28,6 +28,9 @@ app.include_router(kb_router.router)
 from backend.routers import cases as cases_router
 app.include_router(cases_router.router)
 
+from backend.routers import chat as chat_router
+app.include_router(chat_router.router)
+
 @app.get("/health")
 async def health():
     return {"status": "ok"}
