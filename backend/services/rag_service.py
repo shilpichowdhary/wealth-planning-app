@@ -67,3 +67,6 @@ class RAGService:
             )
 
         return RetrievalResult(source=RetrievalSource.NONE)
+
+def get_rag_service():
+    return RAGService()

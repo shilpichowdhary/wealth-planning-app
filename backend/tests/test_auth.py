@@ -13,3 +13,16 @@ def test_create_access_token():
     assert isinstance(token, str)
     payload = AuthService.decode_token(token)
     assert payload["sub"] == "user-id-123"
+
+@pytest.mark.asyncio
+async def test_create_advisor_user(async_client, auth_headers):
+    # The auth_headers fixture already creates an advisor user and logs in.
+    # Verify the token works by calling POST /auth/token with the same credentials.
+    resp = await async_client.post(
+        "/auth/token",
+        data={"username": "advisor@test.com", "password": "TestPass123!"},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "access_token" in data
+    assert data["token_type"] == "bearer"
