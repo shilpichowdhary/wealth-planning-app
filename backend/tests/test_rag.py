@@ -75,4 +75,4 @@ async def test_retrieval_falls_back_to_web(rag_service):
     with patch("backend.services.rag_service.WebSearchService.search", new_callable=AsyncMock) as mock_search:
         mock_search.return_value = [{"text": "Web result", "url": "https://example.com", "title": "Test"}]
         result = await rag_service.retrieve("obscure liechtenstein foundation rule xyz", session_tavily_count=0)
-        assert result.source in (RetrievalSource.WEB, RetrievalSource.NONE)
+        assert result.source == RetrievalSource.WEB

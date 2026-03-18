@@ -1,9 +1,12 @@
+import logging
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 from backend.kb.kb_manager import KBManager
 from backend.services.web_search_service import WebSearchService
 from backend.config import settings
+
+logger = logging.getLogger(__name__)
 
 class RetrievalSource(str, Enum):
     KB = "kb"
@@ -45,8 +48,8 @@ class RAGService:
                 for doc, meta, dist in zip(case_results["documents"][0], case_results["metadatas"][0], case_results["distances"][0]):
                     if (1 - dist) >= 0.35:
                         kb_chunks.append({"text": doc, "similarity": 1 - dist, "source_type": "client_document", **meta})
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning("Case collection query failed for case_id=%s: %s", case_id, e)
 
         if len(kb_chunks) >= KB_SUFFICIENT_THRESHOLD:
             return RetrievalResult(source=RetrievalSource.KB, chunks=kb_chunks, has_sufficient_context=True)

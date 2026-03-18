@@ -3,6 +3,8 @@ from chromadb.config import Settings as ChromaSettings
 from sentence_transformers import SentenceTransformer
 from backend.config import settings
 
+# The embedding model is a lazy singleton — it's stateless and expensive to load,
+# so sharing one instance per process is safe and intentional.
 _model = None
 
 def get_embedding_model() -> SentenceTransformer:

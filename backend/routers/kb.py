@@ -53,7 +53,7 @@ async def list_review_queue(
     current_user: User = Depends(get_current_user),
 ):
     if current_user.role != UserRole.ADVISOR:
-        raise HTTPException(status_code=403)
+        raise HTTPException(status_code=403, detail="Advisors only")
     result = await db.execute(select(KBReviewQueue).where(KBReviewQueue.current_status == status))
     entries = result.scalars().all()
     return [
@@ -80,7 +80,7 @@ async def review_queue_action(
     kb: KBManager = Depends(get_kb_manager),
 ):
     if current_user.role != UserRole.ADVISOR:
-        raise HTTPException(status_code=403)
+        raise HTTPException(status_code=403, detail="Advisors only")
     result = await db.execute(select(KBReviewQueue).where(KBReviewQueue.entry_id == entry_id))
     entry = result.scalar_one_or_none()
     if not entry:
@@ -104,7 +104,7 @@ async def review_queue_action(
         entry.current_status = ReviewStatus.REJECTED
         entry.rejection_note = payload.note
     elif payload.action == "resubmit":
-        if entry.current_status != ReviewStatus.REJECTED:
+        if entry.current_status not in (ReviewStatus.REJECTED, ReviewStatus.RE_REJECTED):
             raise HTTPException(status_code=400, detail="Can only resubmit rejected entries")
         entry.current_status = ReviewStatus.RESUBMITTED
         entry.resubmission_note = payload.note
