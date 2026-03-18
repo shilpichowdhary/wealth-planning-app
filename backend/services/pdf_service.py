@@ -1,9 +1,10 @@
 import asyncio
+import html as html_lib
 import json
 import logging
 import os
 import tempfile
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -39,8 +40,8 @@ def build_report_html(case_data: dict, profile: dict, recommendations: list[dict
         if hasattr(confidence, 'value'):
             confidence = confidence.value
         label = CONFIDENCE_LABELS.get(str(confidence), str(confidence))
-        structure_name = r.get("structure_name", "")
-        rationale = r.get("rationale", "")
+        structure_name = html_lib.escape(r.get("structure_name", ""))
+        rationale = html_lib.escape(r.get("rationale", ""))
         recs_html += f"""
         <div class="rec-card">
           <h3>{structure_name}</h3>
@@ -54,7 +55,12 @@ def build_report_html(case_data: dict, profile: dict, recommendations: list[dict
         objectives_list = json.loads(objectives_raw) if isinstance(objectives_raw, str) else objectives_raw
     except (json.JSONDecodeError, ValueError):
         objectives_list = []
-    objectives_str = ", ".join(objectives_list) if objectives_list else "N/A"
+    objectives_str = ", ".join(html_lib.escape(str(o)) for o in objectives_list) if objectives_list else "N/A"
+
+    client_name = html_lib.escape(case_data.get('client_name', 'Confidential Client'))
+    domicile = html_lib.escape(str(profile.get('domicile', 'N/A')))
+    tax_residency = html_lib.escape(str(profile.get('tax_residency', 'N/A')))
+    nationality = html_lib.escape(str(profile.get('nationality', 'N/A')))
 
     return f"""<!DOCTYPE html>
 <html><head><meta charset="utf-8">
@@ -77,16 +83,16 @@ def build_report_html(case_data: dict, profile: dict, recommendations: list[dict
 <body>
 <div class="cover">
   <h1>Wealth Planning Advisory</h1>
-  <div class="subtitle">{case_data.get('client_name', 'Confidential Client')}</div>
-  <div class="subtitle">Prepared: {datetime.utcnow().strftime('%d %B %Y')}</div>
+  <div class="subtitle">{client_name}</div>
+  <div class="subtitle">Prepared: {datetime.now(timezone.utc).strftime('%d %B %Y')}</div>
   <div class="disclaimer">Confidential. Prepared for the addressee only.</div>
 </div>
 
 <div class="page">
   <h2>Client Profile</h2>
-  <p><strong>Domicile:</strong> {profile.get('domicile', 'N/A')}</p>
-  <p><strong>Tax Residency:</strong> {profile.get('tax_residency', 'N/A')}</p>
-  <p><strong>Nationality:</strong> {profile.get('nationality', 'N/A')}</p>
+  <p><strong>Domicile:</strong> {domicile}</p>
+  <p><strong>Tax Residency:</strong> {tax_residency}</p>
+  <p><strong>Nationality:</strong> {nationality}</p>
   <p><strong>Objectives:</strong> {objectives_str}</p>
 </div>
 
@@ -117,32 +123,42 @@ async def generate_pdf(html: str) -> bytes:
             html_path = f.name
         pdf_path = html_path.replace(".html", ".pdf")
 
-        script = f"""
-const puppeteer = require('./frontend/node_modules/puppeteer');
-(async () => {{
-  const browser = await puppeteer.launch({{args: ['--no-sandbox', '--disable-setuid-sandbox']}});
+        script = """const puppeteer = require('./frontend/node_modules/puppeteer');
+const htmlPath = process.argv[2];
+const pdfPath = process.argv[3];
+(async () => {
+  const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox']});
   const page = await browser.newPage();
-  await page.goto('file://{html_path}', {{waitUntil: 'networkidle0'}});
-  await page.pdf({{
-    path: '{pdf_path}',
+  await page.goto('file://' + htmlPath, {waitUntil: 'networkidle0'});
+  await page.pdf({
+    path: pdfPath,
     format: 'A4',
     printBackground: true,
-    margin: {{top: '0', bottom: '0', left: '0', right: '0'}}
-  }});
+    margin: {top: '0', bottom: '0', left: '0', right: '0'}
+  });
   await browser.close();
-}})().catch(e => {{ console.error(e); process.exit(1); }});
+})().catch(e => { console.error(e); process.exit(1); });
 """
         with tempfile.NamedTemporaryFile(suffix=".js", delete=False, mode="w") as js_file:
             js_file.write(script)
             js_path = js_file.name
 
         proc = await asyncio.create_subprocess_exec(
-            "node", js_path,
+            "node", js_path, html_path, pdf_path,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
             cwd=PROJECT_ROOT,
         )
-        stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=30)
+        try:
+            stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=30)
+        except asyncio.TimeoutError:
+            try:
+                proc.kill()
+            except ProcessLookupError:
+                pass
+            logger.error("Puppeteer subprocess timed out for case PDF generation")
+            raise RuntimeError("PDF generation timed out")
+
         if proc.returncode != 0:
             logger.error("Puppeteer failed (code %d): %s", proc.returncode, stderr.decode())
             raise RuntimeError(f"PDF generation failed: {stderr.decode()[:200]}")
