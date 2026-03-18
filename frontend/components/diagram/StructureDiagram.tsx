@@ -26,7 +26,7 @@ export function StructureDiagram({ diagramData, title }: Props) {
       setNodes(diagramData.nodes)
       setEdges(diagramData.edges)
     }
-  }, [diagramData])
+  }, [diagramData, setNodes, setEdges])
 
   return (
     <div className="flex flex-col h-full">

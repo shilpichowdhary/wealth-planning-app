@@ -21,3 +21,19 @@ def test_builds_nodes_from_recommendation():
     assert result["nodes"][1]["type"] == "trust"
     assert len(result["edges"]) == 2
     assert result["edges"][0]["label"] == "Settlor"
+    assert result["edges"][1]["label"] == "Ownership"  # second edge label check
+
+
+def test_out_of_bounds_edges_skipped():
+    svc = DiagramService()
+    raw = {
+        "entities": [{"label": "A", "type": "individual"}],
+        "edges": [
+            {"source": 0, "target": 99, "label": "Invalid"},
+            {"source": 0, "target": 0, "label": "Valid"},
+        ]
+    }
+    result = svc.build_diagram_data(raw)
+    # Out-of-bounds edge should be skipped
+    assert len(result["edges"]) == 1
+    assert result["edges"][0]["label"] == "Valid"
