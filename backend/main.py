@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.database import create_tables
+import backend.models  # noqa: F401 — ensures all models are registered with Base.metadata
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
