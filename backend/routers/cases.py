@@ -9,7 +9,7 @@ from backend.routers.auth import get_current_user
 
 router = APIRouter(prefix="/cases", tags=["cases"])
 
-@router.post("/", response_model=CaseResponse)
+@router.post("/", response_model=CaseResponse, status_code=201)
 async def create_case(
     payload: CaseCreate,
     db: AsyncSession = Depends(get_db),
@@ -25,6 +25,8 @@ async def create_case(
 
 @router.get("/", response_model=list[CaseResponse])
 async def list_cases(db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
+    if current_user.role != UserRole.ADVISOR:
+        raise HTTPException(status_code=403, detail="Advisors only")
     result = await db.execute(select(Case).where(Case.created_by == current_user.user_id))
     return result.scalars().all()
 

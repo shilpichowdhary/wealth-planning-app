@@ -1,9 +1,9 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
 from backend.models.case import CaseStatus
 
 class CaseCreate(BaseModel):
-    client_name: str
+    client_name: str = Field(min_length=1, max_length=200)
 
 class CaseResponse(BaseModel):
     case_id: str
