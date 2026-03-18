@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,7 +21,16 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/chat", tags=["chat"])
 
 
-@router.post("/stream")
+def _safe_json_loads(s: str | None, default: Any) -> Any:
+    if not s:
+        return default
+    try:
+        return json.loads(s)
+    except (json.JSONDecodeError, ValueError):
+        return default
+
+
+@router.post("/stream", response_class=StreamingResponse)
 async def chat_stream(
     payload: ChatRequest,
     db: AsyncSession = Depends(get_db),
@@ -38,16 +48,17 @@ async def chat_stream(
     if current_user.role == UserRole.CLIENT and current_user.case_id != payload.case_id:
         raise HTTPException(status_code=403, detail="Access denied")
 
-    # Load conversation history
+    # Load conversation history (cap at last 40 messages to prevent huge context windows)
     hist_result = await db.execute(
         select(Conversation)
         .where(Conversation.case_id == payload.case_id)
-        .order_by(Conversation.timestamp)
+        .order_by(Conversation.timestamp.desc())
+        .limit(40)
     )
-    history = [
+    history = list(reversed([
         {"role": msg.role.value if hasattr(msg.role, 'value') else msg.role, "content": msg.content}
         for msg in hist_result.scalars().all()
-    ]
+    ]))
 
     # Load client profile for pseudonymisation
     profile_result = await db.execute(
@@ -60,10 +71,10 @@ async def chat_stream(
             "nationality": profile_row.nationality,
             "domicile": profile_row.domicile,
             "tax_residency": profile_row.tax_residency,
-            "asset_classes": json.loads(profile_row.asset_classes or "[]"),
-            "asset_jurisdictions": json.loads(profile_row.asset_jurisdictions or "[]"),
-            "objectives": json.loads(profile_row.objectives or "[]"),
-            "family_members": json.loads(profile_row.family_members or "[]"),
+            "asset_classes": _safe_json_loads(profile_row.asset_classes, []),
+            "asset_jurisdictions": _safe_json_loads(profile_row.asset_jurisdictions, []),
+            "objectives": _safe_json_loads(profile_row.objectives, []),
+            "family_members": _safe_json_loads(profile_row.family_members, []),
             "existing_structures": profile_row.existing_structures,
         }
 
@@ -85,7 +96,7 @@ async def chat_stream(
     )
 
     async def event_stream():
-        # Emit sources metadata first
+        # Emit sources metadata first (synchronous serialisation — before try block)
         web_source_data = []
         for w in retrieval.web_results:
             if hasattr(w, 'url'):
@@ -99,63 +110,70 @@ async def chat_stream(
             "chunks": retrieval.chunks[:3],
             "web": web_source_data,
         }
-        yield f"data: {json.dumps(source_event)}\n\n"
+        yield f"data: {json.dumps(source_event, default=str)}\n\n"
 
-        # Stream LLM tokens
-        full_response_parts = []
-        async for token in stream_chat(
-            messages=messages_for_llm,
-            retrieval=retrieval,
-            profile=profile,
-        ):
-            full_response_parts.append(token)
-            yield f"data: {json.dumps({'type': 'token', 'text': token})}\n\n"
+        try:
+            # Stream LLM tokens
+            full_response_parts = []
+            async for token in stream_chat(
+                messages=messages_for_llm,
+                retrieval=retrieval,
+                profile=profile,
+            ):
+                full_response_parts.append(token)
+                yield f"data: {json.dumps({'type': 'token', 'text': token})}\n\n"
 
-        full_text = "".join(full_response_parts)
+            full_text = "".join(full_response_parts)
 
-        # Save assistant message using fresh session (not request-scoped db)
-        async with AsyncSessionLocal() as bg_db:
-            asst_msg = Conversation(
-                case_id=payload.case_id,
-                role=MessageRole.ASSISTANT,
-                content=full_text,
-                sources_cited=json.dumps([c.get("source_file") for c in retrieval.chunks]),
-            )
-            bg_db.add(asst_msg)
-            await bg_db.commit()
-
-        # Background: update case summary
-        async def bg_update_summary():
-            updated_history = messages_for_llm + [{"role": "assistant", "content": full_text}]
-            summary = await generate_compact_summary(updated_history)
+            # Save assistant message using fresh session (not request-scoped db)
             async with AsyncSessionLocal() as bg_db:
-                res = await bg_db.execute(select(Case).where(Case.case_id == payload.case_id))
-                c = res.scalar_one_or_none()
-                if c:
-                    c.compact_summary = summary
-                    await bg_db.commit()
-
-        # Background: queue web-sourced KB enrichment entries
-        async def bg_queue_kb_enrichment():
-            if not retrieval.web_results:
-                return
-            from backend.models.kb_review_queue import KBReviewQueue
-            async with AsyncSessionLocal() as bg_db:
-                for web_result in retrieval.web_results:
-                    text = web_result.text if hasattr(web_result, 'text') else web_result.get('text', '')
-                    url = web_result.url if hasattr(web_result, 'url') else web_result.get('url', '')
-                    entry = KBReviewQueue(
-                        jurisdiction="Unknown",
-                        topic=payload.message[:100],
-                        content=text,
-                        web_url=url,
-                    )
-                    bg_db.add(entry)
+                asst_msg = Conversation(
+                    case_id=payload.case_id,
+                    role=MessageRole.ASSISTANT,
+                    content=full_text,
+                    sources_cited=json.dumps([c.get("source_file") for c in retrieval.chunks]),
+                )
+                bg_db.add(asst_msg)
                 await bg_db.commit()
 
-        asyncio.create_task(bg_update_summary())
-        asyncio.create_task(bg_queue_kb_enrichment())
+            # Background: update case summary
+            async def bg_update_summary():
+                updated_history = messages_for_llm + [{"role": "assistant", "content": full_text}]
+                summary = await generate_compact_summary(updated_history)
+                async with AsyncSessionLocal() as bg_db:
+                    res = await bg_db.execute(select(Case).where(Case.case_id == payload.case_id))
+                    c = res.scalar_one_or_none()
+                    if c:
+                        c.compact_summary = summary
+                        await bg_db.commit()
 
-        yield f"data: {json.dumps({'type': 'done'})}\n\n"
+            # Background: queue web-sourced KB enrichment entries
+            async def bg_queue_kb_enrichment():
+                if not retrieval.web_results:
+                    return
+                from backend.models.kb_review_queue import KBReviewQueue
+                jurisdiction = profile.get("domicile") or profile.get("tax_residency") or "Unknown"
+                async with AsyncSessionLocal() as bg_db:
+                    for web_result in retrieval.web_results:
+                        text = web_result.text if hasattr(web_result, 'text') else web_result.get('text', '')
+                        url = web_result.url if hasattr(web_result, 'url') else web_result.get('url', '')
+                        entry = KBReviewQueue(
+                            jurisdiction=jurisdiction,
+                            topic=payload.message[:100],
+                            content=text,
+                            web_url=url,
+                        )
+                        bg_db.add(entry)
+                    await bg_db.commit()
+
+            asyncio.create_task(bg_update_summary())
+            asyncio.create_task(bg_queue_kb_enrichment())
+
+        except Exception as e:
+            logger.error("event_stream error: %s", e, exc_info=True)
+            yield f"data: {json.dumps({'type': 'error', 'message': 'Internal server error'})}\n\n"
+
+        finally:
+            yield f"data: {json.dumps({'type': 'done'})}\n\n"
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")

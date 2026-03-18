@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 
 class ChatMessage(BaseModel):
+    """Used for typed history responses. Reserved for GET /chat/history endpoint."""
     role: str  # "user" | "assistant"
     content: str
 
