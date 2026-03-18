@@ -17,11 +17,7 @@ def test_validate_mime_rejects_exe(tmp_path):
 
 
 def test_validate_mime_accepts_pdf(tmp_path):
-    # PDF magic bytes
     f = tmp_path / "doc.pdf"
     f.write_bytes(b"%PDF-1.4\n%%EOF")
-    # Should not raise (or raise only because it's a malformed PDF, not MIME error)
-    try:
-        validate_mime_type(str(f))
-    except ValueError as e:
-        assert "Invalid file type" not in str(e)
+    result = validate_mime_type(str(f))
+    assert result == "pdf"

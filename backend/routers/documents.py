@@ -31,7 +31,10 @@ async def upload_document(
     # Save to disk
     upload_dir = os.path.join(settings.uploads_path, "cases", case_id)
     os.makedirs(upload_dir, exist_ok=True)
-    file_path = os.path.join(upload_dir, file.filename)
+    safe_filename = os.path.basename(file.filename or "upload")
+    if not safe_filename:
+        raise HTTPException(status_code=400, detail="Invalid filename")
+    file_path = os.path.join(upload_dir, safe_filename)
     with open(file_path, "wb") as f:
         f.write(content)
 
@@ -45,7 +48,7 @@ async def upload_document(
     # Save metadata to DB
     doc = Document(
         case_id=case_id,
-        filename=file.filename,
+        filename=safe_filename,
         file_path=file_path,
         file_type=FileType(file_type),
         file_size_bytes=len(content),
@@ -64,4 +67,8 @@ async def upload_document(
         logger.error("Embedding failed for document %s: %s", file.filename, e)
         chunk_count = 0
 
-    return {"message": f"Uploaded and embedded {chunk_count} chunks", "document_id": doc.document_id}
+    return {
+        "message": f"Uploaded and embedded {chunk_count} chunks",
+        "document_id": doc.document_id,
+        "chunk_count": chunk_count,
+    }

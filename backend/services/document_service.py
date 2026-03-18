@@ -41,9 +41,8 @@ async def process_and_embed_document(
     filename: str,
 ) -> int:
     """Extract text, chunk, embed, store in case-scoped ChromaDB collection."""
-    from backend.kb.chroma_client import get_chroma_client, get_case_collection
+    from backend.kb.chroma_client import get_chroma_client, get_case_collection, get_embedding_model
     from backend.kb.kb_manager import _chunk_text
-    from sentence_transformers import SentenceTransformer
 
     text = extract_text(file_path, file_type)
     chunks = _chunk_text(text)
@@ -51,7 +50,7 @@ async def process_and_embed_document(
         logger.warning("No chunks extracted from %s", filename)
         return 0
 
-    model = SentenceTransformer("all-MiniLM-L6-v2")
+    model = get_embedding_model()
     embeddings = model.encode(chunks).tolist()
     client = get_chroma_client()
     collection = get_case_collection(client, case_id)
