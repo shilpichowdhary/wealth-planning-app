@@ -1,0 +1,8 @@
+.env
+chroma_db/
+uploads/
+*.db
+__pycache__/
+.venv/
+node_modules/
+frontend/.next/
