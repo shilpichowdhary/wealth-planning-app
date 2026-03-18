@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Any, AsyncIterator
+from typing import AsyncIterator
 from backend.config import settings
 from backend.services.rag_service import RetrievalResult, RetrievalSource
 
@@ -9,9 +9,15 @@ logger = logging.getLogger(__name__)
 DISCLAIMER = "IMPORTANT: This is not legal or tax advice. Always verify recommendations with qualified counsel in the relevant jurisdiction."
 
 
+REASONING_FIELDS = {
+    "nationality", "domicile", "tax_residency", "asset_classes",
+    "asset_jurisdictions", "existing_structures", "objectives", "family_members",
+}
+
+
 def pseudonymise_profile(profile: dict) -> dict:
-    """Strip direct identifiers, retain reasoning-relevant attributes."""
-    result = {k: v for k, v in profile.items() if k not in ("client_name",)}
+    """Strip direct identifiers, retain only reasoning-relevant attributes."""
+    result = {k: v for k, v in profile.items() if k in REASONING_FIELDS}
     if "family_members" in result and isinstance(result["family_members"], list):
         role_counts: dict[str, int] = {}
         cleaned = []
@@ -101,8 +107,8 @@ class LLMService:
                 async for text in stream.text_stream:
                     yield text
         except Exception as e:
-            logger.warning("LLM streaming failed: %s", e)
-            yield f"\n\n[Error: Unable to complete response — {e}]"
+            logger.warning("LLM streaming failed: %s", e, exc_info=True)
+            yield "\n\n[Error: Unable to complete the response. Please try again or contact support.]"
 
 
 # Module-level convenience function (wraps LLMService)
