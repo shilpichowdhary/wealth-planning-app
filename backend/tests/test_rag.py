@@ -36,3 +36,36 @@ async def test_replace_on_reupload(kb_manager):
     # All old IDs should be gone, replaced by new ones
     assert len(second_ids.intersection(first_ids)) == 0
     assert len(second_ids) > 0
+
+from unittest.mock import AsyncMock, patch
+from backend.services.rag_service import RAGService, RetrievalResult, RetrievalSource
+
+@pytest.fixture
+def rag_service(kb_manager):
+    return RAGService(kb_manager=kb_manager)
+
+@pytest.mark.asyncio
+async def test_retrieval_uses_kb_when_available(rag_service, kb_manager):
+    await kb_manager.upload_kb_file(
+        "Singapore trusts are exempt from foreign income tax under s13(8).",
+        "singapore_trust_law.txt", "Singapore", "Trust Law"
+    )
+    await kb_manager.upload_kb_file(
+        "Additional Singapore trust rules for foreign settlors apply.",
+        "singapore_trust_rules.txt", "Singapore", "Trust Law"
+    )
+    result = await rag_service.retrieve("Singapore trust tax exemption", session_tavily_count=0)
+    assert result.source == RetrievalSource.KB
+    assert len(result.chunks) > 0
+
+@pytest.mark.asyncio
+async def test_retrieval_respects_tavily_limit(rag_service):
+    result = await rag_service.retrieve("anything", session_tavily_count=5)
+    assert result.source != RetrievalSource.WEB
+
+@pytest.mark.asyncio
+async def test_retrieval_returns_none_when_no_context(rag_service):
+    # Empty KB, tavily limit reached
+    result = await rag_service.retrieve("obscure topic xyz abc def", session_tavily_count=5)
+    assert result.source == RetrievalSource.NONE
+    assert not result.has_sufficient_context
