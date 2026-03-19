@@ -19,8 +19,9 @@ export default function KBReviewPage() {
   const [entries, setEntries] = useState<QueueEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState<string | null>(null);
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
   const token = session?.accessToken;
 
   useEffect(() => {
@@ -31,25 +32,34 @@ export default function KBReviewPage() {
     fetch(`${apiUrl}/kb/review-queue`, {
       headers: { Authorization: `Bearer ${token}` },
     })
-      .then((r) => r.json())
-      .then(setEntries)
+      .then((r) => {
+        if (!r.ok) throw new Error(`Failed to load review queue: ${r.status}`);
+        return r.json();
+      })
+      .then((data) => setEntries(data))
+      .catch((err: unknown) => setError((err instanceof Error ? err.message : null) ?? 'Failed to load review queue.'))
       .finally(() => setLoading(false));
   }, [token, apiUrl, session?.user?.role]);
 
   const handleAction = async (entryId: string, action: "approve" | "reject") => {
     setError(null);
-    const res = await fetch(`${apiUrl}/kb/review-queue/${entryId}/action`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ action }),
-    });
-    if (res.ok) {
-      setEntries((prev) => prev.filter((e) => e.entry_id !== entryId));
-    } else {
-      setError('Action failed. Please try again.');
+    setSubmitting(entryId);
+    try {
+      const res = await fetch(`${apiUrl}/kb/review-queue/${entryId}/action`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ action }),
+      });
+      if (res.ok) {
+        setEntries((prev) => prev.filter((e) => e.entry_id !== entryId));
+      } else {
+        setError('Action failed. Please try again.');
+      }
+    } finally {
+      setSubmitting(null);
     }
   };
 
@@ -90,14 +100,16 @@ export default function KBReviewPage() {
               <p className="text-sm mb-3 line-clamp-3">{entry.content}</p>
               <div className="flex gap-2">
                 <button
+                  disabled={submitting !== null}
                   onClick={() => handleAction(entry.entry_id, "approve")}
-                  className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+                  className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 disabled:opacity-50"
                 >
                   Approve
                 </button>
                 <button
+                  disabled={submitting !== null}
                   onClick={() => handleAction(entry.entry_id, "reject")}
-                  className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+                  className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700 disabled:opacity-50"
                 >
                   Reject
                 </button>
