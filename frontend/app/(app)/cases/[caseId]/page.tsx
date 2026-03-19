@@ -5,6 +5,7 @@ import { DiagramPanel } from '@/components/diagram/DiagramPanel'
 import { createSSEStream } from '@/lib/sse-client'
 
 interface Message {
+  id: string
   role: 'user' | 'assistant'
   content: string
   sources?: any
@@ -20,7 +21,7 @@ interface CaseData {
 export default function CasePage({ params }: { params: { caseId: string } }) {
   const caseId = params.caseId
   const { data: session } = useSession()
-  const token = (session as any)?.accessToken as string
+  const token = (session as any)?.accessToken as string ?? ''
 
   const [caseData, setCaseData] = useState<CaseData | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
@@ -38,6 +39,15 @@ export default function CasePage({ params }: { params: { caseId: string } }) {
   }, [messages])
 
   useEffect(() => {
+    return () => {
+      // Cleanup: abort any active SSE stream when component unmounts
+      if (abortRef.current) {
+        abortRef.current()
+      }
+    }
+  }, [])
+
+  useEffect(() => {
     if (!token) return
     fetch(`${apiUrl}/cases/${caseId}`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -52,6 +62,7 @@ export default function CasePage({ params }: { params: { caseId: string } }) {
       .then(r => r.ok ? r.json() : [])
       .then((history: any[]) => {
         const msgs: Message[] = history.map((h: any) => ({
+          id: crypto.randomUUID(),
           role: h.role,
           content: h.content,
           sources: h.sources,
@@ -65,11 +76,11 @@ export default function CasePage({ params }: { params: { caseId: string } }) {
     if (!input.trim() || streaming || !token) return
     const userMsg = input.trim()
     setInput('')
-    setMessages(prev => [...prev, { role: 'user', content: userMsg }])
+    setMessages(prev => [...prev, { id: crypto.randomUUID(), role: 'user', content: userMsg }])
     setStreaming(true)
 
     let assistantContent = ''
-    setMessages(prev => [...prev, { role: 'assistant', content: '' }])
+    setMessages(prev => [...prev, { id: crypto.randomUUID(), role: 'assistant', content: '' }])
 
     const abort = createSSEStream(
       `${apiUrl}/cases/${caseId}/chat`,
@@ -79,7 +90,7 @@ export default function CasePage({ params }: { params: { caseId: string } }) {
         assistantContent += text
         setMessages(prev => {
           const updated = [...prev]
-          updated[updated.length - 1] = { role: 'assistant', content: assistantContent }
+          updated[updated.length - 1] = { ...updated[updated.length - 1], content: assistantContent }
           return updated
         })
       },
@@ -170,14 +181,14 @@ export default function CasePage({ params }: { params: { caseId: string } }) {
                   <p className="text-slate-400 text-sm">Start a conversation about this case.</p>
                 </div>
               )}
-              {messages.map((msg, i) => (
-                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              {messages.map((msg) => (
+                <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-[75%] rounded-xl px-4 py-3 text-sm leading-relaxed ${
                     msg.role === 'user'
                       ? 'bg-blue-600 text-white'
                       : 'bg-white border border-slate-200 text-slate-800'
                   }`}>
-                    {msg.content || (msg.role === 'assistant' && streaming && i === messages.length - 1 ? (
+                    {msg.content || (msg.role === 'assistant' && streaming && msg.id === messages[messages.length - 1]?.id ? (
                       <span className="inline-flex gap-1">
                         <span className="animate-bounce delay-0">.</span>
                         <span className="animate-bounce delay-100">.</span>

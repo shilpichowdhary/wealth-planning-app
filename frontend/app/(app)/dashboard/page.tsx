@@ -4,7 +4,7 @@ import Link from 'next/link'
 
 export default async function DashboardPage() {
   const session = await auth()
-  const token = (session as any)?.accessToken as string
+  const token = session?.accessToken ?? ''
   const cases = await apiFetch<any[]>('/cases/', token).catch(() => [])
 
   return (
