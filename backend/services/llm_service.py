@@ -1,10 +1,23 @@
 import json
 import logging
+import re
 from typing import AsyncIterator
 from backend.config import settings
 from backend.services.rag_service import RetrievalResult, RetrievalSource
 
 logger = logging.getLogger(__name__)
+
+
+def extract_diagram_json(text: str) -> dict | None:
+    """Extract diagram JSON from LLM response if present."""
+    match = re.search(r'```json\s*(\{.*?"diagram_nodes".*?\})\s*```', text, re.DOTALL)
+    if not match:
+        return None
+    try:
+        return json.loads(match.group(1))
+    except json.JSONDecodeError:
+        return None
+
 
 DISCLAIMER = "IMPORTANT: This is not legal or tax advice. Always verify recommendations with qualified counsel in the relevant jurisdiction."
 

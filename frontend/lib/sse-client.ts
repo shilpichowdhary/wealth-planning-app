@@ -5,6 +5,7 @@ export function createSSEStream(
   onToken: (text: string) => void,
   onSources: (sources: any) => void,
   onDone: () => void,
+  onDiagram?: (diagram: { nodes: any[]; edges: any[] }) => void,
 ) {
   const controller = new AbortController()
 
@@ -35,6 +36,7 @@ export function createSSEStream(
               const data = JSON.parse(line.slice(6))
               if (data.type === 'token') onToken(data.text)
               else if (data.type === 'sources') onSources(data)
+              else if (data.type === 'diagram_update' && onDiagram) onDiagram(data.diagram)
               else if (data.type === 'done') onDone()
             } catch {
               // ignore malformed SSE line

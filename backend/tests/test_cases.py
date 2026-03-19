@@ -39,6 +39,34 @@ async def test_list_cases_returns_only_own(auth_headers, async_client):
 
 
 @pytest.mark.asyncio
+async def test_save_and_get_profile(async_client, auth_headers):
+    # Create case first
+    r = await async_client.post("/cases/", json={"client_name": "Profile Test"}, headers=auth_headers)
+    assert r.status_code == 201
+    case_id = r.json()["case_id"]
+
+    profile = {
+        "nationality": "Indian",
+        "domicile": "India",
+        "tax_residency": "India",
+        "family_members": [],
+        "asset_classes": ["equity"],
+        "asset_jurisdictions": ["India"],
+        "existing_structures": None,
+        "objectives": ["growth"],
+    }
+
+    r = await async_client.post(f"/cases/{case_id}/profile", json=profile, headers=auth_headers)
+    assert r.status_code == 200
+
+    r = await async_client.get(f"/cases/{case_id}/profile", headers=auth_headers)
+    assert r.status_code == 200
+    data = r.json()
+    assert data["nationality"] == "Indian"
+    assert data["asset_classes"] == ["equity"]
+
+
+@pytest.mark.asyncio
 async def test_generate_compact_summary_returns_fallback_on_error():
     from backend.services.summary_service import generate_compact_summary
     with patch("anthropic.AsyncAnthropic") as mock_cls:

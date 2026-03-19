@@ -14,7 +14,8 @@ from backend.schemas.chat import ChatRequest
 from backend.routers.auth import get_current_user
 from backend.models.user import User, UserRole
 from backend.services.rag_service import RAGService, get_rag_service
-from backend.services.llm_service import stream_chat
+from backend.services.llm_service import stream_chat, extract_diagram_json
+from backend.services.diagram_service import DiagramService
 from backend.services.summary_service import generate_compact_summary
 
 logger = logging.getLogger(__name__)
@@ -135,6 +136,14 @@ async def chat_stream(
                 )
                 bg_db.add(asst_msg)
                 await bg_db.commit()
+
+            # Extract and emit diagram if present
+            diagram_raw = extract_diagram_json(full_text)
+            if diagram_raw:
+                diagram_service = DiagramService()
+                diagram_data = diagram_service.build_diagram_data(diagram_raw)
+                diagram_event = json.dumps({"type": "diagram_update", "diagram": diagram_data}, default=str)
+                yield f"data: {diagram_event}\n\n"
 
             # Background: update case summary
             async def bg_update_summary():

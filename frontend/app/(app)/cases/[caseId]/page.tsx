@@ -110,6 +110,9 @@ export default function CasePage({ params }: { params: { caseId: string } }) {
         setStreaming(false)
         abortRef.current = null
       },
+      (diagramData) => {
+        setRecommendedDiagram(diagramData)
+      },
     )
 
     abortRef.current = abort
