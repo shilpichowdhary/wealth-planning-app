@@ -24,16 +24,20 @@ export default function KBReviewPage() {
   const token = session?.accessToken;
 
   useEffect(() => {
-    if (!token || session?.user?.role !== 'advisor') return;
+    if (!token || session?.user?.role !== 'advisor') {
+      setLoading(false);
+      return;
+    }
     fetch(`${apiUrl}/kb/review-queue`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((r) => r.json())
       .then(setEntries)
       .finally(() => setLoading(false));
-  }, [token, apiUrl]);
+  }, [token, apiUrl, session?.user?.role]);
 
   const handleAction = async (entryId: string, action: "approve" | "reject") => {
+    setError(null);
     const res = await fetch(`${apiUrl}/kb/review-queue/${entryId}/action`, {
       method: "POST",
       headers: {
