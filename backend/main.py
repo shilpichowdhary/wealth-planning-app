@@ -37,6 +37,9 @@ app.include_router(reports_router.router)
 from backend.routers import documents
 app.include_router(documents.router)
 
+from backend.routers import admin as admin_router
+app.include_router(admin_router.router)
+
 @app.get("/health")
 async def health():
     return {"status": "ok"}

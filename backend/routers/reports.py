@@ -9,7 +9,7 @@ from backend.models.case import Case
 from backend.models.client_profile import ClientProfile
 from backend.models.recommendation import Recommendation
 from backend.models.user import User, UserRole
-from backend.routers.auth import get_current_user
+from backend.routers.auth import get_current_user, is_staff
 from backend.services.pdf_service import build_report_html, generate_pdf
 
 logger = logging.getLogger(__name__)
@@ -28,7 +28,7 @@ async def download_pdf(
         raise HTTPException(status_code=404, detail="Case not found")
 
     # Access control
-    if current_user.role == UserRole.ADVISOR and case.created_by != current_user.user_id:
+    if is_staff(current_user) and current_user.role != UserRole.ADMIN and case.created_by != current_user.user_id:
         raise HTTPException(status_code=403, detail="Access denied")
     if current_user.role == UserRole.CLIENT and current_user.case_id != case_id:
         raise HTTPException(status_code=403, detail="Access denied")

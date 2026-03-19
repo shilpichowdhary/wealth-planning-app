@@ -2,7 +2,7 @@ from fastapi import APIRouter, UploadFile, File, Form, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from backend.kb.kb_manager import KBManager
-from backend.routers.auth import get_current_user
+from backend.routers.auth import get_current_user, is_staff
 from backend.models.user import User, UserRole
 from backend.models.kb_review_queue import KBReviewQueue, ReviewStatus
 from backend.database import get_db
@@ -17,20 +17,66 @@ def get_kb_manager():
 async def upload_kb_file(
     file: UploadFile = File(...),
     jurisdiction: str = Form(...),
-    topic: str = Form(...),
+    topic: str = Form("general"),
     current_user: User = Depends(get_current_user),
     kb: KBManager = Depends(get_kb_manager),
 ):
-    if current_user.role != UserRole.ADVISOR:
+    if not is_staff(current_user):
         raise HTTPException(status_code=403, detail="Advisors only")
-    content = (await file.read()).decode("utf-8", errors="replace")
+    import tempfile, os
+    from backend.services.document_service import extract_text
+
+    raw = await file.read()
+    filename = file.filename or "upload"
+    suffix = os.path.splitext(filename)[1].lower() or ".txt"
+
+    # Write to temp file so text extractors (PyMuPDF, python-docx) can open it
+    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+        tmp.write(raw)
+        tmp_path = tmp.name
+
+    try:
+        ext = suffix.lstrip(".")
+        if ext == "pdf":
+            content = extract_text(tmp_path, "pdf")
+        elif ext in ("doc", "docx"):
+            content = extract_text(tmp_path, "docx")
+        else:
+            content = raw.decode("utf-8", errors="replace")
+    finally:
+        os.unlink(tmp_path)
+
     count = await kb.upload_kb_file(
         content=content,
-        source_file=file.filename,
+        source_file=filename,
         jurisdiction=jurisdiction,
         topic=topic,
     )
-    return {"message": f"Uploaded {count} chunks", "source_file": file.filename}
+    return {"message": f"Uploaded {count} chunks", "chunks_added": count, "source_file": filename}
+
+@router.get("/documents")
+async def list_kb_documents(
+    current_user: User = Depends(get_current_user),
+    kb: KBManager = Depends(get_kb_manager),
+):
+    if not is_staff(current_user):
+        raise HTTPException(status_code=403, detail="Advisors only")
+    return await kb.list_documents()
+
+
+@router.delete("/documents/{source_file:path}")
+async def delete_kb_document(
+    source_file: str,
+    current_user: User = Depends(get_current_user),
+    kb: KBManager = Depends(get_kb_manager),
+):
+    if not is_staff(current_user):
+        raise HTTPException(status_code=403, detail="Advisors only")
+    deleted = await kb.delete_document(source_file)
+    if deleted == 0:
+        raise HTTPException(status_code=404, detail="Document not found")
+    return {"deleted_chunks": deleted, "source_file": source_file}
+
 
 @router.get("/search")
 async def search_kb(
@@ -52,7 +98,7 @@ async def list_review_queue(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    if current_user.role != UserRole.ADVISOR:
+    if not is_staff(current_user):
         raise HTTPException(status_code=403, detail="Advisors only")
     result = await db.execute(select(KBReviewQueue).where(KBReviewQueue.current_status == status))
     entries = result.scalars().all()
@@ -79,7 +125,7 @@ async def review_queue_action(
     current_user: User = Depends(get_current_user),
     kb: KBManager = Depends(get_kb_manager),
 ):
-    if current_user.role != UserRole.ADVISOR:
+    if not is_staff(current_user):
         raise HTTPException(status_code=403, detail="Advisors only")
     result = await db.execute(select(KBReviewQueue).where(KBReviewQueue.entry_id == entry_id))
     entry = result.scalar_one_or_none()

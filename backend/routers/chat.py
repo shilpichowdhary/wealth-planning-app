@@ -11,7 +11,7 @@ from backend.models.case import Case
 from backend.models.conversation import Conversation, MessageRole
 from backend.models.client_profile import ClientProfile
 from backend.schemas.chat import ChatRequest
-from backend.routers.auth import get_current_user
+from backend.routers.auth import get_current_user, is_staff
 from backend.models.user import User, UserRole
 from backend.services.rag_service import RAGService, get_rag_service
 from backend.services.llm_service import stream_chat, extract_diagram_json
@@ -44,7 +44,7 @@ async def chat_stream(
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
     # Access control
-    if current_user.role == UserRole.ADVISOR and case.created_by != current_user.user_id:
+    if is_staff(current_user) and current_user.role != UserRole.ADMIN and case.created_by != current_user.user_id:
         raise HTTPException(status_code=403, detail="Access denied")
     if current_user.role == UserRole.CLIENT and current_user.case_id != payload.case_id:
         raise HTTPException(status_code=403, detail="Access denied")
@@ -60,6 +60,9 @@ async def chat_stream(
         {"role": msg.role.value if hasattr(msg.role, 'value') else msg.role, "content": msg.content}
         for msg in hist_result.scalars().all()
     ]))
+
+    # Load prior session summary for cross-session memory
+    prior_summary = case.compact_summary or None
 
     # Load client profile for pseudonymisation
     profile_result = await db.execute(
@@ -120,6 +123,7 @@ async def chat_stream(
                 messages=messages_for_llm,
                 retrieval=retrieval,
                 profile=profile,
+                prior_summary=prior_summary,
             ):
                 full_response_parts.append(token)
                 yield f"data: {json.dumps({'type': 'token', 'text': token})}\n\n"

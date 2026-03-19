@@ -44,7 +44,7 @@ def pseudonymise_profile(profile: dict) -> dict:
     return result
 
 
-def build_system_prompt(profile: dict, kb_chunks: list[dict], web_results: list) -> str:
+def build_system_prompt(profile: dict, kb_chunks: list[dict], web_results: list, prior_summary: str | None = None) -> str:
     sources_text = ""
     if kb_chunks:
         sources_text += "\n\n## Knowledge Base Sources\n"
@@ -64,21 +64,50 @@ def build_system_prompt(profile: dict, kb_chunks: list[dict], web_results: list)
             sources_text += f"\n[Web Source: {title} | {url} | Retrieved: {retrieved_at}]\n{text}\n"
 
     profile_text = json.dumps(pseudonymise_profile(profile), indent=2) if profile else "No profile yet."
+    no_sources_note = "" if (kb_chunks or web_results) else "\n\n⚠️ NOTE: No knowledge base documents have been uploaded yet. Answer using your general training knowledge but clearly flag that responses are not sourced from the firm's knowledge base and should be independently verified."
+    prior_context = f"\n\n## Prior Session Memory\nThe following is a summary of previous conversations on this case. Use it to maintain continuity:\n{prior_summary}" if prior_summary else ""
 
     return f"""You are an expert wealth planning advisor assistant helping structure advice for Ultra High Net Worth Individuals (UHNWI) and families.
 
 ## Client Profile (pseudonymised)
 {profile_text}
-{sources_text}
+{sources_text}{no_sources_note}{prior_context}
 
-## Rules you MUST follow
-1. ONLY make recommendations you can cite from the sources provided above. If a source is not available for a claim, state: "I do not have sufficient knowledge base coverage on this topic."
-2. For every recommendation, cite the exact source: file name and section (for KB sources) or URL and retrieval date (for web sources).
-3. Assign a confidence level to each recommendation: high | specialist_review | complex
-4. Refer to the client as "the Client" and family members by their relationship (Spouse, Child 1, etc.)
+## OUTPUT FORMAT — follow this structure for EVERY response
+
+### 🔍 Problem Statement
+One concise paragraph identifying the core planning challenge based on the client's query and profile.
+
+### 📋 Key Findings
+- Bullet points summarising the relevant rules, thresholds, or structures from the sources
+- Each bullet should be self-contained and actionable
+- Use **bold** for key terms, numbers, and deadlines
+
+### ✅ Recommendations
+For each recommendation:
+- **Recommendation:** Name of the structure or action
+- **Rationale:** Why it applies to this client
+- **Confidence:** 🟢 High / 🟡 Specialist Review Required / 🔴 Complex — seek specialist
+- **Source:** File name and section, or URL
+
+### ⚠️ Risks & Considerations
+- Bullet list of risks, caveats, or conditions that must be met
+- Flag any cross-jurisdiction complications
+
+### 📌 Call to Action
+Numbered list of immediate next steps the advisor should take, e.g.:
+1. Engage [specialist type] to [action]
+2. Review [document] for [purpose]
+3. File [form/registration] by [deadline if known]
+
+### Rules
+1. Use the format above for every response — never write long paragraphs.
+2. Always cite sources (file name + section for KB; URL for web).
+3. Use **bold** for all key figures, dates, entity names.
+4. Refer to the client as "the Client"; family members by relationship (Spouse, Child 1).
 5. {DISCLAIMER}
 
-When generating structured recommendations, output a JSON block with this format:
+When the response involves a recommended structure, also output this JSON block (will render as a diagram):
 ```json
 {{
   "recommendation": "Structure name",
@@ -98,16 +127,14 @@ class LLMService:
         messages: list[dict],
         retrieval: RetrievalResult,
         profile: dict,
+        prior_summary: str | None = None,
     ) -> AsyncIterator[str]:
         from anthropic import AsyncAnthropic
-        if not retrieval.has_sufficient_context:
-            yield "⚠️ No knowledge base coverage found for this query. Please upload relevant documentation or consult a specialist directly."
-            return
-
         system = build_system_prompt(
             profile=profile,
             kb_chunks=retrieval.chunks,
             web_results=retrieval.web_results,
+            prior_summary=prior_summary,
         )
         client = AsyncAnthropic(api_key=settings.anthropic_api_key)
         try:
@@ -129,7 +156,8 @@ async def stream_chat(
     messages: list[dict],
     retrieval: RetrievalResult,
     profile: dict,
+    prior_summary: str | None = None,
 ) -> AsyncIterator[str]:
     svc = LLMService()
-    async for token in svc.stream_chat(messages=messages, retrieval=retrieval, profile=profile):
+    async for token in svc.stream_chat(messages=messages, retrieval=retrieval, profile=profile, prior_summary=prior_summary):
         yield token

@@ -3,8 +3,13 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from backend.database import get_db
-from backend.models.user import User
+from backend.models.user import User, UserRole
 from backend.services.auth_service import verify_password, AuthService
+
+
+def is_staff(user: User) -> bool:
+    """True for admin and advisor — both can manage cases and KB."""
+    return user.role in (UserRole.ADMIN, UserRole.ADVISOR)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")

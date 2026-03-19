@@ -36,7 +36,7 @@ function CheckboxGroup({ label, options, selected, onChange }: {
 export default function NewCasePage() {
   const { data: session } = useSession()
   const router = useRouter()
-  const token = (session as any)?.accessToken as string
+  const token = session?.accessToken ?? ''
 
   const [step, setStep] = useState(0)
   const [submitting, setSubmitting] = useState(false)

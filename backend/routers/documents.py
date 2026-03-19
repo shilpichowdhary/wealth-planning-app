@@ -6,7 +6,7 @@ from backend.config import settings
 from backend.database import get_db
 from backend.models.document import Document, FileType
 from backend.models.user import User, UserRole
-from backend.routers.auth import get_current_user
+from backend.routers.auth import get_current_user, is_staff
 from backend.services.document_service import process_and_embed_document, validate_mime_type
 
 logger = logging.getLogger(__name__)
@@ -20,7 +20,7 @@ async def upload_document(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    if current_user.role != UserRole.ADVISOR:
+    if not is_staff(current_user):
         raise HTTPException(status_code=403, detail="Advisors only")
 
     # Read and size-check

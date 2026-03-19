@@ -7,9 +7,10 @@ from sqlalchemy import select
 from backend.database import get_db
 from backend.models.case import Case
 from backend.models.client_profile import ClientProfile
+from backend.models.conversation import Conversation
 from backend.models.user import User, UserRole
 from backend.schemas.case import CaseCreate, CaseResponse
-from backend.routers.auth import get_current_user
+from backend.routers.auth import get_current_user, is_staff
 
 router = APIRouter(prefix="/cases", tags=["cases"])
 
@@ -19,7 +20,7 @@ async def _get_case_with_access(case_id: str, current_user: User, db: AsyncSessi
     case = result.scalar_one_or_none()
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
-    if current_user.role == UserRole.ADVISOR and case.created_by != current_user.user_id:
+    if is_staff(current_user) and current_user.role != UserRole.ADMIN and case.created_by != current_user.user_id:
         raise HTTPException(status_code=403, detail="Access denied")
     if current_user.role == UserRole.CLIENT and current_user.case_id != case_id:
         raise HTTPException(status_code=403, detail="Access denied")
@@ -45,7 +46,7 @@ async def create_case(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    if current_user.role != UserRole.ADVISOR:
+    if not is_staff(current_user):
         raise HTTPException(status_code=403, detail="Advisors only")
     case = Case(client_name=payload.client_name, created_by=current_user.user_id)
     db.add(case)
@@ -55,7 +56,7 @@ async def create_case(
 
 @router.get("/", response_model=list[CaseResponse])
 async def list_cases(db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
-    if current_user.role != UserRole.ADVISOR:
+    if not is_staff(current_user):
         raise HTTPException(status_code=403, detail="Advisors only")
     result = await db.execute(select(Case).where(Case.created_by == current_user.user_id))
     return result.scalars().all()
@@ -120,3 +121,39 @@ async def get_profile(
         "existing_structures": profile.existing_structures,
         "objectives": _loads(profile.objectives, []),
     }
+
+
+@router.get("/{case_id}/history")
+async def get_history(
+    case_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Return full conversation history for a case, oldest first."""
+    await _get_case_with_access(case_id, current_user, db)
+    result = await db.execute(
+        select(Conversation)
+        .where(Conversation.case_id == case_id)
+        .order_by(Conversation.timestamp.asc())
+    )
+    messages = result.scalars().all()
+    return [
+        {
+            "role": msg.role.value if hasattr(msg.role, "value") else msg.role,
+            "content": msg.content,
+            "sources": json.loads(msg.sources_cited) if msg.sources_cited else [],
+            "timestamp": msg.timestamp.isoformat(),
+        }
+        for msg in messages
+    ]
+
+
+@router.get("/{case_id}/summary")
+async def get_summary(
+    case_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Return the compact AI-generated summary of past sessions."""
+    case = await _get_case_with_access(case_id, current_user, db)
+    return {"summary": case.compact_summary or ""}

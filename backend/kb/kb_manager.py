@@ -55,6 +55,33 @@ class KBManager:
         self.collection.add(documents=chunks, embeddings=embeddings, ids=ids, metadatas=metadatas)
         return len(chunks)
 
+    async def list_documents(self) -> list[dict[str, Any]]:
+        """Return one entry per unique source_file with metadata."""
+        result = self.collection.get(include=["metadatas"])
+        seen: dict[str, dict] = {}
+        for meta in result["metadatas"]:
+            sf = meta.get("source_file", "unknown")
+            if sf not in seen:
+                seen[sf] = {
+                    "source_file": sf,
+                    "jurisdiction": meta.get("jurisdiction", ""),
+                    "topic": meta.get("topic", ""),
+                    "last_updated": meta.get("last_updated", ""),
+                    "source_type": meta.get("source_type", ""),
+                    "chunk_count": 1,
+                }
+            else:
+                seen[sf]["chunk_count"] += 1
+        return sorted(seen.values(), key=lambda x: x["last_updated"], reverse=True)
+
+    async def delete_document(self, source_file: str) -> int:
+        """Delete all chunks for a given source_file. Returns number deleted."""
+        existing = self.collection.get(where={"source_file": source_file})
+        if not existing["ids"]:
+            return 0
+        self.collection.delete(ids=existing["ids"])
+        return len(existing["ids"])
+
     async def query(self, query: str, n_results: int = 5, jurisdiction: str | None = None) -> list[dict[str, Any]]:
         embedding = self.model.encode([query]).tolist()
         where = {"jurisdiction": jurisdiction} if jurisdiction else None

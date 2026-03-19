@@ -3,6 +3,15 @@ import Credentials from 'next-auth/providers/credentials'
 
 const API_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
+function decodeJwtPayload(token: string): Record<string, unknown> {
+  try {
+    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+    return JSON.parse(Buffer.from(base64, 'base64').toString('utf-8'))
+  } catch {
+    return {}
+  }
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Credentials({
@@ -21,17 +30,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         })
         if (!res.ok) return null
         const data = await res.json()
-        return { id: data.access_token, accessToken: data.access_token, email: credentials?.email as string }
+        const payload = decodeJwtPayload(data.access_token)
+        const role = (payload.role as string) ?? 'client'
+        return {
+          id: data.access_token,
+          accessToken: data.access_token,
+          email: credentials?.email as string,
+          role,
+        }
       },
     }),
   ],
   callbacks: {
     jwt({ token, user }) {
       if (user?.accessToken) token.accessToken = user.accessToken
+      if (user?.role) token.role = user.role
       return token
     },
     session({ session, token }) {
-      if (token.accessToken) session.accessToken = token.accessToken
+      if (token.accessToken) session.accessToken = token.accessToken as string
+      if (token.role) session.user = { ...session.user, role: token.role as string }
       return session
     },
   },

@@ -3,6 +3,8 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { DiagramPanel } from '@/components/diagram/DiagramPanel'
 import { createSSEStream } from '@/lib/sse-client'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 interface Message {
   id: string
@@ -27,6 +29,9 @@ export default function CasePage({ params }: { params: { caseId: string } }) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [streaming, setStreaming] = useState(false)
+  const [chatError, setChatError] = useState<string | null>(null)
+  const [hasPriorMemory, setHasPriorMemory] = useState(false)
+  const [historyLoading, setHistoryLoading] = useState(true)
   const [existingDiagram, setExistingDiagram] = useState<{ nodes: any[]; edges: any[] } | null>(null)
   const [recommendedDiagram, setRecommendedDiagram] = useState<{ nodes: any[]; edges: any[] } | null>(null)
   const [activeTab, setActiveTab] = useState<'chat' | 'diagram'>('chat')
@@ -56,20 +61,23 @@ export default function CasePage({ params }: { params: { caseId: string } }) {
       .then(data => { if (data) setCaseData(data) })
       .catch(() => {})
 
-    fetch(`${apiUrl}/cases/${caseId}/history`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(r => r.ok ? r.json() : [])
-      .then((history: any[]) => {
-        const msgs: Message[] = history.map((h: any) => ({
-          id: crypto.randomUUID(),
-          role: h.role,
-          content: h.content,
-          sources: h.sources,
-        }))
-        setMessages(msgs)
-      })
-      .catch(() => {})
+    Promise.all([
+      fetch(`${apiUrl}/cases/${caseId}/history`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }).then(r => r.ok ? r.json() : []),
+      fetch(`${apiUrl}/cases/${caseId}/summary`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }).then(r => r.ok ? r.json() : { summary: '' }),
+    ]).then(([history, summaryData]) => {
+      const msgs: Message[] = history.map((h: any) => ({
+        id: crypto.randomUUID(),
+        role: h.role,
+        content: h.content,
+        sources: h.sources,
+      }))
+      setMessages(msgs)
+      if (summaryData.summary) setHasPriorMemory(true)
+    }).catch(() => {}).finally(() => setHistoryLoading(false))
   }, [caseId, token, apiUrl])
 
   const sendMessage = useCallback(() => {
@@ -78,6 +86,7 @@ export default function CasePage({ params }: { params: { caseId: string } }) {
     setInput('')
     setMessages(prev => [...prev, { id: crypto.randomUUID(), role: 'user', content: userMsg }])
     setStreaming(true)
+    setChatError(null)
 
     let assistantContent = ''
     setMessages(prev => [...prev, { id: crypto.randomUUID(), role: 'assistant', content: '' }])
@@ -112,6 +121,10 @@ export default function CasePage({ params }: { params: { caseId: string } }) {
       },
       (diagramData) => {
         setRecommendedDiagram(diagramData)
+      },
+      (errMsg) => {
+        setChatError(errMsg)
+        setStreaming(false)
       },
     )
 
@@ -177,34 +190,66 @@ export default function CasePage({ params }: { params: { caseId: string } }) {
       <div className="flex-1 overflow-hidden">
         {activeTab === 'chat' ? (
           <div className="flex flex-col h-full">
+            {/* Memory banner */}
+            {hasPriorMemory && (
+              <div className="mb-3 flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-lg px-4 py-2 text-xs text-blue-700">
+                <span>🧠</span>
+                <span><strong>Session memory active</strong> — the AI has context from your previous conversations on this case.</span>
+              </div>
+            )}
+
             {/* Messages */}
             <div className="flex-1 overflow-y-auto space-y-4 mb-4">
-              {messages.length === 0 && (
+              {historyLoading ? (
+                <div className="flex items-center justify-center h-full">
+                  <p className="text-slate-400 text-sm">Loading conversation history...</p>
+                </div>
+              ) : messages.length === 0 ? (
                 <div className="flex items-center justify-center h-full">
                   <p className="text-slate-400 text-sm">Start a conversation about this case.</p>
                 </div>
-              )}
+              ) : null}
               {messages.map((msg) => (
                 <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[75%] rounded-xl px-4 py-3 text-sm leading-relaxed ${
+                  <div className={`rounded-xl px-4 py-3 text-sm leading-relaxed ${
                     msg.role === 'user'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white border border-slate-200 text-slate-800'
+                      ? 'max-w-[65%] bg-blue-600 text-white'
+                      : 'w-full bg-white border border-slate-200 text-slate-800'
                   }`}>
-                    {msg.content || (msg.role === 'assistant' && streaming && msg.id === messages[messages.length - 1]?.id ? (
-                      <span className="inline-flex gap-1">
-                        <span className="animate-bounce delay-0">.</span>
-                        <span className="animate-bounce delay-100">.</span>
-                        <span className="animate-bounce delay-200">.</span>
+                    {msg.role === 'user' ? (
+                      <p>{msg.content}</p>
+                    ) : msg.content ? (
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          h3: ({children}) => <h3 className="text-base font-bold text-slate-900 mt-4 mb-2 first:mt-0">{children}</h3>,
+                          h4: ({children}) => <h4 className="text-sm font-semibold text-slate-800 mt-3 mb-1">{children}</h4>,
+                          ul: ({children}) => <ul className="list-disc list-outside ml-4 space-y-1 my-2">{children}</ul>,
+                          ol: ({children}) => <ol className="list-decimal list-outside ml-4 space-y-1 my-2">{children}</ol>,
+                          li: ({children}) => <li className="text-slate-700 leading-relaxed">{children}</li>,
+                          p: ({children}) => <p className="text-slate-700 mb-2 last:mb-0">{children}</p>,
+                          strong: ({children}) => <strong className="font-semibold text-slate-900">{children}</strong>,
+                          hr: () => <hr className="my-3 border-slate-200" />,
+                          blockquote: ({children}) => <blockquote className="border-l-4 border-blue-200 pl-3 text-slate-600 italic my-2">{children}</blockquote>,
+                          code: ({children}) => <code className="bg-slate-100 text-slate-700 px-1 py-0.5 rounded text-xs font-mono">{children}</code>,
+                        }}
+                      >
+                        {msg.content}
+                      </ReactMarkdown>
+                    ) : streaming && msg.id === messages[messages.length - 1]?.id ? (
+                      <span className="inline-flex gap-1 text-slate-400">
+                        <span className="animate-bounce">.</span>
+                        <span className="animate-bounce" style={{animationDelay:'0.1s'}}>.</span>
+                        <span className="animate-bounce" style={{animationDelay:'0.2s'}}>.</span>
                       </span>
-                    ) : '')}
+                    ) : null}
                     {msg.sources && msg.sources.length > 0 && (
-                      <div className="mt-2 pt-2 border-t border-slate-100">
-                        <p className="text-xs text-slate-400 mb-1">Sources:</p>
+                      <div className="mt-3 pt-3 border-t border-slate-100">
+                        <p className="text-xs font-medium text-slate-400 mb-1.5">Sources used:</p>
                         <div className="flex flex-wrap gap-1">
-                          {msg.sources.slice(0, 4).map((s: any, si: number) => (
-                            <span key={si} className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
-                              {s.title || s.source || `Source ${si + 1}`}
+                          {msg.sources.slice(0, 5).map((s: any, si: number) => (
+                            <span key={si} className="text-xs bg-blue-50 text-blue-700 border border-blue-100 px-2 py-0.5 rounded-full">
+                              {s.source_file || s.title || `Source ${si + 1}`}
                             </span>
                           ))}
                         </div>
@@ -215,6 +260,14 @@ export default function CasePage({ params }: { params: { caseId: string } }) {
               ))}
               <div ref={messagesEndRef} />
             </div>
+
+
+            {/* Error */}
+            {chatError && (
+              <div className="mb-2 bg-red-50 border border-red-200 rounded-lg px-4 py-2 text-sm text-red-700">
+                ⚠️ {chatError}
+              </div>
+            )}
 
             {/* Input */}
             <div className="flex gap-2 items-end">

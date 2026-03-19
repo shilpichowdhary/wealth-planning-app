@@ -6,6 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from backend.database import Base
 
 class UserRole(str, PyEnum):
+    ADMIN = "admin"
     ADVISOR = "advisor"
     CLIENT = "client"
 

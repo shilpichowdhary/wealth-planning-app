@@ -6,6 +6,7 @@ export function createSSEStream(
   onSources: (sources: any) => void,
   onDone: () => void,
   onDiagram?: (diagram: { nodes: any[]; edges: any[] }) => void,
+  onError?: (message: string) => void,
 ) {
   const controller = new AbortController()
 
@@ -22,6 +23,7 @@ export function createSSEStream(
   }).then(async (res) => {
     if (!res.ok || !res.body) {
       console.error('SSE request failed:', res.status)
+      if (onError) onError(`Request failed (${res.status})`)
       callDone()
       return
     }
@@ -42,6 +44,7 @@ export function createSSEStream(
               if (data.type === 'token') onToken(data.text)
               else if (data.type === 'sources') onSources(data)
               else if (data.type === 'diagram_update' && onDiagram) onDiagram(data.diagram)
+              else if (data.type === 'error') { if (onError) onError(data.message); callDone() }
               else if (data.type === 'done') callDone()
             } catch {
               // ignore malformed SSE line
