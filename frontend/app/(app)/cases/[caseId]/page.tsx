@@ -21,7 +21,7 @@ interface CaseData {
 export default function CasePage({ params }: { params: { caseId: string } }) {
   const caseId = params.caseId
   const { data: session } = useSession()
-  const token = (session as any)?.accessToken as string ?? ''
+  const token = session?.accessToken ?? ''
 
   const [caseData, setCaseData] = useState<CaseData | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
