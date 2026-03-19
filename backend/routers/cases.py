@@ -36,6 +36,9 @@ class ProfilePayload(BaseModel):
     existing_structures: str | None = None
     objectives: list[str] = []
 
+class SaveProfileResponse(BaseModel):
+    status: str
+
 @router.post("/", response_model=CaseResponse, status_code=201)
 async def create_case(
     payload: CaseCreate,
@@ -62,7 +65,7 @@ async def get_case(case_id: str, db: AsyncSession = Depends(get_db), current_use
     return await _get_case_with_access(case_id, current_user, db)
 
 
-@router.post("/{case_id}/profile", status_code=200)
+@router.post("/{case_id}/profile", status_code=200, response_model=SaveProfileResponse)
 async def save_profile(
     case_id: str,
     payload: ProfilePayload,

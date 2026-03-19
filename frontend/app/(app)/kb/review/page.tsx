@@ -18,12 +18,13 @@ export default function KBReviewPage() {
   const { data: session } = useSession();
   const [entries, setEntries] = useState<QueueEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const token = session?.accessToken;
 
   useEffect(() => {
-    if (!token) return;
+    if (!token || session?.user?.role !== 'advisor') return;
     fetch(`${apiUrl}/kb/review-queue`, {
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -33,7 +34,7 @@ export default function KBReviewPage() {
   }, [token, apiUrl]);
 
   const handleAction = async (entryId: string, action: "approve" | "reject") => {
-    await fetch(`${apiUrl}/kb/review-queue/${entryId}/action`, {
+    const res = await fetch(`${apiUrl}/kb/review-queue/${entryId}/action`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -41,7 +42,11 @@ export default function KBReviewPage() {
       },
       body: JSON.stringify({ action }),
     });
-    setEntries((prev) => prev.filter((e) => e.entry_id !== entryId));
+    if (res.ok) {
+      setEntries((prev) => prev.filter((e) => e.entry_id !== entryId));
+    } else {
+      setError('Action failed. Please try again.');
+    }
   };
 
   if (loading) return <div className="p-8">Loading...</div>;
@@ -51,6 +56,9 @@ export default function KBReviewPage() {
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-6">KB Review Queue</h1>
+      {error && (
+        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">{error}</div>
+      )}
       {entries.length === 0 ? (
         <p className="text-gray-500">No entries pending review.</p>
       ) : (

@@ -83,9 +83,9 @@ export default function CasePage({ params }: { params: { caseId: string } }) {
     setMessages(prev => [...prev, { id: crypto.randomUUID(), role: 'assistant', content: '' }])
 
     const abort = createSSEStream(
-      `${apiUrl}/cases/${caseId}/chat`,
+      `${apiUrl}/chat/stream`,
       token,
-      { message: userMsg },
+      { message: userMsg, case_id: caseId },
       (text) => {
         assistantContent += text
         setMessages(prev => {

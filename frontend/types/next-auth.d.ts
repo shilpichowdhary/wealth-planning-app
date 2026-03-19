@@ -8,17 +8,18 @@ declare module 'next-auth' {
       name?: string | null
       email?: string | null
       image?: string | null
-      role?: string
+      role?: 'advisor' | 'client'
     }
   }
   interface User {
     accessToken?: string
-    role?: string
+    role?: 'advisor' | 'client'
   }
 }
 
 declare module 'next-auth/jwt' {
   interface JWT {
     accessToken?: string
+    role?: 'advisor' | 'client'
   }
 }

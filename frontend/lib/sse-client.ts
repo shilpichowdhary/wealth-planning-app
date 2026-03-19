@@ -9,6 +9,11 @@ export function createSSEStream(
 ) {
   const controller = new AbortController()
 
+  let doneCalled = false
+  const callDone = () => {
+    if (!doneCalled) { doneCalled = true; onDone() }
+  }
+
   fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -17,7 +22,7 @@ export function createSSEStream(
   }).then(async (res) => {
     if (!res.ok || !res.body) {
       console.error('SSE request failed:', res.status)
-      onDone()
+      callDone()
       return
     }
     const reader = res.body.getReader()
@@ -37,7 +42,7 @@ export function createSSEStream(
               if (data.type === 'token') onToken(data.text)
               else if (data.type === 'sources') onSources(data)
               else if (data.type === 'diagram_update' && onDiagram) onDiagram(data.diagram)
-              else if (data.type === 'done') onDone()
+              else if (data.type === 'done') callDone()
             } catch {
               // ignore malformed SSE line
             }
@@ -45,11 +50,11 @@ export function createSSEStream(
         }
       }
     } finally {
-      onDone()  // ensure done is always called
+      callDone()  // ensure done is always called
     }
   }).catch((err) => {
     if (err.name !== 'AbortError') console.error('SSE error:', err)
-    onDone()  // always reset streaming state
+    callDone()  // always reset streaming state
   })
 
   return () => controller.abort()
