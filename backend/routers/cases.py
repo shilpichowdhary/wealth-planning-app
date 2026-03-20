@@ -58,7 +58,10 @@ async def create_case(
 async def list_cases(db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     if not is_staff(current_user):
         raise HTTPException(status_code=403, detail="Advisors only")
-    result = await db.execute(select(Case).where(Case.created_by == current_user.user_id))
+    if current_user.role == UserRole.ADMIN:
+        result = await db.execute(select(Case))
+    else:
+        result = await db.execute(select(Case).where(Case.created_by == current_user.user_id))
     return result.scalars().all()
 
 @router.get("/{case_id}", response_model=CaseResponse)
