@@ -9,6 +9,7 @@ from backend.models.user import User, UserRole
 from backend.models.case import Case
 from backend.routers.auth import get_current_user
 from backend.services.auth_service import hash_password
+from backend.services.settings_service import get_all_admin_settings, set_setting, ADMIN_KEYS
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -19,10 +20,42 @@ def require_admin(current_user: User = Depends(get_current_user)) -> User:
     return current_user
 
 
+# ── API Key / Settings management ──────────────────────────────
+
+
+class UpdateSettingRequest(BaseModel):
+    key: str
+    value: str
+
+
+@router.get("/settings")
+async def list_settings(
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_admin),
+):
+    """Return all admin-manageable settings (API keys masked)."""
+    return await get_all_admin_settings(db)
+
+
+@router.put("/settings")
+async def update_setting(
+    payload: UpdateSettingRequest,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_admin),
+):
+    """Set an API key or config value."""
+    if payload.key not in ADMIN_KEYS:
+        raise HTTPException(status_code=400, detail=f"Unknown setting: {payload.key}")
+    await set_setting(payload.key, payload.value, db)
+    return {"status": "saved", "key": payload.key}
+
+
+# ── Advisor management ─────────────────────────────────────────
+
+
 class CreateAdvisorRequest(BaseModel):
     name: str
     email: EmailStr
-    password: str
 
 
 class AdvisorResponse(BaseModel):
@@ -80,10 +113,11 @@ async def create_advisor(
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=409, detail="Email already registered")
 
+    auto_password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(24))
     user = User(
         name=payload.name,
         email=payload.email,
-        hashed_password=hash_password(payload.password),
+        hashed_password=hash_password(auto_password),
         role=UserRole.ADVISOR,
         created_by=current_admin.user_id,
         is_active=True,

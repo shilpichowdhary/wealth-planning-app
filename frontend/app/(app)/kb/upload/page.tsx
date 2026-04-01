@@ -16,7 +16,7 @@ export default function KBUploadPage() {
   const [result, setResult] = useState<{ chunks: number; message: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  if (session?.user?.role !== "advisor") {
+  if (session?.user?.role !== "advisor" && session?.user?.role !== "admin") {
     return <div className="p-8 text-red-600">Access denied. Advisors only.</div>;
   }
 

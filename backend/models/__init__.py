@@ -5,3 +5,4 @@ from backend.models.conversation import Conversation, MessageRole
 from backend.models.recommendation import Recommendation, ConfidenceLevel
 from backend.models.kb_review_queue import KBReviewQueue, ReviewStatus
 from backend.models.document import Document, FileType
+from backend.models.system_setting import SystemSetting

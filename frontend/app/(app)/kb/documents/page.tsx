@@ -23,7 +23,7 @@ export default function KBDocumentsPage() {
   const [deleting, setDeleting] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!token || session?.user?.role !== "advisor") {
+    if (!token || session?.user?.role !== "advisor" && session?.user?.role !== "admin") {
       setLoading(false);
       return;
     }
@@ -57,7 +57,7 @@ export default function KBDocumentsPage() {
   }
 
   if (loading) return <div className="p-8 text-slate-500">Loading...</div>;
-  if (session?.user?.role !== "advisor")
+  if (session?.user?.role !== "advisor" && session?.user?.role !== "admin")
     return <div className="p-8 text-red-600">Access denied. Advisors only.</div>;
 
   return (

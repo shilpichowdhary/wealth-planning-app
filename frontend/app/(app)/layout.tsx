@@ -1,6 +1,7 @@
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import LogoutButton from '@/components/LogoutButton'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await auth()
@@ -27,13 +28,21 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               </>
             )}
             {isAdmin && (
-              <Link href="/admin/advisors" className="hover:text-white transition text-amber-400 font-medium">
-                Admin
-              </Link>
+              <>
+                <Link href="/admin/advisors" className="hover:text-white transition text-amber-400 font-medium">
+                  Admin
+                </Link>
+                <Link href="/admin/settings" className="hover:text-white transition text-amber-400 font-medium">
+                  Settings
+                </Link>
+              </>
             )}
           </div>
         </div>
-        <span className="text-slate-400 text-xs">{session.user?.email}</span>
+        <div className="flex items-center gap-3">
+          <span className="text-slate-400 text-xs">{session.user?.email}</span>
+          <LogoutButton />
+        </div>
       </nav>
       <main className="max-w-7xl mx-auto px-4 py-6">{children}</main>
     </div>

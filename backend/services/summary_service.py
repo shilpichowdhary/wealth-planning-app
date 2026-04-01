@@ -18,11 +18,14 @@ Return ONLY valid JSON. Use "the Client" not their real name."""
 
 async def generate_compact_summary(conversation_history: list[dict]) -> str:
     from anthropic import AsyncAnthropic
-    anthropic_client = AsyncAnthropic(api_key=settings.anthropic_api_key)
+    from backend.services.settings_service import get_setting
+    api_key = await get_setting("anthropic_api_key")
+    model = await get_setting("claude_model")
+    anthropic_client = AsyncAnthropic(api_key=api_key)
     messages = [{"role": m["role"], "content": m["content"]} for m in conversation_history[-20:]]
     try:
         response = await anthropic_client.messages.create(
-            model=settings.claude_model,
+            model=model,
             max_tokens=1000,
             system=SUMMARY_PROMPT,
             messages=messages,

@@ -26,7 +26,6 @@ export default function AdminAdvisorsPage() {
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [creating, setCreating] = useState(false);
 
   // Password reset result
@@ -61,7 +60,7 @@ export default function AdminAdvisorsPage() {
       const res = await fetch(`${apiUrl}/admin/advisors`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ detail: "Failed" }));
@@ -69,7 +68,7 @@ export default function AdminAdvisorsPage() {
       }
       const newAdvisor = await res.json();
       setAdvisors((prev) => [newAdvisor, ...prev]);
-      setName(""); setEmail(""); setPassword(""); setShowForm(false);
+      setName(""); setEmail(""); setShowForm(false);
     } catch (e: unknown) {
       setActionError(e instanceof Error ? e.message : "Failed to create advisor");
     } finally {
@@ -144,7 +143,7 @@ export default function AdminAdvisorsPage() {
       {showForm && (
         <form onSubmit={handleCreate} className="bg-blue-50 border border-blue-200 rounded-xl p-5 mb-6 space-y-3">
           <h2 className="text-sm font-semibold text-slate-800">New Advisor Account</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <input
               required value={name} onChange={(e) => setName(e.target.value)}
               placeholder="Full name"
@@ -152,17 +151,11 @@ export default function AdminAdvisorsPage() {
             />
             <input
               required type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email address"
-              className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <input
-              required type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-              placeholder="Initial password"
-              minLength={8}
+              placeholder="LC email address"
               className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          <p className="text-xs text-slate-500">Share the password securely with the advisor after creating their account.</p>
+          <p className="text-xs text-slate-500">The user will sign in using their LC account (SSO). No password needed.</p>
           <button
             type="submit" disabled={creating}
             className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition disabled:opacity-50"

@@ -136,10 +136,13 @@ class LLMService:
             web_results=retrieval.web_results,
             prior_summary=prior_summary,
         )
-        client = AsyncAnthropic(api_key=settings.anthropic_api_key)
+        from backend.services.settings_service import get_setting
+        api_key = await get_setting("anthropic_api_key")
+        model = await get_setting("claude_model")
+        client = AsyncAnthropic(api_key=api_key)
         try:
             async with client.messages.stream(
-                model=settings.claude_model,
+                model=model,
                 max_tokens=settings.claude_max_tokens_per_query,
                 system=system,
                 messages=messages,

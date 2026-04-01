@@ -25,7 +25,7 @@ export default function KBReviewPage() {
   const token = session?.accessToken;
 
   useEffect(() => {
-    if (!token || session?.user?.role !== 'advisor') {
+    if (!token || session?.user?.role !== 'advisor' && session?.user?.role !== 'admin') {
       setLoading(false);
       return;
     }
@@ -64,7 +64,7 @@ export default function KBReviewPage() {
   };
 
   if (loading) return <div className="p-8">Loading...</div>;
-  if (session?.user?.role !== "advisor")
+  if (session?.user?.role !== "advisor" && session?.user?.role !== "admin")
     return <div className="p-8 text-red-600">Access denied. Advisors only.</div>;
 
   return (
