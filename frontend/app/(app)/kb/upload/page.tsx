@@ -67,7 +67,7 @@ export default function KBUploadPage() {
           <select
             value={jurisdiction}
             onChange={(e) => setJurisdiction(e.target.value)}
-            className="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {JURISDICTIONS.map((j) => (
               <option key={j} value={j}>{j}</option>
@@ -82,7 +82,7 @@ export default function KBUploadPage() {
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
             placeholder="e.g. inheritance tax, trust structures, estate duty"
-            className="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 

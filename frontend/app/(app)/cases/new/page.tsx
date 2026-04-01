@@ -98,7 +98,7 @@ export default function NewCasePage() {
     }
   }
 
-  const inputCls = 'w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+  const inputCls = 'w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500'
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -157,7 +157,7 @@ export default function NewCasePage() {
                 onChange={e => setExistingStructures(e.target.value)}
                 placeholder="e.g. BVI holding company, UK family trust, Singapore family office..."
                 rows={6}
-                className="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                className="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
               />
             </div>
           </>

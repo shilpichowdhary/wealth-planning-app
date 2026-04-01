@@ -147,12 +147,12 @@ export default function AdminAdvisorsPage() {
             <input
               required value={name} onChange={(e) => setName(e.target.value)}
               placeholder="Full name"
-              className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <input
               required type="email" value={email} onChange={(e) => setEmail(e.target.value)}
               placeholder="LC email address"
-              className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <p className="text-xs text-slate-500">The user will sign in using their LC account (SSO). No password needed.</p>
