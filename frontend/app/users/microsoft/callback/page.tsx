@@ -31,17 +31,15 @@ export default function AuthCallbackPage() {
       const pca = new PublicClientApplication(msalConfig)
       await pca.initialize()
 
-      // Process the redirect response (code in URL hash)
-      const response = await pca.handleRedirectPromise()
+      const response = await pca.handleRedirectPromise({ navigateToLoginRequestUrl: false })
 
       if (!response || !response.idToken) {
-        setError('No authentication response received.')
+        setError('No authentication response received. Please try again.')
         return
       }
 
       setStatus('Verifying account...')
 
-      // Exchange Azure ID token for backend JWT
       const res = await fetch(`${API_URL}/auth/sso`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -57,14 +55,16 @@ export default function AuthCallbackPage() {
       const data = await res.json()
       setStatus('Creating session...')
 
-      // Create next-auth session with the backend JWT
       const result = await signIn('sso-token', {
         token: data.access_token,
+        callbackUrl: '/dashboard',
         redirect: false,
       })
 
       if (result?.error) {
         setError('Failed to create session.')
+      } else if (result?.url) {
+        window.location.href = result.url
       } else {
         window.location.href = '/dashboard'
       }

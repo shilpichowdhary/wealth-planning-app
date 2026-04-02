@@ -42,6 +42,6 @@ function Stop-ServiceByPid {
 }
 
 Write-Host "Stopping Wealth Planning App..." -ForegroundColor Yellow
-Stop-ServiceByPid "backend.pid"  "Backend"  8088
+Stop-ServiceByPid "backend.pid"  "Backend"  8089
 Stop-ServiceByPid "frontend.pid" "Frontend" 3080
 Write-Host "Done." -ForegroundColor Green

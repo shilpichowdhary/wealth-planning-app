@@ -2,7 +2,7 @@
 # Usage: .\run_server.ps1
 #
 # Starts:
-#   1. FastAPI backend (Uvicorn) on 127.0.0.1:8088
+#   1. FastAPI backend (Uvicorn) on 127.0.0.1:8089
 #   2. Next.js frontend on 127.0.0.1:3080
 #
 # IIS site "WealthPlanning" on port 8081 proxies external traffic to both.
@@ -11,7 +11,7 @@
 Set-Location $PSScriptRoot
 
 $BACKEND_HOST  = "127.0.0.1"
-$BACKEND_PORT  = "8088"
+$BACKEND_PORT  = "8089"
 $FRONTEND_PORT = "3080"
 
 # ── Helper: check PID file ────────────────────────────────────────────
