@@ -17,7 +17,7 @@ import { CompanyNode } from './nodes/CompanyNode'
 import { IndividualNode } from './nodes/IndividualNode'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { layoutDiagram } from '@/lib/diagram-layout'
-import { Shield, Building2, User, Plus, RotateCcw, Save, Check } from 'lucide-react'
+import { Shield, Building2, User, Plus, RotateCcw, Save, Check, type LucideIcon } from 'lucide-react'
 
 const nodeTypes = {
   trust: TrustNode,
@@ -255,7 +255,7 @@ function ToolbarButton({
   label,
 }: {
   onClick: () => void
-  icon: React.ComponentType<{ size?: number; className?: string }>
+  icon: LucideIcon
   label: string
 }) {
   return (
