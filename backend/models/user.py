@@ -22,3 +22,4 @@ class User(Base):
     created_by: Mapped[str | None] = mapped_column(String, ForeignKey("users.user_id"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    azure_oid: Mapped[str | None] = mapped_column(String, nullable=True, default=None)

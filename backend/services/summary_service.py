@@ -27,6 +27,7 @@ async def generate_compact_summary(conversation_history: list[dict]) -> str:
     the background task appends the latest assistant reply before summarising.
     """
     from anthropic import AsyncAnthropic
+    from backend.services.settings_service import get_setting
 
     if not conversation_history:
         return "{}"
@@ -41,10 +42,12 @@ async def generate_compact_summary(conversation_history: list[dict]) -> str:
     if not transcript:
         return "{}"
 
-    anthropic_client = AsyncAnthropic(api_key=settings.anthropic_api_key)
+    api_key = await get_setting("anthropic_api_key")
+    model = await get_setting("claude_model")
+    anthropic_client = AsyncAnthropic(api_key=api_key)
     try:
         response = await anthropic_client.messages.create(
-            model=settings.claude_model,
+            model=model,
             max_tokens=1000,
             system=SUMMARY_PROMPT,
             messages=[

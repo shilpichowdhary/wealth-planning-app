@@ -12,6 +12,7 @@ import {
   Send,
   RotateCcw,
   X,
+  type LucideIcon,
 } from "lucide-react";
 
 interface Advisor {
@@ -401,7 +402,7 @@ function ModeTab({
 }: {
   active: boolean
   onClick: () => void
-  icon: React.ComponentType<{ size?: number }>
+  icon: LucideIcon
   label: string
 }) {
   return (

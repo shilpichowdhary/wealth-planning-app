@@ -10,19 +10,22 @@ class WebResult:
 
 class WebSearchService:
     def __init__(self):
-        try:
-            from tavily import TavilyClient
-            from backend.config import settings
-            self.client = TavilyClient(api_key=settings.tavily_api_key)
-            self._available = True
-        except Exception:
-            self._available = False
+        self._available = True
+
+    async def _get_client(self):
+        from tavily import TavilyClient
+        from backend.services.settings_service import get_setting
+        api_key = await get_setting("tavily_api_key")
+        if not api_key or api_key == "placeholder":
+            return None
+        return TavilyClient(api_key=api_key)
 
     async def search(self, query: str, max_results: int = 3) -> list[WebResult]:
-        if not self._available:
-            return []
         try:
-            response = self.client.search(
+            client = await self._get_client()
+            if not client:
+                return []
+            response = client.search(
                 query=f"wealth planning tax law {query}",
                 search_depth="advanced",
                 max_results=max_results,

@@ -9,6 +9,7 @@ import {
   Upload,
   ClipboardCheck,
   ShieldCheck,
+  Settings,
   LogOut,
   type LucideIcon,
 } from 'lucide-react'
@@ -47,6 +48,7 @@ const NAV_ITEMS: { section: string; items: NavItem[] }[] = [
     section: 'Administration',
     items: [
       { href: '/admin/advisors', label: 'Advisors', icon: ShieldCheck, rolesAllowed: ['admin'] },
+      { href: '/admin/settings', label: 'Settings', icon: Settings, rolesAllowed: ['admin'] },
     ],
   },
 ]

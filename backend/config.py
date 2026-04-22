@@ -13,6 +13,19 @@ class Settings(BaseSettings):
     tavily_max_calls_per_session: int = 5
     api_rate_limit_per_minute: int = 10
 
+    # Azure Entra ID SSO
+    azure_tenant_id: str = ""
+    azure_client_id: str = ""
+    azure_client_secret: str = ""
+
+    @property
+    def azure_jwks_uri(self) -> str:
+        return f"https://login.microsoftonline.com/{self.azure_tenant_id}/discovery/v2.0/keys"
+
+    @property
+    def azure_issuer(self) -> str:
+        return f"https://login.microsoftonline.com/{self.azure_tenant_id}/v2.0"
+
     class Config:
         env_file = ".env"
 

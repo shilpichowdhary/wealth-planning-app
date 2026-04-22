@@ -14,12 +14,14 @@ function decodeJwtPayload(token: string): Record<string, unknown> {
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
+    // Email + password login
     Credentials({
+      id: 'credentials',
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
       },
-      async authorize(credentials) {
+      async authorize(credentials): Promise<any> {
         const res = await fetch(`${API_URL}/auth/token`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -40,16 +42,40 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
       },
     }),
+    // SSO login — frontend uses MSAL to get Azure ID token,
+    // exchanges it for a backend JWT via /auth/sso, then passes it here.
+    Credentials({
+      id: 'sso-token',
+      credentials: {
+        token: { type: 'text' },
+      },
+      async authorize(credentials): Promise<any> {
+        const token = credentials?.token as string
+        if (!token) return null
+        const payload = decodeJwtPayload(token)
+        if (!payload.sub || !payload.exp) return null
+        return {
+          id: token,
+          accessToken: token,
+          email: (payload.email as string) ?? '',
+          role: (payload.role as string) ?? 'client',
+        }
+      },
+    }),
   ],
   callbacks: {
-    jwt({ token, user }) {
-      if (user?.accessToken) token.accessToken = user.accessToken
-      if (user?.role) token.role = user.role
+    jwt({ token, user, account }) {
+      if (account && user) {
+        token.accessToken = (user as any).accessToken
+        token.role = (user as any).role
+      }
       return token
     },
     session({ session, token }) {
-      if (token.accessToken) session.accessToken = token.accessToken as string
-      if (token.role) session.user = { ...session.user, role: token.role as string }
+      session.accessToken = token.accessToken as string
+      if (session.user) {
+        session.user.role = token.role as 'admin' | 'advisor' | 'client'
+      }
       return session
     },
   },

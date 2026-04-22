@@ -1,15 +1,53 @@
 'use client'
-import { useState } from 'react'
+import { Suspense, useState, useEffect, useRef } from 'react'
 import { signIn } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { PublicClientApplication, type Configuration } from '@azure/msal-browser'
 import { LCLogoMark, LCWordmark } from '@/components/brand/LCLogo'
 
+const AZURE_CLIENT_ID = process.env.NEXT_PUBLIC_AZURE_CLIENT_ID || ''
+const AZURE_TENANT_ID = process.env.NEXT_PUBLIC_AZURE_TENANT_ID || ''
+
+const msalConfig: Configuration = {
+  auth: {
+    clientId: AZURE_CLIENT_ID,
+    authority: `https://login.microsoftonline.com/${AZURE_TENANT_ID}`,
+    redirectUri: `${typeof window !== 'undefined' ? window.location.origin : ''}/users/microsoft/callback`,
+  },
+  cache: {
+    cacheLocation: 'sessionStorage',
+  },
+}
+
 export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
+  )
+}
+
+function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [ssoLoading, setSsoLoading] = useState(false)
+  const msalRef = useRef<PublicClientApplication | null>(null)
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  const ssoError = searchParams.get('error')
+
+  useEffect(() => {
+    if (AZURE_CLIENT_ID) {
+      const pca = new PublicClientApplication(msalConfig)
+      pca.initialize().then(() => {
+        pca.handleRedirectPromise().catch(() => {})
+        msalRef.current = pca
+      })
+    }
+  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -20,6 +58,21 @@ export default function LoginPage() {
     if (result?.error) setError('Invalid email or password')
     else router.push('/dashboard')
   }
+
+  async function handleSSO() {
+    if (!msalRef.current) {
+      setError('SSO is not configured.')
+      return
+    }
+    setSsoLoading(true)
+    setError('')
+    await msalRef.current.loginRedirect({
+      scopes: ['openid', 'profile', 'email', 'User.Read'],
+    })
+  }
+
+  const displayError = error || (ssoError === 'OAuthCallbackError' ? 'SSO authentication failed.' : '')
+  const ssoEnabled = Boolean(AZURE_CLIENT_ID)
 
   return (
     <div className="min-h-screen bg-lc-black flex items-center justify-center px-6 py-10">
@@ -54,7 +107,25 @@ export default function LoginPage() {
             <h2 className="font-display text-2xl text-lc-white">Sign in</h2>
             <p className="mt-1 text-sm text-ink-400">Use your Lighthouse Canton credentials.</p>
 
-            <form onSubmit={handleSubmit} className="mt-7 space-y-4">
+            {ssoEnabled && (
+              <>
+                <button
+                  type="button"
+                  onClick={handleSSO}
+                  disabled={ssoLoading}
+                  className="mt-6 w-full rounded-lg bg-lc-white text-lc-black py-3 text-sm font-bold tracking-wide hover:bg-ink-100 transition disabled:opacity-50"
+                >
+                  {ssoLoading ? 'Redirecting…' : 'Sign in with LC Account'}
+                </button>
+                <div className="flex items-center gap-3 my-5">
+                  <div className="flex-1 h-px bg-ink-800" />
+                  <span className="text-[10px] uppercase tracking-[0.18em] text-ink-500">or email & password</span>
+                  <div className="flex-1 h-px bg-ink-800" />
+                </div>
+              </>
+            )}
+
+            <form onSubmit={handleSubmit} className={`${ssoEnabled ? '' : 'mt-7'} space-y-4`}>
               <Field label="Email">
                 <input
                   type="email"
@@ -75,9 +146,9 @@ export default function LoginPage() {
                   required
                 />
               </Field>
-              {error && (
+              {displayError && (
                 <div className="rounded-lg border border-lc-red bg-lc-red/10 px-3 py-2 text-sm text-lc-red">
-                  {error}
+                  {displayError}
                 </div>
               )}
               <button
