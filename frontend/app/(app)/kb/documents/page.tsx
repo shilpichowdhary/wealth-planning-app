@@ -178,7 +178,16 @@ export default function KBDocumentsPage() {
               {filtered.map((doc) => (
                 <tr key={doc.source_file} className="hover:bg-ink-850 transition group">
                   <td className="px-4 py-3 font-medium text-ink-100 max-w-xs truncate" title={doc.source_file}>
-                    {doc.source_file}
+                    {doc.source_type === "kb_l2_wiki" ? (
+                      <Link
+                        href={`/kb/wiki/${doc.source_file.split("/").map(encodeURIComponent).join("/")}`}
+                        className="hover:text-lc-red transition"
+                      >
+                        {doc.source_file}
+                      </Link>
+                    ) : (
+                      doc.source_file
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     {doc.jurisdiction ? (

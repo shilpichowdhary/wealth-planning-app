@@ -2,11 +2,25 @@
 chroma_db/
 uploads/
 *.db
+*.db.bak_*
 __pycache__/
 .venv/
+venv/
 node_modules/
 frontend/.next/
 .pytest_cache/
 .coverage
 *.pyc
 .DS_Store
+
+# Claude Code local state
+.claude/
+
+# Runtime artifacts (created by run_server.ps1)
+backend.log
+backend.pid
+frontend.pid
+
+# Ingested KB source files (extracted from the export zip; reproducible)
+kb_files/
+kb_full_export_*.zip

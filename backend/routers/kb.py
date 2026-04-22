@@ -1,3 +1,4 @@
+from pathlib import Path
 from fastapi import APIRouter, UploadFile, File, Form, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -9,6 +10,12 @@ from backend.database import get_db
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/kb", tags=["knowledge-base"])
+
+# Root for kb_l2_wiki source files — the ingest script extracts under
+# kb_files/layer2_wiki_articles/, and source_file paths recorded in ChromaDB
+# are relative to kb_files/. Resolving requested paths against this root
+# (and rejecting anything that escapes it) prevents traversal attacks.
+WIKI_ROOT = (Path(__file__).resolve().parents[2] / "kb_files").resolve()
 
 def get_kb_manager():
     return KBManager()
@@ -76,6 +83,36 @@ async def delete_kb_document(
     if deleted == 0:
         raise HTTPException(status_code=404, detail="Document not found")
     return {"deleted_chunks": deleted, "source_file": source_file}
+
+
+@router.get("/wiki/{path:path}")
+async def read_wiki_file(
+    path: str,
+    current_user: User = Depends(get_current_user),
+):
+    """Return the raw markdown for an ingested Layer-2 wiki file.
+
+    `path` is the source_file recorded in ChromaDB (e.g.
+    "layer2_wiki_articles/wealth_planning/india/trust-taxation.md"), resolved
+    against kb_files/ on disk. Only files under that root are served.
+    """
+    if not is_staff(current_user):
+        raise HTTPException(status_code=403, detail="Advisors only")
+    if not path.endswith(".md"):
+        raise HTTPException(status_code=400, detail="Only markdown files are readable")
+
+    candidate = (WIKI_ROOT / path).resolve()
+    try:
+        candidate.relative_to(WIKI_ROOT)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Path escapes wiki root")
+    if not candidate.is_file():
+        raise HTTPException(status_code=404, detail="Wiki file not found")
+
+    return {
+        "path": path,
+        "content": candidate.read_text(encoding="utf-8", errors="replace"),
+    }
 
 
 @router.get("/search")

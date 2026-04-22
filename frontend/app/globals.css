@@ -98,6 +98,46 @@
     @apply bg-ink-850 text-ink-200 text-left px-3 py-2 font-semibold border-b border-ink-700;
   }
   .prose-chat td { @apply px-3 py-2 border-t border-ink-800; }
+
+  /* Long-form markdown rendering for the wiki viewer. */
+  .wiki-prose {
+    @apply text-[16px] leading-[1.75] text-ink-100;
+  }
+  .wiki-prose h1,
+  .wiki-prose h2,
+  .wiki-prose h3,
+  .wiki-prose h4 {
+    @apply font-display text-ink-100 mt-10 mb-3 tracking-tight;
+  }
+  .wiki-prose h1 { @apply text-[28px] leading-tight; }
+  .wiki-prose h2 { @apply text-[22px] leading-tight border-b border-ink-800 pb-2; }
+  .wiki-prose h3 { @apply text-[18px]; }
+  .wiki-prose h4 { @apply text-[16px] uppercase tracking-[0.1em] text-ink-300; }
+  .wiki-prose p { @apply my-4; }
+  .wiki-prose strong { @apply font-semibold text-lc-white; }
+  .wiki-prose em { @apply italic text-ink-200; }
+  .wiki-prose a { @apply text-lc-red hover:underline underline-offset-2; }
+  .wiki-prose ul { @apply list-disc pl-6 my-4 space-y-1.5; }
+  .wiki-prose ol { @apply list-decimal pl-6 my-4 space-y-1.5; }
+  .wiki-prose li > p { @apply my-1; }
+  .wiki-prose hr { @apply my-8 border-ink-800; }
+  .wiki-prose code {
+    @apply rounded bg-ink-850 px-1.5 py-0.5 text-[14px] text-lc-white font-mono;
+  }
+  .wiki-prose pre {
+    @apply rounded-lg bg-ink-900 p-4 my-4 overflow-x-auto border border-ink-800;
+  }
+  .wiki-prose pre code { @apply bg-transparent text-ink-100 p-0; }
+  .wiki-prose blockquote {
+    @apply border-l-2 border-lc-red pl-4 my-4 text-ink-200 italic;
+  }
+  .wiki-prose table {
+    @apply my-5 w-full text-[14px] border border-ink-800 rounded-lg overflow-hidden;
+  }
+  .wiki-prose th {
+    @apply bg-ink-850 text-ink-100 text-left px-3 py-2 font-semibold border-b border-ink-800;
+  }
+  .wiki-prose td { @apply px-3 py-2 border-t border-ink-800 align-top; }
 }
 
 @layer utilities {
