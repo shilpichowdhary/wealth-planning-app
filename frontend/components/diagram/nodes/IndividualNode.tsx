@@ -3,18 +3,23 @@ import { User } from 'lucide-react'
 
 export function IndividualNode({ data }: { data: any }) {
   return (
-    <div className="flex flex-col items-center gap-1" style={{ width: 100 }}>
-      <Handle type="target" position={Position.Top} className="opacity-0" />
-      <div className="w-12 h-12 rounded-full bg-amber-100 border-2 border-amber-400 flex items-center justify-center">
-        <User size={24} className="text-amber-700" />
+    <div className="flex flex-col items-center gap-1" style={{ width: 120 }}>
+      <Handle type="target" position={Position.Top} className="!opacity-0" />
+      <div className="h-14 w-14 rounded-full bg-lc-black border-2 border-lc-red flex items-center justify-center">
+        <User size={22} className="text-lc-red" />
       </div>
-      <div className="text-xs font-semibold text-slate-700 text-center leading-tight max-w-[90px]">
+      <div className="text-[11px] font-bold text-lc-white text-center leading-tight max-w-[110px] mt-1">
         {data.label}
       </div>
       {data.role && (
-        <div className="text-xs text-slate-500">{data.role}</div>
+        <div className="text-[10px] uppercase tracking-[0.14em] text-ink-300 font-bold">
+          {data.role}
+        </div>
       )}
-      <Handle type="source" position={Position.Bottom} className="opacity-0" />
+      {data.jurisdiction && (
+        <div className="text-[10px] text-lc-red font-bold">{data.jurisdiction}</div>
+      )}
+      <Handle type="source" position={Position.Bottom} className="!opacity-0" />
     </div>
   )
 }

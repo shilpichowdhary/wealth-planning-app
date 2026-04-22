@@ -5,3 +5,5 @@ from backend.models.conversation import Conversation, MessageRole
 from backend.models.recommendation import Recommendation, ConfidenceLevel
 from backend.models.kb_review_queue import KBReviewQueue, ReviewStatus
 from backend.models.document import Document, FileType
+from backend.models.case_diagram import CaseDiagram
+from backend.models.invite_token import InviteToken

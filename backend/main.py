@@ -11,9 +11,11 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Wealth Planning API", version="1.0.0", lifespan=lifespan)
 
+# Accept any localhost / 127.0.0.1 port during local development so the
+# frontend still works when Next falls back to 3001, 3002, etc.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

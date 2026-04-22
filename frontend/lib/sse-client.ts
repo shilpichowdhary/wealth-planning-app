@@ -1,3 +1,9 @@
+export interface KbInsufficientEvent {
+  query: string
+  kb_chunk_count: number
+  kb_preview: { source_file?: string; jurisdiction?: string; similarity?: number }[]
+}
+
 export function createSSEStream(
   url: string,
   token: string,
@@ -7,6 +13,7 @@ export function createSSEStream(
   onDone: () => void,
   onDiagram?: (diagram: { nodes: any[]; edges: any[] }) => void,
   onError?: (message: string) => void,
+  onKbInsufficient?: (evt: KbInsufficientEvent) => void,
 ) {
   const controller = new AbortController()
 
@@ -44,6 +51,13 @@ export function createSSEStream(
               if (data.type === 'token') onToken(data.text)
               else if (data.type === 'sources') onSources(data)
               else if (data.type === 'diagram_update' && onDiagram) onDiagram(data.diagram)
+              else if (data.type === 'kb_insufficient' && onKbInsufficient) {
+                onKbInsufficient({
+                  query: data.query,
+                  kb_chunk_count: data.kb_chunk_count,
+                  kb_preview: data.kb_preview ?? [],
+                })
+              }
               else if (data.type === 'error') { if (onError) onError(data.message); callDone() }
               else if (data.type === 'done') callDone()
             } catch {

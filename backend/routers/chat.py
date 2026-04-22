@@ -82,24 +82,70 @@ async def chat_stream(
             "existing_structures": profile_row.existing_structures,
         }
 
-    # Save user message
-    user_msg = Conversation(
-        case_id=payload.case_id,
-        role=MessageRole.USER,
-        content=payload.message,
+    # Save user message (only on first attempt — re-sends with allow_web or
+    # force_answer after a KB-insufficient prompt reuse the same conversation).
+    # We detect a re-send by checking whether the latest stored message already
+    # matches this payload; cheaper than a dedicated flag.
+    latest_user_q = await db.execute(
+        select(Conversation)
+        .where(
+            Conversation.case_id == payload.case_id,
+            Conversation.role == MessageRole.USER,
+        )
+        .order_by(Conversation.timestamp.desc())
+        .limit(1)
     )
-    db.add(user_msg)
-    await db.commit()
+    latest = latest_user_q.scalar_one_or_none()
+    is_resend = latest is not None and latest.content == payload.message and (
+        payload.allow_web or payload.force_answer
+    )
+    if not is_resend:
+        user_msg = Conversation(
+            case_id=payload.case_id,
+            role=MessageRole.USER,
+            content=payload.message,
+        )
+        db.add(user_msg)
+        await db.commit()
 
-    # Retrieve context
+    # Retrieve context (KB-first; Tavily only when caller permits)
     messages_for_llm = history + [{"role": "user", "content": payload.message}]
     retrieval = await rag.retrieve(
         query=payload.message,
         session_tavily_count=payload.session_tavily_count,
         case_id=payload.case_id,
+        allow_web=payload.allow_web,
+        force_answer=payload.force_answer,
     )
 
+    # Check if KB has any documents at all (separate from query match)
+    kb_has_documents = rag.kb.collection.count() > 0
+
     async def event_stream():
+        # If KB is thin and caller hasn't authorised web or answer-anyway,
+        # emit a permission-prompt event and end the stream — the client
+        # decides whether to resend with allow_web or force_answer.
+        if retrieval.needs_web_approval:
+            yield (
+                "data: "
+                + json.dumps({
+                    "type": "kb_insufficient",
+                    "query": payload.message,
+                    "kb_chunk_count": len(retrieval.chunks),
+                    "kb_preview": [
+                        {
+                            "source_file": c.get("source_file"),
+                            "jurisdiction": c.get("jurisdiction"),
+                            "similarity": round(c.get("similarity", 0), 3),
+                        }
+                        for c in retrieval.chunks[:3]
+                    ],
+                })
+                + "\n\n"
+            )
+            yield f"data: {json.dumps({'type': 'done'})}\n\n"
+            return
+
         # Emit sources metadata first (synchronous serialisation — before try block)
         web_source_data = []
         for w in retrieval.web_results:
@@ -124,6 +170,7 @@ async def chat_stream(
                 retrieval=retrieval,
                 profile=profile,
                 prior_summary=prior_summary,
+                kb_has_documents=kb_has_documents,
             ):
                 full_response_parts.append(token)
                 yield f"data: {json.dumps({'type': 'token', 'text': token})}\n\n"

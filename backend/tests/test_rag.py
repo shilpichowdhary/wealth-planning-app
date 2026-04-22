@@ -71,8 +71,35 @@ async def test_retrieval_returns_none_when_no_context(rag_service):
     assert not result.has_sufficient_context
 
 @pytest.mark.asyncio
-async def test_retrieval_falls_back_to_web(rag_service):
+async def test_retrieval_requires_permission_before_web(rag_service):
+    """KB-first policy: thin KB coverage must NOT silently call web; instead
+    retrieval flags needs_web_approval so the chat router can prompt the user."""
+    result = await rag_service.retrieve("obscure liechtenstein foundation rule xyz", session_tavily_count=0)
+    assert result.source == RetrievalSource.NONE
+    assert result.needs_web_approval is True
+
+
+@pytest.mark.asyncio
+async def test_retrieval_falls_back_to_web_when_allowed(rag_service):
     with patch("backend.services.rag_service.WebSearchService.search", new_callable=AsyncMock) as mock_search:
         mock_search.return_value = [{"text": "Web result", "url": "https://example.com", "title": "Test"}]
-        result = await rag_service.retrieve("obscure liechtenstein foundation rule xyz", session_tavily_count=0)
+        result = await rag_service.retrieve(
+            "obscure liechtenstein foundation rule xyz",
+            session_tavily_count=0,
+            allow_web=True,
+        )
         assert result.source == RetrievalSource.WEB
+
+
+@pytest.mark.asyncio
+async def test_retrieval_force_answer_returns_kb_without_web(rag_service):
+    """force_answer path: no KB match, no web call, caller gets what's there."""
+    with patch("backend.services.rag_service.WebSearchService.search", new_callable=AsyncMock) as mock_search:
+        result = await rag_service.retrieve(
+            "obscure liechtenstein foundation rule xyz",
+            session_tavily_count=0,
+            force_answer=True,
+        )
+        assert result.source in (RetrievalSource.KB, RetrievalSource.NONE)
+        assert result.needs_web_approval is False
+        mock_search.assert_not_called()

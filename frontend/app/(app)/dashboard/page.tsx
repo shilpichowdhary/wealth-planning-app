@@ -2,12 +2,14 @@
 import { useSession } from 'next-auth/react'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { ArrowUpRight, Plus, Sparkles } from 'lucide-react'
 
 interface CaseItem {
   case_id: string
   client_name: string
   last_updated: string
   status: string
+  jurisdiction?: string
 }
 
 export default function DashboardPage() {
@@ -36,47 +38,131 @@ export default function DashboardPage() {
         }
         return r.json()
       })
-      .then(data => { setCases(data); setFetchError(null) })
+      .then(data => {
+        setCases(data)
+        setFetchError(null)
+      })
       .catch(e => setFetchError(e.message))
       .finally(() => setLoading(false))
   }, [token, apiUrl, status])
 
+  const activeCount = cases.filter(c => c.status === 'active').length
+
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Cases</h1>
-        <Link href="/cases/new" className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition">
-          + New Case
+    <div className="max-w-[1280px] mx-auto w-full px-8 py-10">
+      {/* Header */}
+      <header className="mb-10 flex items-start justify-between gap-6 animate-fade-in-up">
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.2em] text-ink-400 font-medium">Workspace</p>
+          <h1 className="mt-2 font-display text-[44px] leading-[1.05] tracking-tight text-ink-100">
+            Cases
+            <em className="italic text-brass-400 font-normal">.</em>
+          </h1>
+          <p className="mt-2 text-ink-300 text-[15px]">
+            {cases.length > 0
+              ? `${cases.length} total — ${activeCount} active`
+              : 'Start by creating your first case.'}
+          </p>
+        </div>
+        <Link
+          href="/cases/new"
+          className="inline-flex items-center gap-2 rounded-lg bg-lc-red text-lc-white px-4 py-2.5 text-sm font-semibold hover:bg-lc-red/90 transition"
+        >
+          <Plus size={16} />
+          New case
         </Link>
-      </div>
+      </header>
 
       {fetchError && (
-        <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700 font-mono">
+        <div className="mb-6 rounded-lg border border-ember-500/40 bg-ember-500/10 px-4 py-3 text-sm text-ember-500 font-mono">
           {fetchError}
         </div>
       )}
 
+      {/* Grid */}
       {loading ? (
-        <p className="text-slate-400 text-sm">Loading cases...</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[...Array(3)].map((_, i) => (
+            <div
+              key={i}
+              className="h-36 rounded-2xl border border-ink-800 bg-ink-900/50 animate-pulse-soft"
+            />
+          ))}
+        </div>
+      ) : cases.length === 0 && !fetchError ? (
+        <EmptyState />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {cases.map((c) => (
-            <Link key={c.case_id} href={`/cases/${c.case_id}`}
-              className="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md transition block">
-              <h3 className="font-semibold text-slate-900">{c.client_name}</h3>
-              <p className="text-slate-500 text-xs mt-1">{new Date(c.last_updated).toLocaleDateString()}</p>
-              <span className={`inline-block mt-2 text-xs px-2 py-0.5 rounded-full ${
-                c.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'
-              }`}>
-                {c.status}
-              </span>
+          {cases.map((c, i) => (
+            <Link
+              key={c.case_id}
+              href={`/cases/${c.case_id}`}
+              style={{ animationDelay: `${i * 0.04}s` }}
+              className="group relative overflow-hidden rounded-2xl border border-ink-800 bg-ink-900 p-5 hover:border-lc-red/50 hover:bg-ink-850 hover:-translate-y-0.5 transition-all animate-fade-in-up"
+            >
+              <div className="relative">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="text-[10px] uppercase tracking-[0.16em] text-ink-400 font-medium mb-1">
+                      Client
+                    </div>
+                    <h3 className="font-display text-lg font-semibold tracking-tight text-ink-100">
+                      {c.client_name}
+                    </h3>
+                  </div>
+                  <ArrowUpRight
+                    size={16}
+                    className="text-ink-500 group-hover:text-brass-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition"
+                  />
+                </div>
+                <div className="mt-6 flex items-center gap-2">
+                  <span
+                    className={`inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-full border ${
+                      c.status === 'active'
+                        ? 'border-jade-500/40 bg-jade-500/10 text-jade-500'
+                        : 'border-ink-700 bg-ink-850 text-ink-400'
+                    }`}
+                  >
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${
+                        c.status === 'active' ? 'bg-jade-500 animate-pulse-soft' : 'bg-ink-500'
+                      }`}
+                    />
+                    {c.status}
+                  </span>
+                  <span className="text-[11px] text-ink-400">
+                    Updated {new Date(c.last_updated).toLocaleDateString(undefined, {
+                      day: 'numeric',
+                      month: 'short',
+                    })}
+                  </span>
+                </div>
+              </div>
             </Link>
           ))}
-          {!loading && cases.length === 0 && !fetchError && (
-            <p className="text-slate-500 text-sm col-span-3">No cases yet. Create your first case.</p>
-          )}
         </div>
       )}
+    </div>
+  )
+}
+
+function EmptyState() {
+  return (
+    <div className="rounded-2xl border border-dashed border-ink-700 bg-ink-900/30 p-12 text-center animate-fade-in-up">
+      <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-brass-500/10 border border-brass-500/30 mb-4">
+        <Sparkles size={20} className="text-brass-400" />
+      </div>
+      <h3 className="font-display text-xl font-semibold text-ink-100">No cases yet</h3>
+      <p className="mt-2 text-sm text-ink-300 max-w-sm mx-auto">
+        Create a case to start a private advisory dialogue. Each case remembers prior conversations and structures you build.
+      </p>
+      <Link
+        href="/cases/new"
+        className="mt-6 inline-flex items-center gap-2 rounded-lg bg-lc-red text-lc-white px-4 py-2.5 text-sm font-semibold hover:bg-lc-red/90 transition"
+      >
+        <Plus size={16} />
+        Create your first case
+      </Link>
     </div>
   )
 }
