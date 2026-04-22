@@ -1,22 +1,28 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
+import { Frank_Ruhl_Libre, Public_Sans } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
+// Headlines — Frank Ruhl Libre Light. Never Regular, never Bold per the
+// Lighthouse Canton brand guideline (bold looks wrong in this face).
+const display = Frank_Ruhl_Libre({
+  subsets: ["latin"],
+  weight: ["300"],
+  display: "swap",
+  variable: "--font-display",
 });
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
+
+// Body — Public Sans Light/Regular, with Bold available for sub-headlines + CTAs.
+const sans = Public_Sans({
+  subsets: ["latin"],
+  weight: ["300", "400", "600", "700"],
+  display: "swap",
+  variable: "--font-sans",
 });
 
 export const metadata: Metadata = {
-  title: "Wealth Planning Advisor",
-  description: "AI-powered wealth planning for UHNWI",
+  title: "Lighthouse Canton · Wealth Planning",
+  description: "Private wealth advisory console for Lighthouse Canton",
 };
 
 export default function RootLayout({
@@ -25,10 +31,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+    <html lang="en" className={`${display.variable} ${sans.variable}`}>
+      <body className="font-sans antialiased bg-lc-black text-lc-white selection:bg-lc-red selection:text-lc-white">
         <Providers>{children}</Providers>
       </body>
     </html>

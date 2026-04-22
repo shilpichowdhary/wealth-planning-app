@@ -1,6 +1,8 @@
 "use client";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
+import { Check, X, ExternalLink, ClipboardCheck } from "lucide-react";
+import { jurisdictionFlag, jurisdictionLabel } from "@/lib/jurisdictions";
 
 interface QueueEntry {
   entry_id: string;
@@ -21,11 +23,11 @@ export default function KBReviewPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState<string | null>(null);
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
   const token = session?.accessToken;
 
   useEffect(() => {
-    if (!token || session?.user?.role !== 'advisor' && session?.user?.role !== 'admin') {
+    if (!token || !["admin", "advisor"].includes(session?.user?.role ?? "")) {
       setLoading(false);
       return;
     }
@@ -37,7 +39,9 @@ export default function KBReviewPage() {
         return r.json();
       })
       .then((data) => setEntries(data))
-      .catch((err: unknown) => setError((err instanceof Error ? err.message : null) ?? 'Failed to load review queue.'))
+      .catch((err: unknown) =>
+        setError(err instanceof Error ? err.message : "Failed to load review queue."),
+      )
       .finally(() => setLoading(false));
   }, [token, apiUrl, session?.user?.role]);
 
@@ -56,65 +60,102 @@ export default function KBReviewPage() {
       if (res.ok) {
         setEntries((prev) => prev.filter((e) => e.entry_id !== entryId));
       } else {
-        setError('Action failed. Please try again.');
+        setError("Action failed. Please try again.");
       }
     } finally {
       setSubmitting(null);
     }
   };
 
-  if (loading) return <div className="p-8">Loading...</div>;
-  if (session?.user?.role !== "advisor" && session?.user?.role !== "admin")
-    return <div className="p-8 text-red-600">Access denied. Advisors only.</div>;
+  if (loading)
+    return <div className="max-w-4xl mx-auto px-8 py-10 text-ink-400 text-sm">Loading…</div>;
+  if (!["admin", "advisor"].includes(session?.user?.role ?? ""))
+    return (
+      <div className="max-w-4xl mx-auto px-8 py-16 text-ember-500">
+        Access denied. Advisors and admins only.
+      </div>
+    );
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold mb-6">KB Review Queue</h1>
+    <div className="max-w-4xl mx-auto w-full px-8 py-10">
+      <header className="mb-8 animate-fade-in-up">
+        <p className="text-[11px] uppercase tracking-[0.2em] text-ink-400 font-medium">Knowledge base</p>
+        <h1 className="mt-2 font-display text-[38px] leading-[1.05] tracking-tight text-ink-100">
+          Review queue
+          <em className="italic text-brass-400 font-normal">.</em>
+        </h1>
+        <p className="mt-2 text-ink-300 text-[15px]">
+          Web-sourced content awaiting approval into the knowledge base.
+        </p>
+      </header>
+
       {error && (
-        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">{error}</div>
+        <div className="mb-5 rounded-lg border border-ember-500/40 bg-ember-500/10 px-4 py-3 text-sm text-ember-500">
+          {error}
+        </div>
       )}
+
       {entries.length === 0 ? (
-        <p className="text-gray-500">No entries pending review.</p>
+        <div className="rounded-2xl border border-dashed border-ink-700 bg-ink-900/30 p-12 text-center animate-fade-in-up">
+          <ClipboardCheck size={28} className="mx-auto text-ink-500 mb-3" />
+          <p className="text-sm text-ink-300">No entries pending review.</p>
+        </div>
       ) : (
-        <div className="space-y-4">
-          {entries.map((entry) => (
-            <div key={entry.entry_id} className="border rounded-lg p-4">
-              <div className="flex justify-between items-start mb-2">
-                <span className="text-sm text-gray-500">
-                  {entry.jurisdiction} &middot; {entry.topic} &middot;{" "}
-                  {entry.date_retrieved
-                    ? new Date(entry.date_retrieved).toLocaleDateString()
-                    : "Unknown date"}
-                </span>
+        <div className="space-y-3">
+          {entries.map((entry, i) => (
+            <article
+              key={entry.entry_id}
+              style={{ animationDelay: `${i * 0.04}s` }}
+              className="rounded-2xl border border-ink-800 bg-ink-900 p-5 animate-fade-in-up"
+            >
+              <div className="flex flex-wrap items-center gap-2 mb-3">
+                {entry.jurisdiction && (
+                  <span className="chip">
+                    <span>{jurisdictionFlag(entry.jurisdiction)}</span>
+                    {jurisdictionLabel(entry.jurisdiction)}
+                  </span>
+                )}
+                {entry.topic && <span className="chip">{entry.topic}</span>}
+                {entry.date_retrieved && (
+                  <span className="text-[11px] text-ink-400">
+                    {new Date(entry.date_retrieved).toLocaleDateString()}
+                  </span>
+                )}
               </div>
+
               {entry.web_url && (
                 <a
                   href={entry.web_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-blue-600 hover:underline mb-1 block truncate"
+                  className="inline-flex items-center gap-1 text-[12px] text-brass-400 hover:text-brass-300 mb-3 truncate max-w-full"
                 >
-                  {entry.web_url}
+                  <ExternalLink size={12} />
+                  <span className="truncate">{entry.web_url}</span>
                 </a>
               )}
-              <p className="text-sm mb-3 line-clamp-3">{entry.content}</p>
+
+              <p className="text-[14px] text-ink-200 leading-relaxed line-clamp-4 mb-4">{entry.content}</p>
+
               <div className="flex gap-2">
                 <button
                   disabled={submitting !== null}
                   onClick={() => handleAction(entry.entry_id, "approve")}
-                  className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-jade-500/15 border border-jade-500/40 text-jade-500 text-sm font-medium hover:bg-jade-500/25 transition disabled:opacity-50"
                 >
+                  <Check size={14} />
                   Approve
                 </button>
                 <button
                   disabled={submitting !== null}
                   onClick={() => handleAction(entry.entry_id, "reject")}
-                  className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700 disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-ember-500/10 border border-ember-500/40 text-ember-500 text-sm font-medium hover:bg-ember-500/20 transition disabled:opacity-50"
                 >
+                  <X size={14} />
                   Reject
                 </button>
               </div>
-            </div>
+            </article>
           ))}
         </div>
       )}

@@ -1,11 +1,12 @@
 import json
 from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from backend.database import get_db
 from backend.models.case import Case
+from backend.models.case_diagram import CaseDiagram
 from backend.models.client_profile import ClientProfile
 from backend.models.conversation import Conversation
 from backend.models.user import User, UserRole
@@ -160,3 +161,67 @@ async def get_summary(
     """Return the compact AI-generated summary of past sessions."""
     case = await _get_case_with_access(case_id, current_user, db)
     return {"summary": case.compact_summary or ""}
+
+
+class DiagramPayload(BaseModel):
+    nodes: list[dict[str, Any]] = Field(default_factory=list)
+    edges: list[dict[str, Any]] = Field(default_factory=list)
+
+
+@router.get("/{case_id}/diagram")
+async def get_case_diagram(
+    case_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Return the advisor-saved structure diagram for this case, if any."""
+    await _get_case_with_access(case_id, current_user, db)
+    result = await db.execute(select(CaseDiagram).where(CaseDiagram.case_id == case_id))
+    diagram = result.scalar_one_or_none()
+    if not diagram:
+        return {"nodes": [], "edges": [], "updated_at": None}
+    return {
+        "nodes": json.loads(diagram.nodes_json or "[]"),
+        "edges": json.loads(diagram.edges_json or "[]"),
+        "updated_at": diagram.updated_at.isoformat() if diagram.updated_at else None,
+    }
+
+
+@router.put("/{case_id}/diagram")
+async def save_case_diagram(
+    case_id: str,
+    payload: DiagramPayload,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Persist the advisor's edited structure diagram. Idempotent — replaces any
+    existing diagram for the case. Returns the updated timestamp."""
+    await _get_case_with_access(case_id, current_user, db)
+    if not is_staff(current_user):
+        raise HTTPException(status_code=403, detail="Advisors only")
+
+    result = await db.execute(select(CaseDiagram).where(CaseDiagram.case_id == case_id))
+    diagram = result.scalar_one_or_none()
+    nodes_json = json.dumps(payload.nodes)
+    edges_json = json.dumps(payload.edges)
+
+    if diagram:
+        diagram.nodes_json = nodes_json
+        diagram.edges_json = edges_json
+        diagram.updated_by = current_user.user_id
+    else:
+        diagram = CaseDiagram(
+            case_id=case_id,
+            nodes_json=nodes_json,
+            edges_json=edges_json,
+            updated_by=current_user.user_id,
+        )
+        db.add(diagram)
+
+    await db.commit()
+    await db.refresh(diagram)
+    return {
+        "nodes": payload.nodes,
+        "edges": payload.edges,
+        "updated_at": diagram.updated_at.isoformat() if diagram.updated_at else None,
+    }
