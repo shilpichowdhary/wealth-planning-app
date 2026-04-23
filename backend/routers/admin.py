@@ -56,6 +56,104 @@ async def update_setting(
     return {"status": "saved", "key": payload.key}
 
 
+@router.post("/settings/test-anthropic")
+async def test_anthropic_connection(
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_admin),
+):
+    """Ping Anthropic with the currently-saved API key + model.
+
+    Returns a structured result so the admin can distinguish auth / network /
+    model-name errors from each other without reading server logs.
+    """
+    from backend.services.settings_service import get_setting
+
+    api_key = await get_setting("anthropic_api_key", db)
+    model = await get_setting("claude_model", db)
+
+    if not api_key or api_key == "placeholder":
+        return {
+            "ok": False,
+            "stage": "config",
+            "detail": "No Anthropic API key saved. Set one in the field above and try again.",
+        }
+    if not model:
+        return {
+            "ok": False,
+            "stage": "config",
+            "detail": "No Claude model saved. Enter 'claude-sonnet-4-6' (or another model id) and save.",
+        }
+
+    try:
+        from anthropic import (
+            AsyncAnthropic,
+            AuthenticationError,
+            PermissionDeniedError,
+            NotFoundError,
+            APIConnectionError,
+            RateLimitError,
+        )
+    except Exception as e:  # pragma: no cover — SDK missing shouldn't happen
+        return {"ok": False, "stage": "sdk", "detail": f"Anthropic SDK unavailable: {e}"}
+
+    client = AsyncAnthropic(api_key=api_key)
+    try:
+        resp = await client.messages.create(
+            model=model,
+            max_tokens=5,
+            messages=[{"role": "user", "content": "ping"}],
+        )
+        return {
+            "ok": True,
+            "model": model,
+            "input_tokens": getattr(resp.usage, "input_tokens", None),
+            "stop_reason": resp.stop_reason,
+            "detail": "Anthropic API reachable with the saved key and model.",
+        }
+    except AuthenticationError as e:
+        return {
+            "ok": False,
+            "stage": "auth",
+            "detail": "Anthropic rejected the API key (401). Rotate it on console.anthropic.com and paste the new key.",
+            "raw": str(e)[:200],
+        }
+    except PermissionDeniedError as e:
+        return {
+            "ok": False,
+            "stage": "permission",
+            "detail": "The key is valid but doesn't have permission for this model (403).",
+            "raw": str(e)[:200],
+        }
+    except NotFoundError as e:
+        return {
+            "ok": False,
+            "stage": "model",
+            "detail": f"Model '{model}' not found. Check the model id — e.g. claude-sonnet-4-6.",
+            "raw": str(e)[:200],
+        }
+    except APIConnectionError as e:
+        return {
+            "ok": False,
+            "stage": "network",
+            "detail": "Could not reach api.anthropic.com from this server. Check the VM's outbound HTTPS / firewall / proxy.",
+            "raw": str(e)[:200],
+        }
+    except RateLimitError as e:
+        return {
+            "ok": False,
+            "stage": "rate-limit",
+            "detail": "Rate limited by Anthropic (429) — your key is valid but over quota.",
+            "raw": str(e)[:200],
+        }
+    except Exception as e:
+        return {
+            "ok": False,
+            "stage": "unknown",
+            "detail": f"Unexpected error: {type(e).__name__}.",
+            "raw": str(e)[:200],
+        }
+
+
 # ── Invite helpers ─────────────────────────────────────────────
 
 
