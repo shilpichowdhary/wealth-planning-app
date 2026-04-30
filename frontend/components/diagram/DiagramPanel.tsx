@@ -15,7 +15,7 @@ export function DiagramPanel({ existingDiagram, recommendedDiagram, onSave, save
 
   if (hasExisting && hasRecommended) {
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-2 h-full gap-px bg-ink-800">
+      <div className="grid grid-cols-1 lg:grid-cols-2 h-full gap-px bg-ink-100">
         <StructureDiagram
           diagramData={existingDiagram}
           title="Existing structure"

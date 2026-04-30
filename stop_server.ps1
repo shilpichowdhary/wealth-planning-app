@@ -26,11 +26,12 @@ function Stop-ServiceByPid {
     $listening = netstat -ano | Select-String ":${Port}\s.*LISTENING" | ForEach-Object {
         ($_ -split '\s+')[-1]
     } | Sort-Object -Unique
-    foreach ($pid in $listening) {
-        if ($pid -and $pid -ne '0') {
-            Stop-Process -Id ([int]$pid) -Force -ErrorAction SilentlyContinue
+    # NB: cannot use $pid — it's a PowerShell read-only built-in (current PID).
+    foreach ($targetPid in $listening) {
+        if ($targetPid -and $targetPid -ne '0') {
+            Stop-Process -Id ([int]$targetPid) -Force -ErrorAction SilentlyContinue
             if (-not $stopped) {
-                Write-Host "$Label stopped (port $Port, PID: $pid)" -ForegroundColor Green
+                Write-Host "$Label stopped (port $Port, PID: $targetPid)" -ForegroundColor Green
                 $stopped = $true
             }
         }

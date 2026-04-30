@@ -10,7 +10,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const name = (session.user as any)?.name ?? email.split('@')[0]
 
   return (
-    <div className="min-h-screen bg-ink-950 text-ink-100 flex">
+    <div className="min-h-screen bg-smoke text-ink-900 flex">
       <Sidebar role={role} name={name} email={email} />
       <main className="flex-1 min-w-0 flex flex-col">
         {children}

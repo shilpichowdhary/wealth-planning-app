@@ -1,0 +1,1564 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Lighthouse Canton — Corporate Deck · Q1 2026</title>
+
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="ppt-template.css" />
+
+  <script src="deck-stage.js" defer></script>
+
+  <style>
+    :root { --slide-pad-x: 88px; --slide-pad-y: 76px; }
+
+    /* Download button that overlays deck */
+    .download-ribbon {
+      position: fixed; top: 14px; right: 14px; z-index: 100;
+      display: inline-flex; align-items: center; gap: 8px;
+      font-family: var(--font-sans); font-size: 12px; font-weight: 600;
+      letter-spacing: 0.04em; text-transform: uppercase;
+      padding: 10px 16px; border-radius: 999px;
+      background: var(--lc-red); color: #fff; text-decoration: none;
+      box-shadow: 0 6px 20px rgba(216,33,44,0.28);
+      transition: transform 0.12s ease;
+    }
+    .download-ribbon:hover { transform: translateY(-1px); }
+    @media print { .download-ribbon { display: none; } }
+
+    .canon-note {
+      position: fixed; bottom: 14px; left: 14px; z-index: 100;
+      max-width: 360px;
+      padding: 10px 14px; background: rgba(255,255,255,0.95);
+      border-left: 3px solid var(--lc-red);
+      font-family: var(--font-sans); font-size: 11px; line-height: 1.45;
+      color: var(--lc-black); box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+    }
+    .canon-note b { color: var(--lc-red); }
+    @media print { .canon-note { display: none; } }
+
+    /* Content-specific helpers */
+    .ls-hero {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse at 70% 60%, rgba(216,33,44,0.12), transparent 50%),
+        linear-gradient(180deg, #fff 0%, #faf8f5 100%);
+    }
+    .sg-map-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--lc-red);
+      box-shadow: 0 0 0 6px rgba(216,33,44,0.15);
+      display: inline-block; margin-right: 10px; vertical-align: middle;
+    }
+
+    /* Timeline (Journey) */
+    .tl-row { display:grid; grid-template-columns: 88px 1fr; gap:24px; align-items:start; padding:16px 0; border-top:1px solid rgba(0,0,0,0.08); }
+    .tl-row:first-child { border-top:0; }
+    .tl-year { font-family:var(--font-serif); font-weight:300; font-size:38px; line-height:1; color:var(--lc-red); }
+    .tl-body { font-family:var(--font-sans); font-size:15px; line-height:1.55; color:var(--lc-black); }
+
+    /* Awards list */
+    .awards-col { font-family:var(--font-sans); font-size:15px; line-height:1.55; }
+    .awards-col .award { padding:14px 0; border-top:1px solid rgba(0,0,0,0.08); }
+    .awards-col .award:first-child { border-top:0; }
+    .awards-col .award b { font-family:var(--font-serif); font-weight:400; color:var(--lc-red); display:block; font-size:17px; margin-bottom:4px; }
+
+    /* Capability card */
+    .cap-card { padding:28px 28px 28px 32px; border-left:3px solid var(--lc-red); background:#fafaf9; height:100%; display:flex; flex-direction:column; }
+    .cap-card h3 { font-family:var(--font-serif); font-weight:400; font-size:28px; margin:0 0 14px; line-height:1.1; }
+    .cap-card .kicker { font-family:var(--font-serif); font-style:italic; font-size:15px; color:var(--lc-red); margin-bottom:8px; }
+    .cap-card ul { margin:0; padding-left:18px; font-family:var(--font-sans); font-size:14px; line-height:1.55; color:var(--lc-black); }
+    .cap-card ul li { margin-bottom:6px; }
+
+    /* Product grid cells */
+    .prod-cell { padding:22px 20px; background:#fafaf9; border-top:2px solid var(--lc-red); }
+    .prod-cell .kicker { font-family:var(--font-sans); font-size:10px; font-weight:600; letter-spacing:0.2em; text-transform:uppercase; color:var(--lc-black-80); margin-bottom:8px; }
+    .prod-cell .name { font-family:var(--font-serif); font-weight:400; font-size:22px; line-height:1.15; color:var(--lc-black); }
+
+    /* Impact cell */
+    .impact-cell { padding:24px 28px 24px 32px; border-left:3px solid var(--lc-red); }
+    .impact-cell .cat { font-family:var(--font-serif); font-weight:400; font-style:italic; font-size:26px; color:var(--lc-red); margin-bottom:6px; line-height:1.1; }
+    .impact-cell .tag { font-family:var(--font-sans); font-size:10px; font-weight:700; letter-spacing:0.15em; text-transform:uppercase; color:var(--lc-black); margin-bottom:14px; }
+    .impact-cell p { font-family:var(--font-sans); font-size:14px; line-height:1.55; margin:0; color:var(--lc-black); }
+
+    /* 10 rules grid */
+    .rules-grid { display:grid; grid-template-columns: repeat(2, 1fr); gap:18px 48px; }
+    .rule { display:grid; grid-template-columns: 48px 1fr; gap:16px; }
+    .rule .n { font-family:var(--font-serif); font-weight:300; font-size:36px; color:var(--lc-red); line-height:0.9; }
+    .rule .body { font-family:var(--font-sans); font-size:13px; line-height:1.5; color:var(--lc-black); }
+    .rule .body b { font-family:var(--font-serif); font-weight:400; font-size:15px; color:var(--lc-black); display:block; margin-bottom:2px; }
+
+    /* Comparison table */
+    .cmp { width:100%; border-collapse:collapse; font-family:var(--font-sans); font-size:14px; }
+    .cmp th, .cmp td { padding:14px 20px; text-align:left; vertical-align:top; border-bottom:1px solid rgba(0,0,0,0.08); }
+    .cmp thead th { font-family:var(--font-serif); font-weight:400; font-size:18px; color:var(--lc-black); border-bottom:2px solid var(--lc-red); }
+    .cmp thead th:nth-child(2) { color:var(--lc-red); }
+    .cmp th.row-label { font-family:var(--font-sans); font-weight:600; font-size:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--lc-black-80); width:22%; }
+    .cmp td b { font-family:var(--font-serif); font-weight:400; color:var(--lc-black); }
+
+    /* Top-down framework pillars */
+    .pillar { padding:22px 20px 24px; background:#fafaf9; border-top:3px solid var(--lc-red); height:100%; }
+    .pillar h4 { font-family:var(--font-serif); font-weight:400; font-size:20px; margin:0 0 12px; color:var(--lc-black); }
+    .pillar ul { margin:0; padding-left:0; list-style:none; font-family:var(--font-sans); font-size:13px; line-height:1.75; color:var(--lc-black); }
+
+    /* Serif numeral bullets for process */
+    .step { position:relative; padding-left:72px; }
+    .step .big-n { position:absolute; left:0; top:-8px; font-family:var(--font-serif); font-weight:300; font-size:64px; line-height:1; color:var(--lc-red); }
+    .step h4 { font-family:var(--font-serif); font-weight:400; font-size:22px; margin:0 0 10px; line-height:1.15; }
+    .step ul { margin:0; padding-left:18px; font-family:var(--font-sans); font-size:13px; line-height:1.6; }
+
+    /* Vantage features */
+    .vfeat { padding:28px 24px; background:#fafaf9; border-top:3px solid var(--lc-red); text-align:center; display:flex; flex-direction:column; justify-content:center; min-height:160px; }
+    .vfeat .t { font-family:var(--font-serif); font-weight:400; font-size:20px; line-height:1.2; color:var(--lc-black); }
+  </style>
+</head>
+
+<body>
+  <a class="download-ribbon" href="templates/LC Corporate Deck Q1 2026.pptx" download>
+    ⬇ Source .pptx
+  </a>
+
+  <div class="canon-note">
+    <b>Canonical content.</b> This deck is the source-of-truth for all factual statements about Lighthouse Canton. Copy must not be altered without stakeholder approval.
+  </div>
+
+  <script type="application/json" id="speaker-notes">
+  []
+  </script>
+
+  <deck-stage aspect="16:9" style="--bg:#000;">
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         01 · COVER
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="01 Cover" style="background:#fff;">
+      <div class="ls-hero"></div>
+      <div class="slide-pad" style="position:relative; display:flex; flex-direction:column; justify-content:space-between;">
+        <div>
+          <div class="t-sans" style="font-size:13px; letter-spacing:0.2em; text-transform:uppercase; color:var(--lc-black-80);">
+            lighthouse-canton.com
+          </div>
+        </div>
+
+        <div>
+          <div style="width:80px; height:3px; background:var(--lc-red); margin-bottom:40px;"></div>
+          <h1 class="t-display" style="font-size:132px; line-height:1; margin:0;">
+            Lighthouse<br/>
+            <span style="color:var(--lc-red);">Canton</span>
+          </h1>
+          <div class="t-serif-label" style="font-style:italic; font-size:40px; margin-top:32px; color:var(--lc-black-80);">
+            Corporate Deck · Q1 2026
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+          <div class="t-sans" style="font-size:13px; color:var(--lc-black-80); max-width:440px; line-height:1.5;">
+            A global investment institution regulated by MAS, DFSA, SEBI and FCA — integrated wealth and asset management across Singapore, Dubai, India and the United Kingdom.
+          </div>
+          <div class="t-serif-label" style="font-style:italic; font-size:18px; color:var(--lc-black);">
+            Where Insight Meets Opportunity
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         02 · TABLE OF CONTENTS
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="02 Table of Contents">
+      <div class="chapter-tab"><span class="num">—</span>  ·  Contents</div>
+      <div class="slide-pad" style="top:140px;">
+        <h2 class="t-display" style="font-size:72px; margin:0 0 48px;">Table of Contents</h2>
+
+        <div class="toc-row">
+          <div>
+            <div class="chapter">About Lighthouse Canton</div>
+            <div class="subs">Overview · Journey &amp; Milestones · Awards &amp; Recognition · Mission &amp; Vision</div>
+          </div>
+          <div class="pages">04 – 08</div>
+        </div>
+        <div class="toc-row">
+          <div>
+            <div class="chapter">Our Business Overview</div>
+            <div class="subs">Wealth, Business &amp; Family Solutions · Asset Management · Advisory and Capital Solutions · Recent Notable Engagements · Bespoke Solutions</div>
+          </div>
+          <div class="pages">09 – 13</div>
+        </div>
+        <div class="toc-row">
+          <div>
+            <div class="chapter">Asset Management</div>
+            <div class="subs">Private and Public Markets · Institutional Investors and Partners · Our Impact</div>
+          </div>
+          <div class="pages">14 – 18</div>
+        </div>
+        <div class="toc-row">
+          <div>
+            <div class="chapter">Wealth, Business &amp; Family Solutions</div>
+            <div class="subs">Holistic Solutions · Family Office Services &amp; Solutions · Integrated Wealth Management</div>
+          </div>
+          <div class="pages">19 – 23</div>
+        </div>
+        <div class="toc-row">
+          <div>
+            <div class="chapter">Investment Capabilities</div>
+            <div class="subs">Business Principles · Investment Philosophy · Top-Down Allocation Framework · Risk Management</div>
+          </div>
+          <div class="pages">24 – 29</div>
+        </div>
+        <div class="toc-row">
+          <div>
+            <div class="chapter">LC Vantage — A Full-Stack Private Banking Offering</div>
+            <div class="subs">Digital Full-Stack Private Banking Solution · LC Vantage Features</div>
+          </div>
+          <div class="pages">30 – 33</div>
+        </div>
+      </div>
+      <div class="footer-pageno">02</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         03 · DISCLAIMER
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="03 Disclaimer">
+      <div class="chapter-tab"><span style="font-family:var(--font-serif); font-weight:400; font-size:18px; color:var(--lc-red);">Disclaimer</span></div>
+      <div class="slide-pad" style="top:130px;">
+        <h2 class="t-display" style="font-size:56px; margin:0 0 28px;">Disclaimer</h2>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:48px;">
+          <div class="t-sans" style="font-size:12px; line-height:1.6; color:var(--lc-black);">
+            <p style="margin:0 0 12px;">The contents of this document are confidential and are meant for the intended recipient only. If you are not the intended recipient, please delete all copies of this document and notify the sender immediately. This document, provided as a general commentary, is for informational purposes only and is not to be construed as an offer to sell or solicit an offer to buy any financial instruments in any jurisdiction. This does not constitute any form of regulated financial advice, and your independent financial advisor should be consulted prior to taking any investment decision(s).</p>
+            <p style="margin:0 0 12px;">This document is based on information from sources which are reliable but has not been independently verified by Lighthouse Canton Pte. Ltd. (&ldquo;LCPL&rdquo;) and its affiliate, Lighthouse Canton Capital (DIFC) Pte. Ltd) (&ldquo;LCC&rdquo;) (collectively, &ldquo;LC&rdquo;). The Net Asset Value (&ldquo;NAV&rdquo;) of the funds will be computed independently by a third-party fund administrator on a regular basis in accordance with the applicable NAV calculation policy and relevant pricing model. Deviation to the policy, if any, will be disclosed by the respective fund administrator and/or the Manager. LC has taken the reasonable steps to verify the contents of this document and accepts no liability for any loss arising from the use of any information contained herein. Please also note that past performances are not indicative of future performance.</p>
+            <p style="margin:0 0 12px;">Information contained herein are those of the author(s) and does not represent the views held by other parties. LC is also under no obligation to update you on any changes made to this document.</p>
+          </div>
+          <div class="t-sans" style="font-size:12px; line-height:1.6; color:var(--lc-black);">
+            <p style="margin:0 0 12px;">This document is prepared by LCPL and LCC, which are regulated by Monetary Authority of Singapore (&ldquo;MAS&rdquo;) and Dubai Financial Services Authority (&ldquo;DFSA&rdquo;) respectively. MAS and DFSA have no responsibility for reviewing, verifying and approving the contents of this document and/or other associated documents. The contents of this document may not be reproduced or referenced, either in part or in full, without prior written permission from LC.</p>
+            <p style="margin:0 0 12px;">This document is only intended for Accredited Investors and/or Professional Clients, as defined by MAS and DFSA.</p>
+            <p style="margin:20px 0 0; padding-top:16px; border-top:2px solid var(--lc-red); font-family:var(--font-serif); font-weight:400; font-size:13px; color:var(--lc-black-80);">
+              Regulated by MAS (Singapore), DFSA (Dubai), SEBI (India) and FCA (United Kingdom).
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="footer-pageno">03</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         04 · A GLOBAL INVESTMENT INSTITUTION (capabilities split)
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="04 A Global Investment Institution">
+      <div class="chapter-tab"><span class="num">01</span>  ·  About Lighthouse Canton</div>
+      <div class="slide-pad" style="top:120px;">
+        <div class="t-serif-label" style="font-style:italic; font-size:20px; color:var(--lc-red); margin-bottom:10px;">About Lighthouse Canton</div>
+        <h2 class="t-display" style="font-size:60px; margin:0 0 40px; line-height:1.05;">
+          A Global Investment Institution
+        </h2>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:32px; margin-bottom:28px;">
+          <div class="cap-card">
+            <div class="kicker">Asset Management</div>
+            <h3>Differentiated strategies in public &amp; private markets</h3>
+            <ul>
+              <li>Private market funds</li>
+              <li>Public market funds</li>
+            </ul>
+          </div>
+          <div class="cap-card">
+            <div class="kicker">Wealth Management</div>
+            <h3>Global wealth, business and family solutions</h3>
+            <ul>
+              <li>Full-stack private banking offering</li>
+              <li>Capital advisory for private clients</li>
+              <li>Corporate finance and M&amp;A advisory</li>
+              <li>Structured financial solutions</li>
+              <li>Strategic capital solutions</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="t-sans" style="font-size:11px; line-height:1.6; color:var(--lc-black-80);">
+          Lighthouse Canton Pte Ltd is a holder of Capital Markets Services (CMS) license for Fund Management and Dealing in Capital Market Products issued by the Monetary Authority of Singapore. Lighthouse Canton Capital (DIFC) Pte Ltd is the holder of Category 3C license issued by Dubai Financial Services Authority (DFSA). LC Capital India Pte Ltd is holder of license to conduct Portfolio Management Services (PMS) issued by Securities and Exchange Board of India (SEBI). Lighthouse Canton UK Limited is regulated and authorized by the Financial Conduct Authority (FCA) to provide investment advice, facilitate deals and arrange investment transactions.
+        </div>
+      </div>
+      <div class="footer-pageno">04</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         05 · ABOUT — offices + AUM headline
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="05 About / Offices">
+      <div class="chapter-tab"><span class="num">01</span>  ·  About Lighthouse Canton</div>
+      <div class="slide-pad" style="top:120px;">
+        <div class="t-serif-label" style="font-style:italic; font-size:20px; color:var(--lc-red); margin-bottom:10px;">About Lighthouse Canton</div>
+        <h2 class="t-display" style="font-size:56px; margin:0 0 8px; line-height:1.05;">
+          Integrated Wealth and Asset Management
+        </h2>
+        <div class="t-serif-label" style="font-style:italic; font-size:24px; color:var(--lc-black-80); margin-bottom:36px;">
+          Creating value through innovative investment solutions.
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1.4fr 1fr; gap:56px; align-items:start;">
+          <!-- Offices -->
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:24px 32px;">
+            <div>
+              <div class="t-serif-label" style="font-size:24px; color:var(--lc-red); margin-bottom:6px;"><span class="sg-map-dot"></span>Singapore</div>
+              <div class="t-sans" style="font-size:14px; line-height:1.55; color:var(--lc-black);">
+                Our headquarters serves regional clients and provides holistic wealth &amp; asset management solutions.
+              </div>
+            </div>
+            <div>
+              <div class="t-serif-label" style="font-size:24px; color:var(--lc-red); margin-bottom:6px;"><span class="sg-map-dot"></span>Dubai</div>
+              <div class="t-sans" style="font-size:14px; line-height:1.55; color:var(--lc-black);">
+                Our Dubai office serves Middle Eastern and African wealth management clients.
+              </div>
+            </div>
+            <div>
+              <div class="t-serif-label" style="font-size:24px; color:var(--lc-red); margin-bottom:6px;"><span class="sg-map-dot"></span>India</div>
+              <div class="t-sans" style="font-size:14px; line-height:1.55; color:var(--lc-black);">
+                Offices in 6 major cities serve our Indian wealth and asset management clients.
+              </div>
+            </div>
+            <div>
+              <div class="t-serif-label" style="font-size:24px; color:var(--lc-red); margin-bottom:6px;"><span class="sg-map-dot"></span>London</div>
+              <div class="t-sans" style="font-size:14px; line-height:1.55; color:var(--lc-black);">
+                Our office in London provides global investment banking capabilities for clients.
+              </div>
+            </div>
+          </div>
+
+          <!-- AUM Panel -->
+          <div style="padding:36px 32px; background:#000; color:#fff; border-top:4px solid var(--lc-red);">
+            <div class="t-sans" style="font-size:11px; letter-spacing:0.2em; text-transform:uppercase; color:rgba(255,255,255,0.55); margin-bottom:20px;">Counting our scale</div>
+            <div class="t-display" style="font-size:96px; line-height:0.9; margin:0 0 6px;">
+              $5bn<span style="color:var(--lc-red); font-size:44px; vertical-align:super; line-height:1;">+</span>
+            </div>
+            <div class="t-sans" style="font-size:12px; color:rgba(255,255,255,0.65); letter-spacing:0.1em; text-transform:uppercase; margin-bottom:18px;">USD</div>
+            <div class="t-sans" style="font-size:14px; line-height:1.55; color:rgba(255,255,255,0.85);">
+              Assets under Management and Advisory (AUM) across our group, as of 31<sup>st</sup> Oct 2025.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="footer-pageno">05</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         06 · OUR JOURNEY (full timeline 2014 → 2026)
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="06 Our Journey">
+      <div class="chapter-tab"><span class="num">01</span>  ·  About Lighthouse Canton</div>
+      <div class="slide-pad" style="top:112px; bottom:60px;">
+        <div class="t-serif-label" style="font-style:italic; font-size:20px; color:var(--lc-red); margin-bottom:8px;">Milestones</div>
+        <h2 class="t-display" style="font-size:56px; margin:0 0 28px; line-height:1.05;">Our Journey</h2>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:0 40px;">
+          <!-- Col 1 -->
+          <div>
+            <div class="tl-row">
+              <div class="tl-year">2014</div>
+              <div class="tl-body">Lighthouse Canton Pte Ltd founded in Singapore.</div>
+            </div>
+            <div class="tl-row">
+              <div class="tl-year">2015</div>
+              <div class="tl-body">LC Core Fund launched and life sciences portfolio acquired.</div>
+            </div>
+            <div class="tl-row">
+              <div class="tl-year">2016</div>
+              <div class="tl-body">AUM surpassed USD 100M, and Sage One India Growth Fund was launched.</div>
+            </div>
+            <div class="tl-row">
+              <div class="tl-year">2018</div>
+              <div class="tl-body">India business launched, AUM exceeded USD 1Bn, and Supply Chain Credit Fund launched.</div>
+            </div>
+          </div>
+          <!-- Col 2 -->
+          <div>
+            <div class="tl-row">
+              <div class="tl-year">2020</div>
+              <div class="tl-body">Dubai and Bengaluru offices opened, and LC Trade Finance launched.</div>
+            </div>
+            <div class="tl-row">
+              <div class="tl-year">2021</div>
+              <div class="tl-body">Partnered with La Caisse for Life Sciences Real Estate in India, and opened Mumbai &amp; Hyderabad offices.</div>
+            </div>
+            <div class="tl-row">
+              <div class="tl-year">2022</div>
+              <div class="tl-body">Team surpassed 100 employees, LC Nueva VC Fund closed, and AUM reached USD 3B.</div>
+            </div>
+            <div class="tl-row">
+              <div class="tl-year">2023</div>
+              <div class="tl-body">Venture Debt Strategy announced, LC Vantage launched, and partnered with Alta, Southeast Asia's largest marketplace.</div>
+            </div>
+          </div>
+          <!-- Col 3 -->
+          <div>
+            <div class="tl-row">
+              <div class="tl-year">2024</div>
+              <div class="tl-body">Team surpassed 190 employees, LC Nueva Momentum Fund and LC GenInnov Global Innovation Fund launched. Partnered with NH Absolute Return Partners to co-invest in private debt. AUM reached USD 4B.</div>
+            </div>
+            <div class="tl-row">
+              <div class="tl-year">2025</div>
+              <div class="tl-body">Surpassed USD 5Bn in assets under management. USD 40Mn strategic funding led by Peak XV Partners; joined by Nextinfinity and Qatar Insurance Company — 1<sup>st</sup> external raise in 10+ years. Closed LC Venture Debt AIF.</div>
+            </div>
+            <div class="tl-row">
+              <div class="tl-year">2026</div>
+              <div class="tl-body">Launched LC Growth Debt Fund II.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="footer-pageno">06</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         07 · AWARDS & RECOGNITIONS
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="07 Awards & Recognitions">
+      <div class="chapter-tab"><span class="num">01</span>  ·  About Lighthouse Canton</div>
+      <div class="slide-pad" style="top:112px;">
+        <div class="t-serif-label" style="font-style:italic; font-size:20px; color:var(--lc-red); margin-bottom:8px;">Recognition</div>
+        <h2 class="t-display" style="font-size:56px; margin:0 0 28px; line-height:1.05;">Awards &amp; Recognitions</h2>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:48px;">
+          <div class="awards-col">
+            <div class="award">
+              <b>Asian Private Banker — 15th Awards</b>
+              Best Independent Wealth Manager, Singapore (5<sup>th</sup> consecutive year). Shilpi Chowdhary, Group CEO, awarded Individual award for Best Independent Wealth Manager.
+            </div>
+            <div class="award">
+              <b>Asian Private Banker — 14th Awards</b>
+              Best Independent Wealth Manager, Singapore (4<sup>th</sup> consecutive year); Highly Commended, India.
+            </div>
+            <div class="award">
+              <b>Euromoney Private Banking Awards 2025</b>
+              Best Wealth Manager, Singapore &amp; UAE.
+            </div>
+            <div class="award">
+              <b>Euromoney Private Banking Awards</b>
+              Best Independent Wealth Manager Asia; Best Independent Wealth Manager Singapore (2<sup>nd</sup> consecutive year); Best Independent Wealth Manager UAE (2<sup>nd</sup> consecutive year).
+            </div>
+            <div class="award">
+              <b>Financial Times MandateWire — Asset Management Excellence Awards, Middle East</b>
+              Best Asset Manager for Family Offices.
+            </div>
+          </div>
+
+          <div class="awards-col">
+            <div class="award">
+              <b>BarclayHedge</b>
+              SageOne India Growth Fund ranked #3, Emerging Markets Equity – Asia.
+            </div>
+            <div class="award">
+              <b>Financial Times</b>
+              Featured in Asia-Pacific High Growth Companies 2025.
+            </div>
+            <div class="award">
+              <b>Clearstream Partnership</b>
+              Fund execution &amp; custody via Vestima platform.
+            </div>
+            <div class="award">
+              <b>The Straits Times / Statista</b>
+              Recognized among Singapore's Fastest Growing Companies.
+            </div>
+            <div class="award">
+              <b>Blue Sail Partners AG</b>
+              Strategic cross-border capital advisory cooperation.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="footer-pageno">07</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         08 · MISSION & VISION
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="08 Mission & Vision" style="background:#000; color:#fff;">
+      <div class="slide-pad" style="display:grid; grid-template-columns: 1fr 1fr; gap:80px; align-items:center;">
+        <div>
+          <div class="t-sans" style="font-size:12px; letter-spacing:0.2em; text-transform:uppercase; color:rgba(255,255,255,0.55); margin-bottom:18px;">Our Mission</div>
+          <div style="width:60px; height:3px; background:var(--lc-red); margin-bottom:32px;"></div>
+          <h2 class="t-display" style="font-size:52px; line-height:1.15; margin:0; color:#fff;">
+            To be market leaders through people excellence, investment acumen and digital agility.
+          </h2>
+        </div>
+        <div>
+          <div class="t-sans" style="font-size:12px; letter-spacing:0.2em; text-transform:uppercase; color:rgba(255,255,255,0.55); margin-bottom:18px;">Our Vision</div>
+          <div style="width:60px; height:3px; background:var(--lc-red); margin-bottom:32px;"></div>
+          <h2 class="t-display" style="font-size:52px; line-height:1.15; margin:0; color:#fff; font-style:italic;">
+            Creating value through innovative investment solutions.
+          </h2>
+        </div>
+      </div>
+      <div class="footer-pageno" style="color:rgba(255,255,255,0.55);">08</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         09 · SECTION DIVIDER — 01 Our Business Overview
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="09 Section · Our Business Overview" class="section-black">
+      <div class="slide-pad" style="display:grid; grid-template-columns: 1fr 1fr; align-items:center; gap:120px;">
+        <div class="chapter-num" style="text-align:right;">01</div>
+        <div>
+          <div class="t-sans" style="font-size:14px; letter-spacing:0.2em; text-transform:uppercase; color:rgba(255,255,255,0.55); margin-bottom:24px;">Section</div>
+          <h2 class="chapter-title">Our Business Overview</h2>
+        </div>
+      </div>
+      <div class="footer-pageno" style="color:rgba(255,255,255,0.55);">09</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         10 · WEALTH, BUSINESS & FAMILY SOLUTIONS
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="10 Wealth, Business & Family Solutions">
+      <div class="chapter-tab"><span class="num">01</span>  ·  Our Business Overview</div>
+      <div class="slide-pad" style="top:120px;">
+        <div class="t-serif-label" style="font-style:italic; font-size:20px; color:var(--lc-red); margin-bottom:8px;">Wealth, Business &amp; Family Solutions</div>
+        <h2 class="t-display" style="font-size:56px; margin:0 0 36px; line-height:1.05;">
+          Tailored Solutions with an<br/>Institutional Approach
+        </h2>
+
+        <div style="display:grid; grid-template-columns: 420px 3px 1fr; gap:48px; align-items:start;">
+          <div class="t-serif-label" style="font-size:28px; line-height:1.2; color:var(--lc-black);">
+            Regulated by the Monetary Authority of Singapore (MAS) &amp; Dubai Financial Services Authority (DFSA).
+          </div>
+          <div class="v-rule" style="min-height:280px;"></div>
+          <ul class="t-sans" style="font-size:17px; line-height:1.7; color:var(--lc-black); padding-left:20px; margin:0;">
+            <li style="margin-bottom:12px;">Amongst a handful who have their own Wealth Management and Asset Management platforms servicing global clients across families, institutions and sovereign investors.</li>
+            <li style="margin-bottom:12px;">Unique in-house legal and tax capabilities.</li>
+            <li style="margin-bottom:12px;">Diverse experience in wealth management, corporate finance, structured finance, private equity, listed equities, funds structuring and deal structuring.</li>
+            <li>Ability to set-up bespoke funds for clients with lifetime tax exemption for wealth management clients in Singapore.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-pageno">10</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         11 · ASSET MANAGEMENT
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="11 Asset Management (Business Overview)">
+      <div class="chapter-tab"><span class="num">01</span>  ·  Our Business Overview</div>
+      <div class="slide-pad" style="top:120px;">
+        <div class="t-serif-label" style="font-style:italic; font-size:20px; color:var(--lc-red); margin-bottom:8px;">Asset Management</div>
+        <h2 class="t-display" style="font-size:52px; margin:0 0 36px; line-height:1.05;">
+          Targeting niche and differentiated strategies in Southeast Asia and India to generate uncorrelated returns
+        </h2>
+
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:32px;">
+          <div style="border-left:3px solid var(--lc-red); padding-left:24px;">
+            <div class="t-serif-label" style="font-size:22px; color:var(--lc-red); font-style:italic; margin-bottom:10px;">Clientele</div>
+            <p class="t-sans" style="font-size:15px; line-height:1.6; margin:0; color:var(--lc-black);">
+              We invest on behalf of some of the world's largest institutional investors such as pension funds, sovereign funds, and insurance companies.
+            </p>
+          </div>
+          <div style="border-left:3px solid var(--lc-red); padding-left:24px;">
+            <div class="t-serif-label" style="font-size:22px; color:var(--lc-red); font-style:italic; margin-bottom:10px;">Focus</div>
+            <p class="t-sans" style="font-size:15px; line-height:1.6; margin:0; color:var(--lc-black);">
+              Our focus is on uncorrelated investment strategies that allow our investors to benefit from steady returns across all market cycles.
+            </p>
+          </div>
+          <div style="border-left:3px solid var(--lc-red); padding-left:24px;">
+            <div class="t-serif-label" style="font-size:22px; color:var(--lc-red); font-style:italic; margin-bottom:10px;">Alpha</div>
+            <p class="t-sans" style="font-size:15px; line-height:1.6; margin:0; color:var(--lc-black);">
+              We generate alpha through the team's superior ability in investment selection, high diversification within a strategy, and a robust risk management and governance framework.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="footer-pageno">11</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         12 · ADVISORY AND CAPITAL SOLUTIONS
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="12 Advisory and Capital Solutions">
+      <div class="chapter-tab"><span class="num">01</span>  ·  Our Business Overview</div>
+      <div class="slide-pad" style="top:120px;">
+        <div class="t-serif-label" style="font-style:italic; font-size:20px; color:var(--lc-red); margin-bottom:8px;">Advisory and Capital Solutions</div>
+        <h2 class="t-display" style="font-size:56px; margin:0 0 40px; line-height:1.05;">
+          Advisory and Capital Solutions
+        </h2>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:40px;">
+          <div class="cap-card">
+            <div class="kicker">Investment Banking Advisory</div>
+            <h3>Strategic &amp; M&amp;A advice for families and family-owned enterprises</h3>
+            <ul>
+              <li>Strategic and M&amp;A advice for families and family-owned enterprises.</li>
+              <li>Senior team with global experience and established connectivity across regions.</li>
+            </ul>
+          </div>
+          <div class="cap-card">
+            <div class="kicker">Capital Solutions</div>
+            <h3>Tailored financing across the capital structure</h3>
+            <ul>
+              <li>Tailored financing solutions across the capital structure with varying degrees of complexity.</li>
+              <li>Bespoke lending solutions for early to late-stage corporates.</li>
+              <li>Accomplished team with deep expertise in credit solutions.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="footer-pageno">12</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         13 · BESPOKE SOLUTIONS
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="13 Bespoke Solutions">
+      <div class="chapter-tab"><span class="num">01</span>  ·  Our Business Overview</div>
+      <div class="slide-pad" style="top:120px;">
+        <div class="t-serif-label" style="font-style:italic; font-size:20px; color:var(--lc-red); margin-bottom:8px;">Bespoke Solutions</div>
+        <h2 class="t-display" style="font-size:56px; margin:0 0 12px; line-height:1.05;">
+          Bespoke Solutions
+        </h2>
+        <div class="t-serif-label" style="font-style:italic; font-size:26px; color:var(--lc-black-80); margin-bottom:40px;">
+          Customized solutions for institutions &amp; family offices.
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:24px 48px;">
+          <div style="display:grid; grid-template-columns: 40px 1fr; gap:20px;">
+            <div class="t-display" style="font-size:48px; color:var(--lc-red); line-height:1;">01</div>
+            <p class="t-sans" style="font-size:17px; line-height:1.55; margin:0; color:var(--lc-black);">
+              Investment solutions designed to match risk/reward requirements.
+            </p>
+          </div>
+          <div style="display:grid; grid-template-columns: 40px 1fr; gap:20px;">
+            <div class="t-display" style="font-size:48px; color:var(--lc-red); line-height:1;">02</div>
+            <p class="t-sans" style="font-size:17px; line-height:1.55; margin:0; color:var(--lc-black);">
+              Vehicles structured to provide cost and tax efficiency.
+            </p>
+          </div>
+          <div style="display:grid; grid-template-columns: 40px 1fr; gap:20px;">
+            <div class="t-display" style="font-size:48px; color:var(--lc-red); line-height:1;">03</div>
+            <p class="t-sans" style="font-size:17px; line-height:1.55; margin:0; color:var(--lc-black);">
+              Access to most global listed / OTC markets through top-tier global and regional / niche institutions.
+            </p>
+          </div>
+          <div style="display:grid; grid-template-columns: 40px 1fr; gap:20px;">
+            <div class="t-display" style="font-size:48px; color:var(--lc-red); line-height:1;">04</div>
+            <p class="t-sans" style="font-size:17px; line-height:1.55; margin:0; color:var(--lc-black);">
+              Access to proprietary &amp; external strategies with superior risk-adjusted returns vs. traditional offering.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="footer-pageno">13</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         14 · SECTION DIVIDER — 02 Asset Management
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="14 Section · Asset Management" class="section-black">
+      <div class="slide-pad" style="display:grid; grid-template-columns: 1fr 1fr; align-items:center; gap:120px;">
+        <div class="chapter-num" style="text-align:right;">02</div>
+        <div>
+          <div class="t-sans" style="font-size:14px; letter-spacing:0.2em; text-transform:uppercase; color:rgba(255,255,255,0.55); margin-bottom:24px;">Section</div>
+          <h2 class="chapter-title">Asset Management</h2>
+        </div>
+      </div>
+      <div class="footer-pageno" style="color:rgba(255,255,255,0.55);">14</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         15 · LC ASSET MANAGEMENT (content page)
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="15 LC Asset Management">
+      <div class="chapter-tab"><span class="num">02</span>  ·  Asset Management</div>
+      <div class="slide-pad" style="top:120px;">
+        <div class="t-serif-label" style="font-style:italic; font-size:20px; color:var(--lc-red); margin-bottom:8px;">Lighthouse Canton Asset Management</div>
+        <h2 class="t-display" style="font-size:52px; margin:0 0 36px; line-height:1.05;">
+          Offers niche and differentiated strategies in Southeast Asia and India to generate uncorrelated returns
+        </h2>
+
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:32px;">
+          <div style="border-left:3px solid var(--lc-red); padding-left:24px;">
+            <div class="t-serif-label" style="font-size:22px; color:var(--lc-red); font-style:italic; margin-bottom:10px;">Clientele</div>
+            <p class="t-sans" style="font-size:15px; line-height:1.6; margin:0; color:var(--lc-black);">
+              We invest on behalf of some of the world's largest institutional investors such as pension funds, sovereign funds, and insurance companies.
+            </p>
+          </div>
+          <div style="border-left:3px solid var(--lc-red); padding-left:24px;">
+            <div class="t-serif-label" style="font-size:22px; color:var(--lc-red); font-style:italic; margin-bottom:10px;">Focus</div>
+            <p class="t-sans" style="font-size:15px; line-height:1.6; margin:0; color:var(--lc-black);">
+              Our focus is on uncorrelated investment strategies that allow our investors to benefit from steady returns across all market cycles.
+            </p>
+          </div>
+          <div style="border-left:3px solid var(--lc-red); padding-left:24px;">
+            <div class="t-serif-label" style="font-size:22px; color:var(--lc-red); font-style:italic; margin-bottom:10px;">Alpha</div>
+            <p class="t-sans" style="font-size:15px; line-height:1.6; margin:0; color:var(--lc-black);">
+              We generate alpha through the team's superior ability in investment selection, high diversification within a strategy, and a robust risk management and governance framework.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="footer-pageno">15</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         16 · PRIVATE & PUBLIC MARKET FUNDS
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="16 Private & Public Market Funds">
+      <div class="chapter-tab"><span class="num">02</span>  ·  Asset Management</div>
+      <div class="slide-pad" style="top:120px;">
+        <div class="t-serif-label" style="font-style:italic; font-size:20px; color:var(--lc-red); margin-bottom:8px;">Fund Strategies</div>
+        <h2 class="t-display" style="font-size:56px; margin:0 0 36px; line-height:1.05;">Our Fund Strategies</h2>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:48px;">
+          <div>
+            <div class="t-serif-label" style="font-size:28px; color:var(--lc-red); margin-bottom:18px; padding-bottom:12px; border-bottom:2px solid var(--lc-red); display:inline-block;">
+              Private Market
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+              <div class="prod-cell">
+                <div class="kicker">Venture Capital</div>
+                <div class="name">LC Nueva Fund</div>
+              </div>
+              <div class="prod-cell">
+                <div class="kicker">Venture Debt</div>
+                <div class="name">LC Scala Venture Debt Fund</div>
+              </div>
+              <div class="prod-cell">
+                <div class="kicker">Life Sciences Real Estate</div>
+                <div class="name">Neovantage Innovation Parks</div>
+              </div>
+              <div class="prod-cell">
+                <div class="kicker">Venture Capital</div>
+                <div class="name">LC Nueva Momentum Fund</div>
+              </div>
+              <div class="prod-cell" style="grid-column: span 2;">
+                <div class="kicker">Private Credit</div>
+                <div class="name">LC Supply Chain Credit Fund</div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="t-serif-label" style="font-size:28px; color:var(--lc-red); margin-bottom:18px; padding-bottom:12px; border-bottom:2px solid var(--lc-red); display:inline-block;">
+              Public Market
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr; gap:16px;">
+              <div class="prod-cell">
+                <div class="kicker">Global Macro</div>
+                <div class="name">LC Beacon Global Fund</div>
+              </div>
+              <div class="prod-cell">
+                <div class="kicker">Indian Equities</div>
+                <div class="name">SageOne India Growth Master Fund</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="footer-pageno">16</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         17 · INSTITUTIONAL INVESTORS AND PARTNERS
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="17 Institutional Investors & Partners">
+      <div class="chapter-tab"><span class="num">02</span>  ·  Asset Management</div>
+      <div class="slide-pad" style="top:110px;">
+        <div class="t-serif-label" style="font-style:italic; font-size:20px; color:var(--lc-red); margin-bottom:8px;">Partnerships</div>
+        <h2 class="t-display" style="font-size:46px; margin:0 0 28px; line-height:1.05;">Our Institutional Investors and Partners</h2>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px 40px;">
+          <div style="border-left:3px solid var(--lc-red); padding:4px 0 16px 22px;">
+            <div class="t-sans" style="font-size:10px; font-weight:700; letter-spacing:0.15em; text-transform:uppercase; color:var(--lc-red); margin-bottom:6px;">Life Sciences Real Estate Investor</div>
+            <div class="t-serif-label" style="font-size:22px; margin-bottom:8px;">Ivanhoé Cambridge</div>
+            <p class="t-sans" style="font-size:13px; line-height:1.55; margin:0; color:var(--lc-black);">
+              Real estate arm of CDPQ, one of Canada's leading institutional fund managers; held C$77 Bn in real estate assets as on December 31, 2022. LC has developed high-quality life sciences real estate office labs through a platform setup in partnership with them.
+            </p>
+          </div>
+
+          <div style="border-left:3px solid var(--lc-red); padding:4px 0 16px 22px;">
+            <div class="t-sans" style="font-size:10px; font-weight:700; letter-spacing:0.15em; text-transform:uppercase; color:var(--lc-red); margin-bottom:6px;">LC Venture Debt Fund Investor</div>
+            <div class="t-serif-label" style="font-size:22px; margin-bottom:8px;">NH Absolute Return Partners (NHARP)</div>
+            <p class="t-sans" style="font-size:13px; line-height:1.55; margin:0; color:var(--lc-black);">
+              Singapore-based asset management subsidiary of Korean financial institution NH Investment &amp; Securities. In addition to being an investor, NHARP has also established a US$20m co-investment vehicle with LC, for debt investments in India.
+            </p>
+          </div>
+
+          <div style="border-left:3px solid var(--lc-red); padding:4px 0 16px 22px;">
+            <div class="t-sans" style="font-size:10px; font-weight:700; letter-spacing:0.15em; text-transform:uppercase; color:var(--lc-red); margin-bottom:6px;">LC Venture Debt Fund Investor</div>
+            <div class="t-serif-label" style="font-size:22px; margin-bottom:8px;">Qatar Insurance Company (QIC Group)</div>
+            <p class="t-sans" style="font-size:13px; line-height:1.55; margin:0; color:var(--lc-black);">
+              One of the largest insurance companies in the MENA region, with total market-cap of more than QAR 8 Bn. QIC is also the first digital insurance company in Qatar and has been crowned as the best online insurance company in the Middle East.
+            </p>
+          </div>
+
+          <div style="border-left:3px solid var(--lc-red); padding:4px 0 16px 22px;">
+            <div class="t-sans" style="font-size:10px; font-weight:700; letter-spacing:0.15em; text-transform:uppercase; color:var(--lc-red); margin-bottom:6px;">LC Nueva Fund Investor</div>
+            <div class="t-serif-label" style="font-size:22px; margin-bottom:8px;">Small Industries Development Bank of India (SIDBI)</div>
+            <p class="t-sans" style="font-size:13px; line-height:1.55; margin:0; color:var(--lc-black);">
+              Apex regulatory body for overall licensing and regulation, and principal financial institution for micro, small and medium enterprise finance companies (MSME sector) in India, under the jurisdiction of Ministry of Finance.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="footer-pageno">17</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         18 · OUR IMPACT
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="18 Our Impact">
+      <div class="chapter-tab"><span class="num">02</span>  ·  Asset Management</div>
+      <div class="slide-pad" style="top:120px;">
+        <div class="t-serif-label" style="font-style:italic; font-size:20px; color:var(--lc-red); margin-bottom:8px;">Impact</div>
+        <h2 class="t-display" style="font-size:56px; margin:0 0 40px; line-height:1.05;">Our Impact</h2>
+
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:32px;">
+          <div class="impact-cell">
+            <div class="cat">Life Sciences Real Estate</div>
+            <div class="tag">Supporting ESG considerations</div>
+            <p>Our life science infrastructure focuses on being energy efficient. Our green building certifications portray our commitment to ESG considerations. 65% of facilities in our operating portfolio are LEED certified.</p>
+          </div>
+          <div class="impact-cell">
+            <div class="cat">SMEs Across Asia</div>
+            <div class="tag">Bridging capital with alternative financing</div>
+            <p>Our private market strategies, such as supply chain financing, help bridge the gap in financing from traditional lenders by providing SMEs with access to adaptable alternative financing options.</p>
+          </div>
+          <div class="impact-cell">
+            <div class="cat">Early &amp; Growth Companies</div>
+            <div class="tag">Empowering growth through venture capital &amp; venture debt</div>
+            <p>Our venture debt and capital strategies are driving technological progress by providing capital to innovative startups in the region.</p>
+          </div>
+        </div>
+      </div>
+      <div class="footer-pageno">18</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         19 · SECTION DIVIDER — 03 Wealth, Business & Family Solutions
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="19 Section · Wealth, Business & Family Solutions" class="section-black">
+      <div class="slide-pad" style="display:grid; grid-template-columns: 1fr 1fr; align-items:center; gap:120px;">
+        <div class="chapter-num" style="text-align:right;">03</div>
+        <div>
+          <div class="t-sans" style="font-size:14px; letter-spacing:0.2em; text-transform:uppercase; color:rgba(255,255,255,0.55); margin-bottom:24px;">Section</div>
+          <h2 class="chapter-title">Wealth, Business &amp; Family Solutions</h2>
+        </div>
+      </div>
+      <div class="footer-pageno" style="color:rgba(255,255,255,0.55);">19</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         20 · HOLISTIC SOLUTIONS
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="20 Holistic Solutions">
+      <div class="chapter-tab"><span class="num">03</span>  ·  Wealth, Business &amp; Family Solutions</div>
+      <div class="slide-pad" style="top:120px;">
+        <div class="t-serif-label" style="font-style:italic; font-size:20px; color:var(--lc-red); margin-bottom:8px;">Holistic Solutions with End-to-End Execution</div>
+        <h2 class="t-display" style="font-size:48px; margin:0 0 44px; line-height:1.05;">
+          Holistic Advisory &amp; Execution Across Business &amp; Personal Structures
+        </h2>
+
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:24px;">
+          <div class="prod-cell" style="padding:24px 22px 26px;">
+            <div class="kicker">Pillar 01</div>
+            <div class="name" style="font-size:24px;">Bespoke Funds With Institutional Trading &amp; Active Risk Management</div>
+          </div>
+          <div class="prod-cell" style="padding:24px 22px 26px;">
+            <div class="kicker">Pillar 02</div>
+            <div class="name" style="font-size:24px;">Sophisticated Proprietary Investment Strategies</div>
+          </div>
+          <div class="prod-cell" style="padding:24px 22px 26px;">
+            <div class="kicker">Pillar 03</div>
+            <div class="name" style="font-size:24px;">Advice on Trusts &amp; Succession Planning</div>
+          </div>
+          <div class="prod-cell" style="padding:24px 22px 26px;">
+            <div class="kicker">Pillar 04</div>
+            <div class="name" style="font-size:24px;">Asset Allocation &amp; Aggregation by MFO / SFO</div>
+          </div>
+          <div class="prod-cell" style="padding:24px 22px 26px;">
+            <div class="kicker">Pillar 05</div>
+            <div class="name" style="font-size:24px;">Private Bank Account(s)</div>
+          </div>
+        </div>
+      </div>
+      <div class="footer-pageno">20</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         21 · FAMILY OFFICE SERVICES & SOLUTIONS — Part 1
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="21 Family Office Services (1/2)">
+      <div class="chapter-tab"><span class="num">03</span>  ·  Wealth, Business &amp; Family Solutions</div>
+      <div class="slide-pad" style="top:120px;">
+        <div class="t-serif-label" style="font-style:italic; font-size:20px; color:var(--lc-red); margin-bottom:8px;">Family Office Services &amp; Solutions</div>
+        <h2 class="t-display" style="font-size:52px; margin:0 0 36px; line-height:1.05;">Family Office Services &amp; Solutions</h2>
+
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:32px;">
+          <div class="cap-card">
+            <div class="kicker">Wealth Management</div>
+            <h3>Integrated &amp; customized approach</h3>
+            <ul>
+              <li>Managing investment portfolios with an integrated &amp; customized approach.</li>
+              <li>Portfolio reporting, analysis &amp; investment advisory.</li>
+              <li>Managing costs, maximizing Return on Investment (RoI).</li>
+              <li>Access to institutional platform.</li>
+            </ul>
+          </div>
+          <div class="cap-card">
+            <div class="kicker">Funds &amp; Investment</div>
+            <h3>In-house and bespoke funds</h3>
+            <ul>
+              <li>Participating in in-house funds; establishing customized, bespoke funds.</li>
+              <li>Access to inaccessible investment opportunities and products, co-investments and PE/VC deals.</li>
+              <li>Review, analysis and diligence services.</li>
+            </ul>
+          </div>
+          <div class="cap-card">
+            <div class="kicker">Credit</div>
+            <h3>Customized credit solutions</h3>
+            <ul>
+              <li>Facilitating customized credit solutions for wealth management and corporates.</li>
+              <li>Advice on optimal credit strategy.</li>
+              <li>Access to low credit costs.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="footer-pageno">21</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         22 · FAMILY OFFICE SERVICES — Part 2
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="22 Family Office Services (2/2)">
+      <div class="chapter-tab"><span class="num">03</span>  ·  Wealth, Business &amp; Family Solutions</div>
+      <div class="slide-pad" style="top:120px;">
+        <div class="t-serif-label" style="font-style:italic; font-size:20px; color:var(--lc-red); margin-bottom:8px;">Family Office Services &amp; Solutions</div>
+        <h2 class="t-display" style="font-size:52px; margin:0 0 36px; line-height:1.05;">Family Office Services &amp; Solutions</h2>
+
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:32px;">
+          <div class="cap-card">
+            <div class="kicker">Advisory</div>
+            <h3>Trust, succession &amp; structure</h3>
+            <ul>
+              <li>In-house cross-border trust, succession, insurance solutions and estate planning.</li>
+              <li>Advice on investment and transaction structures.</li>
+              <li>Liaising with law firms, accounting firms and other advisors, and reviewing legal advice.</li>
+            </ul>
+          </div>
+          <div class="cap-card">
+            <div class="kicker">Network</div>
+            <h3>Leading global institutions</h3>
+            <ul>
+              <li>Access to leading private banks, investment banks, financial institutions, funds and intermediaries.</li>
+              <li>Access to leading global law firms, accounting firms, and other specialists.</li>
+            </ul>
+          </div>
+          <div class="cap-card">
+            <div class="kicker">Other Services</div>
+            <h3>Lifestyle &amp; impact</h3>
+            <ul>
+              <li>Concierge and lifestyle services.</li>
+              <li>Access to experts in luxury assets, art, wine, automobiles, yachts &amp; jets.</li>
+              <li>Philanthropy &amp; social impact.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="footer-pageno">22</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         23 · INTEGRATED WEALTH MANAGEMENT
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="23 Integrated Wealth Management">
+      <div class="chapter-tab"><span class="num">03</span>  ·  Wealth, Business &amp; Family Solutions</div>
+      <div class="slide-pad" style="top:112px;">
+        <div class="t-serif-label" style="font-style:italic; font-size:20px; color:var(--lc-red); margin-bottom:8px;">Integrated Wealth Management</div>
+        <h2 class="t-display" style="font-size:44px; margin:0 0 6px; line-height:1.05;">
+          Integrated Wealth Management
+        </h2>
+        <div class="t-serif-label" style="font-style:italic; font-size:22px; color:var(--lc-black-80); margin-bottom:24px;">
+          Portfolio construction and planning: Client Goal Alignment &amp; Development → Portfolio Management → Client Progress Tracking.
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr) repeat(3, 1fr); grid-template-rows: auto; gap:14px 16px;">
+          <div class="pillar">
+            <h4>Client Objectives</h4>
+            <ul>
+              <li>• Understand liquidity &amp; capital situation and return expectations.</li>
+              <li>• Define investment goals, acceptable investments, portfolio limitations.</li>
+              <li>• Identify responsible parties &amp; authorised banks/brokers.</li>
+              <li>• Identify and schedule anticipated cash outlay.</li>
+            </ul>
+          </div>
+          <div class="pillar">
+            <h4>Asset Allocation</h4>
+            <ul>
+              <li>• Establish investment parameters.</li>
+              <li>• Utilize internal capital market assumptions to develop asset mix.</li>
+              <li>• Adjust asset allocation based on portfolio maturity, short- &amp; long-term growth and risk objectives.</li>
+            </ul>
+          </div>
+          <div class="pillar">
+            <h4>Security Selection</h4>
+            <ul>
+              <li>• Identify value creation opportunities amongst existing and new holdings.</li>
+              <li>• Create portfolio utilizing existing security pool.</li>
+              <li>• Timely and cost effective execution.</li>
+            </ul>
+          </div>
+          <div class="pillar">
+            <h4>Risk Management</h4>
+            <ul>
+              <li>• Run risk analysis on asset classes for parameters like VaR, volatility, drawdowns.</li>
+              <li>• Apprise client of potential downsides in current asset mix and possible mitigations.</li>
+            </ul>
+          </div>
+          <div class="pillar">
+            <h4>Optimisation</h4>
+            <ul>
+              <li>• Optimisation of current allocations to reach client goals and objectives.</li>
+              <li>• Overview of asset allocation to reduce asset class, sector and geographical exposures.</li>
+            </ul>
+          </div>
+          <div class="pillar">
+            <h4>Benchmarking &amp; Reporting</h4>
+            <ul>
+              <li>• Select appropriate Index / benchmark.</li>
+              <li>• Conduct periodic performance monitoring.</li>
+              <li>• Provide full compliance reporting.</li>
+              <li>• Provide monthly reporting and NAV / risk update.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="footer-pageno">23</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         24 · SECTION DIVIDER — 04 Investment Capabilities
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="24 Section · Investment Capabilities" class="section-black">
+      <div class="slide-pad" style="display:grid; grid-template-columns: 1fr 1fr; align-items:center; gap:120px;">
+        <div class="chapter-num" style="text-align:right;">04</div>
+        <div>
+          <div class="t-sans" style="font-size:14px; letter-spacing:0.2em; text-transform:uppercase; color:rgba(255,255,255,0.55); margin-bottom:24px;">Section</div>
+          <h2 class="chapter-title">Investment Capabilities</h2>
+        </div>
+      </div>
+      <div class="footer-pageno" style="color:rgba(255,255,255,0.55);">24</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         25 · BUSINESS PRINCIPLES (comparison)
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="25 Business Principles">
+      <div class="chapter-tab"><span class="num">04</span>  ·  Investment Capabilities</div>
+      <div class="slide-pad" style="top:120px;">
+        <div class="t-serif-label" style="font-style:italic; font-size:20px; color:var(--lc-red); margin-bottom:8px;">Business Principles</div>
+        <h2 class="t-display" style="font-size:56px; margin:0 0 32px; line-height:1.05;">Business Principles</h2>
+
+        <table class="cmp">
+          <thead>
+            <tr>
+              <th class="row-label">Dimension</th>
+              <th>Lighthouse Canton</th>
+              <th>Traditional Wealth Managers</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="row-label">Business Model</th>
+              <td><b>Mostly flat fee.</b></td>
+              <td>Predominantly transaction / commission based.</td>
+            </tr>
+            <tr>
+              <th class="row-label">Portfolio Construction</th>
+              <td>Selection of assets primarily based on <b>valuations</b>.</td>
+              <td>Predominantly bonds, equities &amp; structured products.</td>
+            </tr>
+            <tr>
+              <th class="row-label">Allocation</th>
+              <td>Asset class / geography <b>agnostic</b>.</td>
+              <td>Fixed allocation to asset classes and geographies.</td>
+            </tr>
+            <tr>
+              <th class="row-label">Risk</th>
+              <td><b>Drawdowns pre-defined</b> with clients, stress-tests.</td>
+              <td>Drawdowns depending on client's risk-profile.</td>
+            </tr>
+            <tr>
+              <th class="row-label">Turnover</th>
+              <td>As minimum as possible (when required).</td>
+              <td>Potentially high (structured products, stocks, etc.).</td>
+            </tr>
+            <tr>
+              <th class="row-label">Funds Selection</th>
+              <td><b>Open Architecture</b> Institutional Share Class.</td>
+              <td>Restricted to existing partnerships. Retail share class.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="footer-pageno">25</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         26 · OUR INVESTMENT PHILOSOPHY — 10 rules
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="26 Investment Philosophy (10 rules)">
+      <div class="chapter-tab"><span class="num">04</span>  ·  Investment Capabilities</div>
+      <div class="slide-pad" style="top:104px;">
+        <div class="t-serif-label" style="font-style:italic; font-size:20px; color:var(--lc-red); margin-bottom:8px;">Our Investment Philosophy</div>
+        <h2 class="t-display" style="font-size:38px; margin:0 0 4px; line-height:1.05;">The 10 rules that guide our investment framework</h2>
+        <div style="width:60px; height:2px; background:var(--lc-red); margin:18px 0 22px;"></div>
+
+        <div class="rules-grid">
+          <div class="rule"><div class="n">01</div><div class="body"><b>Align Portfolios with Client Interests</b>Ensure investment strategies are in full harmony with the client's financial goals and risk tolerance.</div></div>
+          <div class="rule"><div class="n">02</div><div class="body"><b>Flexibility Across Strategies</b>Broad spectrum of investment avenues — stocks, bonds, long/short strategies, trade finance, relative value, etc. — to optimize risk-adjusted returns.</div></div>
+          <div class="rule"><div class="n">03</div><div class="body"><b>Dynamic Rebalancing</b>Adjust portfolios only when necessary, staying responsive to market conditions.</div></div>
+          <div class="rule"><div class="n">04</div><div class="body"><b>Prioritize Capital Protection</b>Establish clear boundaries for drawdowns before constructing portfolios, emphasizing safety of capital.</div></div>
+          <div class="rule"><div class="n">05</div><div class="body"><b>Work with Top-Tier Managers Only</b>Select managers with proven track records, emphasizing high Sharpe, Calmar, and Sortino ratios.</div></div>
+          <div class="rule"><div class="n">06</div><div class="body"><b>Diversification</b>Increase diversification in higher-risk investments (emerging market, high-yield, distressed) using well-diversified funds.</div></div>
+          <div class="rule"><div class="n">07</div><div class="body"><b>Leverage Earnings Compounding</b>Focus on the long-term compounding potential of earnings when choosing stocks.</div></div>
+          <div class="rule"><div class="n">08</div><div class="body"><b>Emphasize Cost Efficiency</b>Minimize expenses related to fund fees and transaction costs to maximize returns.</div></div>
+          <div class="rule"><div class="n">09</div><div class="body"><b>Research-Driven Asset Allocation</b>Employ a methodology that integrates valuations, cycles, and technical analysis.</div></div>
+          <div class="rule"><div class="n">10</div><div class="body"><b>Clear Exit Plan on Tactical Trades</b>Implement tactical trades with predefined take-profit and stop-loss parameters to manage risk.</div></div>
+        </div>
+      </div>
+      <div class="footer-pageno">26</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         27 · ASSET CLASS & INSTRUMENT AGNOSTIC
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="27 Asset Class & Instrument Agnostic">
+      <div class="chapter-tab"><span class="num">04</span>  ·  Investment Capabilities</div>
+      <div class="slide-pad" style="top:112px;">
+        <div class="t-serif-label" style="font-style:italic; font-size:20px; color:var(--lc-red); margin-bottom:8px;">Coverage</div>
+        <h2 class="t-display" style="font-size:48px; margin:0 0 4px; line-height:1.05;">Asset Class and Instrument Agnostic</h2>
+        <div class="t-serif-label" style="font-style:italic; font-size:22px; color:var(--lc-black-80); margin-bottom:28px;">
+          Broad coverage with no inherent biases.
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:24px;">
+          <div>
+            <div style="padding:20px 24px; background:#fafaf9; border-top:3px solid var(--lc-red);">
+              <div class="t-serif-label" style="font-size:26px; margin-bottom:4px;">Equities</div>
+              <div class="t-sans" style="font-size:11px; font-weight:700; letter-spacing:0.15em; text-transform:uppercase; color:var(--lc-red); margin-bottom:14px;">Capital Accumulation</div>
+              <p class="t-sans" style="font-size:13px; line-height:1.55; margin:0 0 16px; color:var(--lc-black);">
+                Equities serve as a building block in many portfolios and are often considered a good way to benefit from long-term capital appreciation. Equities can have significant volatility and are suitable only for risk-tolerant investors.
+              </p>
+              <div class="t-sans" style="font-size:11px; color:var(--lc-black-80); font-style:italic;">
+                Stocks · Options · Long/Short · Private Equity · etc.
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div style="padding:20px 24px; background:#fafaf9; border-top:3px solid var(--lc-red);">
+              <div class="t-serif-label" style="font-size:26px; margin-bottom:4px;">Fixed Income</div>
+              <div class="t-sans" style="font-size:11px; font-weight:700; letter-spacing:0.15em; text-transform:uppercase; color:var(--lc-red); margin-bottom:14px;">Capital Preservation &amp;/or Yield Enhancement</div>
+              <p class="t-sans" style="font-size:13px; line-height:1.55; margin:0 0 16px; color:var(--lc-black);">
+                Fixed income serves the needs of investors who require a steady stream of income to their portfolios. Considered less risky than equities, bonds can play an important role for more conservative investors.
+              </p>
+              <div class="t-sans" style="font-size:11px; color:var(--lc-black-80); font-style:italic;">
+                Bonds · Private Debt · Long/Short · Alternative Lenders · Mortgages · etc.
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div style="padding:20px 24px; background:#fafaf9; border-top:3px solid var(--lc-red);">
+              <div class="t-serif-label" style="font-size:26px; margin-bottom:4px;">Alternatives</div>
+              <div class="t-sans" style="font-size:11px; font-weight:700; letter-spacing:0.15em; text-transform:uppercase; color:var(--lc-red); margin-bottom:14px;">Capital Accumulation &amp;/or Yield Enhancement</div>
+              <p class="t-sans" style="font-size:13px; line-height:1.55; margin:0 0 16px; color:var(--lc-black);">
+                Alternative investments provide returns driven by factors materially different from those of traditional asset classes such as bonds and equities. Alternatives are key to enabling the construction of truly well-balanced and diversified portfolios.
+              </p>
+              <div class="t-sans" style="font-size:11px; color:var(--lc-black-80); font-style:italic;">
+                Real Estate · Macro · Insurance · Trade Finance · Commodities · Litigation · etc.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="footer-pageno">27</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         28 · TOP-DOWN ALLOCATION FRAMEWORK
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="28 Top-Down Allocation Framework">
+      <div class="chapter-tab"><span class="num">04</span>  ·  Investment Capabilities</div>
+      <div class="slide-pad" style="top:120px;">
+        <div class="t-serif-label" style="font-style:italic; font-size:20px; color:var(--lc-red); margin-bottom:8px;">Our Top-Down Allocation Framework</div>
+        <h2 class="t-display" style="font-size:52px; margin:0 0 36px; line-height:1.05;">Our Top-Down Allocation Framework</h2>
+
+        <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:24px;">
+          <div class="pillar">
+            <h4>Economic Cycle</h4>
+            <ul>
+              <li>• Consumer</li>
+              <li>• Business</li>
+              <li>• Housing</li>
+              <li>• Inflation</li>
+              <li>• Monetary Conditions</li>
+              <li>• Labor</li>
+            </ul>
+          </div>
+          <div class="pillar">
+            <h4>Earnings Cycle</h4>
+            <ul>
+              <li>• Sales Growth</li>
+              <li>• Earnings Growth</li>
+              <li>• Operating Margins</li>
+              <li>• Profit Margins</li>
+              <li>• Earnings Surprises</li>
+              <li>• Revisions</li>
+            </ul>
+          </div>
+          <div class="pillar">
+            <h4>Market Signals</h4>
+            <ul>
+              <li>• Market Breadth</li>
+              <li>• Sentiment</li>
+              <li>• Momentum</li>
+              <li>• Sector Rotation Trends</li>
+              <li>• Cross-Asset Indicators</li>
+              <li>• Contrarian</li>
+            </ul>
+          </div>
+          <div class="pillar">
+            <h4>Valuations</h4>
+            <ul>
+              <li>• P/E Ratio</li>
+              <li>• Current vs. Derived P/E</li>
+              <li>• EV to EBITDA / P/B</li>
+              <li>• Earnings Yield vs. Bond Yield</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="footer-pageno">28</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         29 · RISK MANAGEMENT
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="29 Risk Management">
+      <div class="chapter-tab"><span class="num">04</span>  ·  Investment Capabilities</div>
+      <div class="slide-pad" style="top:120px;">
+        <div class="t-serif-label" style="font-style:italic; font-size:20px; color:var(--lc-red); margin-bottom:8px;">Risk Management</div>
+        <h2 class="t-display" style="font-size:56px; margin:0 0 20px; line-height:1.05;">Risk Management</h2>
+        <p class="t-sans" style="font-size:20px; line-height:1.55; margin:0 0 36px; color:var(--lc-black); max-width:72ch;">
+          Risk assessment is an integral part of our investment decisions and lays the foundation for our investment process.
+        </p>
+
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:20px 32px;">
+          <div style="border-left:3px solid var(--lc-red); padding:8px 0 8px 20px;">
+            <div class="t-serif-label" style="font-size:20px;">Drawdowns agreed prior to portfolio construction</div>
+          </div>
+          <div style="border-left:3px solid var(--lc-red); padding:8px 0 8px 20px;">
+            <div class="t-serif-label" style="font-size:20px;">Portfolio optimization</div>
+          </div>
+          <div style="border-left:3px solid var(--lc-red); padding:8px 0 8px 20px;">
+            <div class="t-serif-label" style="font-size:20px;">Stress-test scenarios</div>
+          </div>
+          <div style="border-left:3px solid var(--lc-red); padding:8px 0 8px 20px;">
+            <div class="t-serif-label" style="font-size:20px;">Beta to relevant benchmarks</div>
+          </div>
+          <div style="border-left:3px solid var(--lc-red); padding:8px 0 8px 20px;">
+            <div class="t-serif-label" style="font-size:20px;">Hedging solutions</div>
+          </div>
+          <div style="border-left:3px solid var(--lc-red); padding:8px 0 8px 20px;">
+            <div class="t-serif-label" style="font-size:20px;">Portfolio liquidity and unwind cost</div>
+          </div>
+        </div>
+      </div>
+      <div class="footer-pageno">29</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         30 · SECTION DIVIDER — 05 LC Vantage
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="30 Section · LC Vantage" class="section-black">
+      <div class="slide-pad" style="display:grid; grid-template-columns: 1fr 1fr; align-items:center; gap:120px;">
+        <div class="chapter-num" style="text-align:right;">05</div>
+        <div>
+          <div class="t-sans" style="font-size:14px; letter-spacing:0.2em; text-transform:uppercase; color:rgba(255,255,255,0.55); margin-bottom:24px;">Section</div>
+          <h2 class="chapter-title">LC Vantage <span style="font-style:italic; color:rgba(255,255,255,0.6);">—</span> A Full-Stack Private Banking Offering</h2>
+        </div>
+      </div>
+      <div class="footer-pageno" style="color:rgba(255,255,255,0.55);">30</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         31 · LC VANTAGE — Digital Full-Stack Private Banking Solution
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="31 LC Vantage · Digital Full-Stack">
+      <div class="chapter-tab"><span class="num">05</span>  ·  LC Vantage</div>
+      <div class="slide-pad" style="top:112px;">
+        <div class="t-serif-label" style="font-style:italic; font-size:20px; color:var(--lc-red); margin-bottom:8px;">LC Vantage</div>
+        <h2 class="t-display" style="font-size:48px; margin:0 0 28px; line-height:1.05;">
+          Digital Full-Stack Private Banking Solution
+        </h2>
+
+        <div style="display:grid; grid-template-columns: 1.2fr 1fr; gap:40px;">
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px;">
+            <div class="prod-cell" style="padding:18px 20px;">
+              <div class="name" style="font-size:18px;">Seamless onboarding with digital ID systems</div>
+            </div>
+            <div class="prod-cell" style="padding:18px 20px;">
+              <div class="name" style="font-size:18px;">Access to global markets</div>
+            </div>
+            <div class="prod-cell" style="padding:18px 20px;">
+              <div class="name" style="font-size:18px;">Institution-grade analytics</div>
+            </div>
+            <div class="prod-cell" style="padding:18px 20px;">
+              <div class="name" style="font-size:18px;">Complete custodian capability*</div>
+            </div>
+            <div class="prod-cell" style="padding:18px 20px; grid-column: span 2;">
+              <div class="name" style="font-size:18px;">Effortless portfolio management &amp; consolidation</div>
+            </div>
+          </div>
+
+          <div style="background:#000; color:#fff; padding:32px 28px; border-top:4px solid var(--lc-red);">
+            <div class="t-sans" style="font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:rgba(255,255,255,0.55); margin-bottom:16px;">Scale &amp; partnerships</div>
+            <div class="t-display" style="font-size:54px; line-height:1; margin:0 0 8px;">USD&nbsp;16&nbsp;trillion<span style="color:var(--lc-red);">+</span></div>
+            <p class="t-sans" style="font-size:14px; line-height:1.55; color:rgba(255,255,255,0.85); margin:0 0 18px;">
+              Portfolio consolidation across global institutions managing USD 16 trillion+ of assets.*
+            </p>
+            <p class="t-sans" style="font-size:14px; line-height:1.55; color:rgba(255,255,255,0.85); margin:0;">
+              A network of unparalleled partnerships spanning various aspects of wealth tech.
+            </p>
+          </div>
+        </div>
+
+        <div class="t-sans" style="font-size:11px; color:var(--lc-black-80); margin-top:16px;">
+          *The services are being provided through partnerships with licensed custodians.
+        </div>
+      </div>
+      <div class="footer-pageno">31</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         32 · LC VANTAGE MARKETPLACE
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="32 LC Vantage Marketplace">
+      <div class="chapter-tab"><span class="num">05</span>  ·  LC Vantage</div>
+      <div class="slide-pad" style="top:120px;">
+        <div class="t-serif-label" style="font-style:italic; font-size:20px; color:var(--lc-red); margin-bottom:8px;">LC Vantage Marketplace</div>
+        <h2 class="t-display" style="font-size:56px; margin:0 0 40px; line-height:1.05;">LC Vantage Marketplace</h2>
+
+        <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:28px 40px;">
+          <div style="border-left:3px solid var(--lc-red); padding:6px 0 18px 24px;">
+            <div class="t-serif-label" style="font-size:26px; color:var(--lc-red); margin-bottom:10px;">50+ Global Markets</div>
+            <p class="t-sans" style="font-size:16px; line-height:1.55; margin:0; color:var(--lc-black);">
+              Trade across 50+ global markets in over 20 currencies.
+            </p>
+          </div>
+          <div style="border-left:3px solid var(--lc-red); padding:6px 0 18px 24px;">
+            <div class="t-serif-label" style="font-size:26px; color:var(--lc-red); margin-bottom:10px;">Exclusive &amp; Diverse Investment Products</div>
+            <p class="t-sans" style="font-size:16px; line-height:1.55; margin:0; color:var(--lc-black);">
+              Bonds, hedge funds, alternative assets, private markets, structured products, options trading, and bond baskets.
+            </p>
+          </div>
+          <div style="border-left:3px solid var(--lc-red); padding:6px 0 18px 24px;">
+            <div class="t-serif-label" style="font-size:26px; color:var(--lc-red); margin-bottom:10px;">Democratizing High Quality Investments</div>
+            <p class="t-sans" style="font-size:16px; line-height:1.55; margin:0; color:var(--lc-black);">
+              Co-investment &amp; pooling for lower ticket sizes.
+            </p>
+          </div>
+          <div style="border-left:3px solid var(--lc-red); padding:6px 0 18px 24px;">
+            <div class="t-serif-label" style="font-size:26px; color:var(--lc-red); margin-bottom:10px;">Competitive Pricing</div>
+            <p class="t-sans" style="font-size:16px; line-height:1.55; margin:0; color:var(--lc-black);">
+              Eliminating high brokerage fees and similar exorbitant costs associated with traditional wealth management.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="footer-pageno">32</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         33 · LC VANTAGE FEATURES
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="33 LC Vantage Features">
+      <div class="chapter-tab"><span class="num">05</span>  ·  LC Vantage</div>
+      <div class="slide-pad" style="top:120px;">
+        <div class="t-serif-label" style="font-style:italic; font-size:20px; color:var(--lc-red); margin-bottom:8px;">Features</div>
+        <h2 class="t-display" style="font-size:56px; margin:0 0 48px; line-height:1.05;">LC Vantage Features</h2>
+
+        <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:20px;">
+          <div class="vfeat">
+            <div class="t-display" style="font-size:44px; color:var(--lc-red); line-height:1; margin-bottom:16px;">01</div>
+            <div class="t">Product<br/>Recommendations</div>
+          </div>
+          <div class="vfeat">
+            <div class="t-display" style="font-size:44px; color:var(--lc-red); line-height:1; margin-bottom:16px;">02</div>
+            <div class="t">Portfolio Management &amp; Analytics</div>
+          </div>
+          <div class="vfeat">
+            <div class="t-display" style="font-size:44px; color:var(--lc-red); line-height:1; margin-bottom:16px;">03</div>
+            <div class="t">Direct Market<br/>Access</div>
+          </div>
+          <div class="vfeat">
+            <div class="t-display" style="font-size:44px; color:var(--lc-red); line-height:1; margin-bottom:16px;">04</div>
+            <div class="t">Customer Relationship Management</div>
+          </div>
+        </div>
+      </div>
+      <div class="footer-pageno">33</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         34 · THANK YOU + primary offices
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="34 Thank You" style="background:#fff;">
+      <div class="slide-pad" style="display:flex; flex-direction:column;">
+        <div style="padding-top:16px;">
+          <h2 class="t-display" style="font-size:120px; margin:0; line-height:1;">Thank you<span style="color:var(--lc-red);">.</span></h2>
+          <p class="t-serif-label" style="font-style:italic; font-size:32px; margin:24px 0 0; color:var(--lc-black-80);">
+            Where Insight Meets Opportunity
+          </p>
+        </div>
+
+        <div style="margin-top:56px;">
+          <hr style="border:0; border-top:1px solid rgba(0,0,0,0.15); margin:0 0 28px;"/>
+          <div class="contacts-grid">
+            <div class="contact">
+              <h4>Singapore</h4>
+              16 Collyer Quay #11-02<br/>
+              Collyer Quay Centre<br/>
+              Singapore&ndash;049318<br/>
+              <br/>
+              +65 67130570
+            </div>
+            <div class="contact">
+              <h4>Dubai</h4>
+              The Exchange, Gate Village 11,<br/>
+              Unit 204, DIFC,<br/>
+              Dubai, UAE&ndash;507026<br/>
+              <br/>
+              +971 45 861500
+            </div>
+            <div class="contact">
+              <h4>New Delhi</h4>
+              Unit 104A, Worldmark 2 Asset,<br/>
+              Delhi Aerocity,<br/>
+              New Delhi 110037<br/>
+              <br/>
+              +91 9650473961
+            </div>
+            <div class="contact">
+              <h4>London</h4>
+              24 Hanover Square,<br/>
+              London, W1S 1JD<br/>
+              United Kingdom<br/>
+              <br/>
+              lighthouse-canton.com
+            </div>
+          </div>
+          <div class="t-sans" style="font-size:12px; color:var(--lc-black-80); margin-top:20px;">
+            Additional offices: Mumbai · Bengaluru · Hyderabad · Chennai · GIFT City (Gandhinagar).
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         35 · OFFICES — Full multi-city grid
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="35 Offices · Full Contact Grid" style="background:#fff;">
+      <div class="slide-pad" style="display:flex; flex-direction:column;">
+        <div style="margin-bottom:28px;">
+          <div class="t-serif-label" style="font-size:18px; color:var(--lc-red); margin-bottom:10px; font-style:italic;">Where we are</div>
+          <h2 class="t-display" style="font-size:60px; margin:0; line-height:1.05;">Offices</h2>
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:28px 36px; flex:1;">
+          <div class="contact">
+            <h4 style="color:var(--lc-red);">Singapore <span style="color:var(--lc-black-80); font-weight:400; font-size:10px; letter-spacing:0.15em;">HQ</span></h4>
+            16 Collyer Quay #11-02<br/>
+            Collyer Quay Centre<br/>
+            Singapore&ndash;049318<br/>
+            <br/>
+            +65 67130570
+          </div>
+          <div class="contact">
+            <h4 style="color:var(--lc-red);">Dubai</h4>
+            The Exchange,<br/>
+            Gate Village 11, Unit 204,<br/>
+            DIFC, Dubai, UAE&ndash;507026<br/>
+            <br/>
+            +971 45 861500
+          </div>
+          <div class="contact">
+            <h4 style="color:var(--lc-red);">London</h4>
+            24 Hanover Square,<br/>
+            London, W1S 1JD<br/>
+            United Kingdom
+          </div>
+          <div class="contact">
+            <h4 style="color:var(--lc-red);">New Delhi</h4>
+            Unit 104A, Worldmark 2 Asset,<br/>
+            Delhi Aerocity,<br/>
+            New Delhi 110037<br/>
+            <br/>
+            +91 9650473961
+          </div>
+
+          <div class="contact">
+            <h4>Mumbai</h4>
+            Unit 507/508, A Wing,<br/>
+            INS Tower, G Block, BKC,<br/>
+            Mumbai 400051
+          </div>
+          <div class="contact">
+            <h4>Bengaluru</h4>
+            1st Floor, WeWork 37,<br/>
+            Cunningham Cross Rd,<br/>
+            SRT Road, Vasant Nagar,<br/>
+            Bengaluru 560001<br/>
+            <br/>
+            +91 9900096873
+          </div>
+          <div class="contact">
+            <h4>Hyderabad</h4>
+            Suite 502, Building 450,<br/>
+            Central Plaza, Genome Valley,<br/>
+            Shameerpet, Hyderabad 500078<br/>
+            <br/>
+            +91 9900096873
+          </div>
+          <div class="contact">
+            <h4>Chennai</h4>
+            RK Swamy Centre, Hansa Building,<br/>
+            Door No:3, Thousand Lights,<br/>
+            Chennai 600006<br/>
+            <br/>
+            +91 9650473961
+          </div>
+
+          <div class="contact">
+            <h4>GIFT City</h4>
+            Unit FF-10, FF Floor,<br/>
+            Pragya Accelerator, Block 15T,<br/>
+            GIFT CITY, Gandhinagar,<br/>
+            Gujarat 382355<br/>
+            <br/>
+            +91 9650473961
+          </div>
+          <div class="contact" style="grid-column: span 3; border-top:2px solid var(--lc-red); padding-top:16px; margin-top:8px;">
+            <h4>Get in touch</h4>
+            <span style="font-family:var(--font-serif); font-weight:300; font-size:20px; color:var(--lc-black);">info@lighthouse-canton.com</span>
+            &nbsp;&nbsp;·&nbsp;&nbsp;
+            <span style="font-family:var(--font-serif); font-weight:300; font-size:20px; color:var(--lc-black);">service@lighthouse-canton.in</span>
+            &nbsp;&nbsp;·&nbsp;&nbsp;
+            <span style="font-family:var(--font-serif); font-weight:300; font-size:20px; color:var(--lc-black);">lighthouse-canton.com</span>
+          </div>
+        </div>
+      </div>
+      <div class="footer-pageno">35</div>
+    </section>
+
+  </deck-stage>
+
+</body>
+</html>

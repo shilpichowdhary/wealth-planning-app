@@ -47,11 +47,12 @@ def test_system_prompt_includes_source_requirement():
 async def test_stream_chat_returns_warning_when_no_context():
     svc = LLMService()
     retrieval = RetrievalResult(source=RetrievalSource.NONE, has_sufficient_context=False)
-    tokens = []
-    async for token in svc.stream_chat(messages=[], retrieval=retrieval, profile={}):
-        tokens.append(token)
-    assert len(tokens) == 1
-    assert "No knowledge base coverage" in tokens[0] or "⚠️" in tokens[0]
+    events = []
+    async for event in svc.stream_chat(messages=[], retrieval=retrieval, profile={}):
+        events.append(event)
+    assert len(events) == 1
+    assert events[0]["type"] == "text"
+    assert "No knowledge base coverage" in events[0]["text"] or "⚠️" in events[0]["text"]
 
 
 @pytest.mark.asyncio
@@ -67,12 +68,12 @@ async def test_stream_chat_error_yields_generic_message():
         mock_instance = MagicMock()
         mock_cls.return_value = mock_instance
         mock_instance.messages.stream.side_effect = Exception("API down")
-        tokens = []
-        async for token in svc.stream_chat(
+        events = []
+        async for event in svc.stream_chat(
             messages=[{"role": "user", "content": "test"}],
             retrieval=retrieval,
             profile={},
         ):
-            tokens.append(token)
-    full = "".join(tokens)
+            events.append(event)
+    full = "".join(e["text"] for e in events if e.get("type") == "text")
     assert "Error" in full or "Unable" in full

@@ -28,7 +28,7 @@ export function TrustNode({ data }: { data: any }) {
         </span>
       )}
       {data.role && (
-        <span className="text-[10px] text-ink-300 mt-0.5">{data.role}</span>
+        <span className="text-[10px] text-ink-600 mt-0.5">{data.role}</span>
       )}
       <Handle type="source" position={Position.Bottom} className="!opacity-0" />
     </div>

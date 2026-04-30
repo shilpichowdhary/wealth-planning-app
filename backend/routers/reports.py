@@ -1,74 +1,144 @@
-import json
+"""Deck generation + download endpoints.
+
+Replaces the old mechanical HTML→Puppeteer /reports/{id}/pdf with an
+agent-driven PowerPoint pipeline:
+
+  POST /reports/{case_id}/deck/generate  → curator + render → CaseDeck row
+  GET  /reports/{case_id}/deck            → metadata of latest version + staleness
+  GET  /reports/{case_id}/deck.pptx       → download editable PowerPoint
+  GET  /reports/{case_id}/deck.pdf        → download PDF (lazy soffice convert)
+
+Access control mirrors the rest of the case API: admin sees all, advisor
+sees own cases, client sees only their own case.
+"""
 import logging
+from pathlib import Path
+
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import Response
+from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+
 from backend.database import get_db
 from backend.models.case import Case
-from backend.models.client_profile import ClientProfile
-from backend.models.recommendation import Recommendation
 from backend.models.user import User, UserRole
 from backend.routers.auth import get_current_user, is_staff
-from backend.services.pdf_service import build_report_html, generate_pdf
+from backend.services import deck_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/reports", tags=["reports"])
 
 
-@router.get("/{case_id}/pdf")
+async def _check_access(case_id: str, db: AsyncSession, user: User) -> Case:
+    """Look up the case and enforce per-user access. Raises 404/403."""
+    from sqlalchemy import select
+    case = (
+        await db.execute(select(Case).where(Case.case_id == case_id))
+    ).scalar_one_or_none()
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+    if (
+        is_staff(user)
+        and user.role != UserRole.ADMIN
+        and case.created_by != user.user_id
+    ):
+        raise HTTPException(status_code=403, detail="Access denied")
+    if user.role == UserRole.CLIENT and user.case_id != case_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    return case
+
+
+@router.get("/{case_id}/deck")
+async def get_deck_status(
+    case_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Returns metadata about the latest generated deck (or {none: true}).
+
+    Used by the frontend to render the Generate / Download buttons and to
+    show a 'inputs have changed since last generation' staleness pill.
+    """
+    await _check_access(case_id, db, current_user)
+    deck = await deck_service.latest_deck(case_id, db)
+    if not deck:
+        return {"exists": False}
+    stale = await deck_service.is_stale(case_id, db)
+    return {
+        "exists": True,
+        "version": deck.version,
+        "generated_at": deck.generated_at.isoformat() if deck.generated_at else None,
+        "generated_by": deck.generated_by,
+        "model_used": deck.model_used,
+        "stale": stale,
+        "has_pdf": bool(deck.pdf_path and Path(deck.pdf_path).exists()),
+    }
+
+
+@router.post("/{case_id}/deck/generate")
+async def generate_deck_endpoint(
+    case_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Curator + renderer pipeline. Synchronous (≈30s on Sonnet 4.6 + caching).
+
+    Only staff can generate decks — clients can download but cannot regenerate.
+    """
+    await _check_access(case_id, db, current_user)
+    if current_user.role == UserRole.CLIENT:
+        raise HTTPException(status_code=403, detail="Only staff can generate decks")
+    try:
+        deck = await deck_service.generate_deck(
+            case_id, db, generated_by=current_user.user_id
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.error("Deck generation failed for %s: %s", case_id, e, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Deck generation failed: {e}")
+    return {
+        "version": deck.version,
+        "generated_at": deck.generated_at.isoformat(),
+        "model_used": deck.model_used,
+    }
+
+
+@router.get("/{case_id}/deck.pptx")
+async def download_pptx(
+    case_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    case = await _check_access(case_id, db, current_user)
+    deck = await deck_service.latest_deck(case_id, db)
+    if not deck or not deck.pptx_path or not Path(deck.pptx_path).exists():
+        raise HTTPException(status_code=404, detail="No deck generated yet")
+    return FileResponse(
+        deck.pptx_path,
+        media_type=(
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+        ),
+        filename=f"wealth-plan-{(case.client_name or case_id)[:24]}.pptx",
+    )
+
+
+@router.get("/{case_id}/deck.pdf")
 async def download_pdf(
     case_id: str,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    case_result = await db.execute(select(Case).where(Case.case_id == case_id))
-    case = case_result.scalar_one_or_none()
-    if not case:
-        raise HTTPException(status_code=404, detail="Case not found")
-
-    # Access control
-    if is_staff(current_user) and current_user.role != UserRole.ADMIN and case.created_by != current_user.user_id:
-        raise HTTPException(status_code=403, detail="Access denied")
-    if current_user.role == UserRole.CLIENT and current_user.case_id != case_id:
-        raise HTTPException(status_code=403, detail="Access denied")
-
-    profile_result = await db.execute(select(ClientProfile).where(ClientProfile.case_id == case_id))
-    profile_row = profile_result.scalar_one_or_none()
-    profile_dict = {}
-    if profile_row:
-        profile_dict = {
-            "domicile": profile_row.domicile,
-            "nationality": profile_row.nationality,
-            "tax_residency": profile_row.tax_residency,
-            "objectives": profile_row.objectives,
-        }
-
-    rec_result = await db.execute(select(Recommendation).where(Recommendation.case_id == case_id))
-    recommendations = [
-        {
-            "structure_name": r.structure_name,
-            "confidence_level": r.confidence_level,
-            "rationale": r.rationale,
-            "sources": r.sources,
-        }
-        for r in rec_result.scalars().all()
-    ]
-
+    case = await _check_access(case_id, db, current_user)
+    deck = await deck_service.latest_deck(case_id, db)
+    if not deck:
+        raise HTTPException(status_code=404, detail="No deck generated yet")
     try:
-        html = build_report_html(
-            case_data={"client_name": case.client_name},
-            profile=profile_dict,
-            recommendations=recommendations,
-            diagrams={},
-        )
-        pdf_bytes = await generate_pdf(html)
-    except Exception as e:
-        logger.error("PDF generation failed for case %s: %s", case_id, e)
-        raise HTTPException(status_code=500, detail="Failed to generate PDF report")
-
-    return Response(
-        content=pdf_bytes,
+        pdf_path = await deck_service.ensure_pdf(deck, db)
+    except (FileNotFoundError, RuntimeError) as e:
+        logger.error("PDF conversion failed for %s: %s", case_id, e)
+        raise HTTPException(status_code=500, detail="PDF conversion failed")
+    return FileResponse(
+        str(pdf_path),
         media_type="application/pdf",
-        headers={"Content-Disposition": f"attachment; filename=wealth-plan-{case_id[:8]}.pdf"},
+        filename=f"wealth-plan-{(case.client_name or case_id)[:24]}.pdf",
     )

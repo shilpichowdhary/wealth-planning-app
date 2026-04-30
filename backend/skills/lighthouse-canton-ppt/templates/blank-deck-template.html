@@ -1,0 +1,718 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Lighthouse Canton — PowerPoint Template</title>
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="ppt-template.css" />
+  <script src="deck-stage.js" defer></script>
+  <style>
+    html, body { margin: 0; padding: 0; background: #0a0a0a; height: 100%; overflow: hidden; font-family: var(--font-sans); }
+
+    /* Toolbar — hidden on print */
+    .toolbar {
+      position: fixed; top: 14px; right: 14px; z-index: 9999;
+      display: flex; gap: 6px; align-items: center;
+      background: rgba(20,20,20,0.86); backdrop-filter: blur(12px);
+      padding: 6px; border: 1px solid rgba(255,255,255,0.14);
+    }
+    .toolbar a, .toolbar button {
+      appearance: none; background: transparent; color: rgba(255,255,255,0.88);
+      border: 1px solid rgba(255,255,255,0.16);
+      padding: 8px 12px; font-family: var(--font-sans); font-weight: 500;
+      font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase;
+      text-decoration: none; cursor: pointer;
+      transition: background .15s, color .15s, border-color .15s;
+    }
+    .toolbar a:hover, .toolbar button:hover { background: #fff; color: #000; border-color: #fff; }
+    .toolbar .primary { background: var(--lc-red); color: #fff; border-color: var(--lc-red); }
+    .toolbar .primary:hover { background: #fff; color: var(--lc-red); border-color: #fff; }
+    @media print { .toolbar { display: none !important; } }
+
+    /* Placeholder styling: [Bracket text] shows dotted underline to mark it as placeholder */
+    .placeholder { border-bottom: 1px dashed rgba(229,0,37,0.35); }
+  </style>
+</head>
+<body>
+
+  <div class="toolbar" role="toolbar" aria-label="Deck actions">
+    <a href="00 Overview.html" title="Back to design system">← System</a>
+    <a href="templates/LC Master Template.pptx" download title="Download the editable PowerPoint master">Download .pptx</a>
+    <button type="button" onclick="window.print()" class="primary">Print / PDF</button>
+  </div>
+
+  <deck-stage width="1920" height="1080">
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         01 · COVER — Bridge photo on right, serif title + red wordmark
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="01 Cover">
+      <!-- Photo on right 60% -->
+      <div style="position:absolute; top:0; right:0; bottom:0; width:60%; background-image:url('assets/deck/hero-bridge.jpg'); background-size:cover; background-position:center;"></div>
+      <!-- White text panel left 40% -->
+      <div style="position:absolute; left:0; top:0; bottom:0; width:50%; background:#fff;"></div>
+
+      <div style="position:absolute; left:120px; top:380px; width:820px;">
+        <h1 class="t-display" style="font-size:88px; margin:0 0 14px;">
+          <span class="placeholder">Presentation Title</span>
+        </h1>
+        <h2 class="t-display" style="font-style:italic; font-size:72px; color:var(--lc-black-80); margin:0 0 44px; font-weight:300;">
+          <span class="placeholder">Subtitle line</span>
+        </h2>
+        <div class="t-sans" style="font-size:18px; color:var(--lc-black-80); margin-bottom:56px;">
+          <span class="placeholder">Q1 2026</span>
+        </div>
+        <img src="assets/logo-wordmark-red.png" alt="Lighthouse Canton" style="height:48px; display:block;"/>
+        <div class="t-sans" style="font-size:14px; letter-spacing:0.08em; color:var(--lc-black-80); margin-top:14px;">
+          lighthouse-canton.com
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         02 · COVER (alt) — White bg, typography-led, small red accent
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="02 Cover (Alt)">
+      <div class="slide-pad" style="display:flex; flex-direction:column; justify-content:center;">
+        <div style="max-width:1400px;">
+          <div class="t-sans" style="font-size:16px; letter-spacing:0.18em; text-transform:uppercase; color:var(--lc-black-80); margin-bottom:42px;">
+            <span class="placeholder">Document Type</span>  ·  <span class="placeholder">Date</span>
+          </div>
+          <h1 class="t-display" style="font-size:104px; margin:0;">
+            <span class="placeholder">Where Insight Meets</span>
+          </h1>
+          <h1 class="t-display" style="font-size:104px; font-style:italic; font-weight:300; margin:0;">
+            <span class="placeholder">Opportunity.</span>
+          </h1>
+          <hr class="h-rule-red" style="width:140px; height:3px; margin:56px 0 48px;"/>
+          <p class="t-sans" style="max-width:760px; font-size:22px; line-height:1.55; color:var(--lc-black);">
+            <span class="placeholder">One-sentence description of what this document contains. Keep it to a single line, under 180 characters.</span>
+          </p>
+        </div>
+      </div>
+
+      <img class="wordmark-bl" src="assets/logo-wordmark-red.png" alt="Lighthouse Canton"/>
+      <div class="footer-pageno">02</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         03 · TABLE OF CONTENTS
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="03 Table of Contents">
+      <div class="slide-pad">
+        <h2 class="t-display" style="font-size:88px; margin:0 0 72px;">Table of Contents</h2>
+
+        <div class="toc-row">
+          <div>
+            <div class="chapter"><span class="placeholder">Chapter One</span></div>
+            <div class="subs">
+              <span class="placeholder">Sub-section</span> &nbsp; · &nbsp;
+              <span class="placeholder">Sub-section</span> &nbsp; · &nbsp;
+              <span class="placeholder">Sub-section</span>
+            </div>
+          </div>
+          <div class="pages">02 – 08</div>
+        </div>
+
+        <div class="toc-row">
+          <div>
+            <div class="chapter"><span class="placeholder">Chapter Two</span></div>
+            <div class="subs">
+              <span class="placeholder">Sub-section</span> &nbsp; · &nbsp;
+              <span class="placeholder">Sub-section</span>
+            </div>
+          </div>
+          <div class="pages">09 – 16</div>
+        </div>
+
+        <div class="toc-row">
+          <div>
+            <div class="chapter"><span class="placeholder">Chapter Three</span></div>
+            <div class="subs">
+              <span class="placeholder">Sub-section</span> &nbsp; · &nbsp;
+              <span class="placeholder">Sub-section</span>
+            </div>
+          </div>
+          <div class="pages">17 – 24</div>
+        </div>
+
+        <div class="toc-row">
+          <div>
+            <div class="chapter"><span class="placeholder">Chapter Four</span></div>
+            <div class="subs">
+              <span class="placeholder">Sub-section</span>
+            </div>
+          </div>
+          <div class="pages">25 – 30</div>
+        </div>
+      </div>
+
+      <div class="footer-pageno">03</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         04 · DISCLAIMER — Mandatory. Must appear in every LC external deck.
+         Copy below is verbatim from the master and MUST NOT be modified.
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="04 Disclaimer">
+      <div class="chapter-tab"><span style="font-family:var(--font-serif); font-weight:400; font-size:18px; color:var(--lc-red);">Disclaimer</span></div>
+
+      <div class="slide-pad" style="top:140px;">
+        <h2 class="t-display" style="font-size:56px; margin:0 0 36px;">Disclaimer</h2>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:56px;">
+          <div class="t-sans" style="font-size:13px; line-height:1.65; color:var(--lc-black);">
+            <p style="margin:0 0 14px;">
+              The contents of this document are confidential and are meant for the intended recipient only. If you are not the intended recipient, please delete all copies of this document and notify the sender immediately. This document, provided as a general commentary, is for informational purposes only and is not to be construed as an offer to sell or solicit an offer to buy any financial instruments in any jurisdiction. This does not constitute any form of regulated financial advice, and your independent financial advisor should be consulted prior to taking any investment decision(s).
+            </p>
+            <p style="margin:0 0 14px;">
+              This document is based on information from sources which are reliable but has not been independently verified by Lighthouse Canton Pte. Ltd. (&ldquo;LCPL&rdquo;) and its affiliate, Lighthouse Canton Capital (DIFC) Pte. Ltd) (&ldquo;LCC&rdquo;) (collectively, &ldquo;LC&rdquo;). The Net Asset Value (&ldquo;NAV&rdquo;) of the funds will be computed independently by a third-party fund administrator on a regular basis in accordance with the applicable NAV calculation policy and relevant pricing model. Deviation to the policy, if any, will be disclosed by the respective fund administrator and/or the Manager. LC has taken the reasonable steps to verify the contents of this document and accepts no liability for any loss arising from the use of any information contained herein. Please also note that past performances are not indicative of future performance.
+            </p>
+            <p style="margin:0 0 14px;">
+              Information contained herein are those of the author(s) and does not represent the views held by other parties. LC is also under no obligation to update you on any changes made to this document.
+            </p>
+          </div>
+
+          <div class="t-sans" style="font-size:13px; line-height:1.65; color:var(--lc-black);">
+            <p style="margin:0 0 14px;">
+              This document is prepared by LCPL and LCC, which are regulated by Monetary Authority of Singapore (&ldquo;MAS&rdquo;) and Dubai Financial Services Authority (&ldquo;DFSA&rdquo;) respectively. MAS and DFSA have no responsibility for reviewing, verifying and approving the contents of this document and/or other associated documents. The contents of this document may not be reproduced or referenced, either in part or in full, without prior written permission from LC.
+            </p>
+            <p style="margin:0 0 14px;">
+              This document is only intended for Accredited Investors and/or Professional Clients, as defined by MAS and DFSA.
+            </p>
+            <p style="margin:24px 0 0; padding-top:20px; border-top:2px solid var(--lc-red); font-family:var(--font-serif); font-weight:400; font-size:14px; color:var(--lc-black-80);">
+              Regulated by MAS (Singapore), DFSA (Dubai), SEBI (India) and FCA (United Kingdom).
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-pageno">04</div>
+    </section>
+    <section data-label="04 Section Divider" class="section-black">
+      <div class="slide-pad" style="display:grid; grid-template-columns: 1fr 1fr; align-items:center; gap:120px;">
+        <div class="chapter-num" style="text-align:right;">01</div>
+        <div>
+          <div class="t-sans" style="font-size:14px; letter-spacing:0.2em; text-transform:uppercase; color:rgba(255,255,255,0.55); margin-bottom:24px;">
+            Section
+          </div>
+          <h2 class="chapter-title"><span class="placeholder" style="border-color:rgba(255,255,255,0.3);">Chapter Title Goes Here</span></h2>
+        </div>
+      </div>
+      <div class="footer-pageno" style="color:rgba(255,255,255,0.55);">04</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         05 · CONTENT — Serif label + RED VERTICAL RULE + sans body
+         (The hallmark LC layout pattern)
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="05 Two-Column (Serif + Rule + Sans)">
+      <div class="chapter-tab"><span class="num">01</span>  ·  <span class="placeholder">Chapter Name</span></div>
+
+      <div class="slide-pad" style="top:180px;">
+        <h2 class="t-display" style="font-size:72px; margin:0 0 96px;">
+          <span class="placeholder">Slide Title With a Real Thought</span>
+        </h2>
+
+        <!-- Row 1 -->
+        <div style="display:grid; grid-template-columns: 480px 3px 1fr; gap:60px; align-items:start; margin-bottom:56px;">
+          <div class="t-serif-label" style="font-size:44px;">
+            <span class="placeholder">Category<br/>Label</span>
+          </div>
+          <div class="v-rule" style="min-height:140px;"></div>
+          <div class="t-sans" style="font-size:22px; line-height:1.55; max-width:64ch;">
+            <span class="placeholder">Describe this pillar in 1–2 sentences. Keep the tone confident, specific and plain. No filler adjectives.</span>
+          </div>
+        </div>
+
+        <!-- Row 2 -->
+        <div style="display:grid; grid-template-columns: 480px 3px 1fr; gap:60px; align-items:start; margin-bottom:56px;">
+          <div class="t-serif-label" style="font-size:44px;">
+            <span class="placeholder">Category<br/>Label</span>
+          </div>
+          <div class="v-rule" style="min-height:140px;"></div>
+          <div class="t-sans" style="font-size:22px; line-height:1.55; max-width:64ch;">
+            <span class="placeholder">Describe this pillar in 1–2 sentences. Keep the tone confident, specific and plain.</span>
+          </div>
+        </div>
+
+        <!-- Row 3 -->
+        <div style="display:grid; grid-template-columns: 480px 3px 1fr; gap:60px; align-items:start;">
+          <div class="t-serif-label" style="font-size:44px;">
+            <span class="placeholder">Category<br/>Label</span>
+          </div>
+          <div class="v-rule" style="min-height:140px;"></div>
+          <div class="t-sans" style="font-size:22px; line-height:1.55; max-width:64ch;">
+            <span class="placeholder">Describe this pillar in 1–2 sentences.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-pageno">05</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         06 · CONTENT — Title + Lead paragraph (simple, no columns)
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="06 Title + Lede">
+      <div class="chapter-tab"><span class="num">01</span>  ·  <span class="placeholder">Chapter Name</span></div>
+
+      <div class="slide-pad" style="top:200px;">
+        <h2 class="t-display" style="font-size:88px; margin:0 0 56px; max-width:1500px;">
+          <span class="placeholder">A bold sentence that states the main idea.</span>
+        </h2>
+
+        <div style="display:grid; grid-template-columns: 4px 1fr; gap:48px; align-items:start; max-width:1300px;">
+          <div class="v-rule" style="min-height:220px; width:4px;"></div>
+          <p class="t-sans" style="font-size:26px; line-height:1.55; font-weight:400; margin:0;">
+            <span class="placeholder">A 2–3 sentence lead that expands on the title. Keep it confident and specific — use real figures where possible. Avoid filler adjectives like "leading", "innovative" or "world-class".</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="footer-pageno">06</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         07 · CONTENT — 4-Region grid (serif caps + red underline + sans)
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="07 Four-Region Grid">
+      <div class="chapter-tab"><span class="num">01</span>  ·  <span class="placeholder">Chapter Name</span></div>
+
+      <div class="slide-pad" style="top:180px; display:flex; flex-direction:column;">
+        <h2 class="t-display" style="font-size:64px; margin:0 0 88px; max-width:1200px;">
+          <span class="placeholder">Section title across four categories.</span>
+        </h2>
+
+        <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:60px; flex: 1;">
+          <div class="region">
+            <div class="region-name"><span class="placeholder">Region One</span></div>
+            <span class="region-underline"></span>
+            <p class="region-body"><span class="placeholder">Short description of this region, office or category.</span></p>
+          </div>
+          <div class="region">
+            <div class="region-name"><span class="placeholder">Region Two</span></div>
+            <span class="region-underline"></span>
+            <p class="region-body"><span class="placeholder">Short description of this region, office or category.</span></p>
+          </div>
+          <div class="region">
+            <div class="region-name"><span class="placeholder">Region Three</span></div>
+            <span class="region-underline"></span>
+            <p class="region-body"><span class="placeholder">Short description of this region, office or category.</span></p>
+          </div>
+          <div class="region">
+            <div class="region-name"><span class="placeholder">Region Four</span></div>
+            <span class="region-underline"></span>
+            <p class="region-body"><span class="placeholder">Short description of this region, office or category.</span></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-pageno">07</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         08 · CONTENT — Quote / Mission statement over soft photo
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="08 Quote / Mission">
+      <div class="photo-full photo-soft" style="background-image:url('assets/deck/mountain-bg.jpg');"></div>
+
+      <div class="slide-pad" style="display:grid; grid-template-columns:1fr 1fr; gap:80px;">
+        <div>
+          <div style="display:grid; grid-template-columns:4px 1fr; gap:36px; align-items:start;">
+            <div class="v-rule" style="min-height:200px; width:4px;"></div>
+            <div>
+              <h3 class="t-display" style="font-size:56px; margin:0 0 32px;"><span class="placeholder">Our Mission</span></h3>
+              <p class="t-sans" style="font-size:24px; line-height:1.55; margin:0; max-width:24ch;">
+                <span class="placeholder">One-sentence mission statement in plain language.</span>
+              </p>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:auto;">
+          <div style="display:grid; grid-template-columns:4px 1fr; gap:36px; align-items:start;">
+            <div class="v-rule" style="min-height:200px; width:4px;"></div>
+            <div>
+              <h3 class="t-display" style="font-size:56px; margin:0 0 32px;"><span class="placeholder">Our Vision</span></h3>
+              <p class="t-sans" style="font-size:24px; line-height:1.55; margin:0; max-width:24ch;">
+                <span class="placeholder">One-sentence vision statement.</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-pageno">08</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         09 · CONTENT — Two-column body text
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="09 Two-Column Text">
+      <div class="chapter-tab"><span class="num">02</span>  ·  <span class="placeholder">Chapter Name</span></div>
+
+      <div class="slide-pad" style="top:180px;">
+        <h2 class="t-display" style="font-size:72px; margin:0 0 72px;">
+          <span class="placeholder">Section title over two paragraphs.</span>
+        </h2>
+
+        <div style="display:grid; grid-template-columns:1fr 3px 1fr; gap:64px; align-items:start;">
+          <div>
+            <h3 class="t-serif-label" style="font-size:32px; margin:0 0 20px;"><span class="placeholder">Sub-heading</span></h3>
+            <p class="t-sans" style="font-size:20px; line-height:1.6; margin:0;">
+              <span class="placeholder">Body paragraph — 3–5 sentences. Use specific figures, dates or names wherever possible. Keep the pacing calm and even; don't over-emphasise.</span>
+            </p>
+          </div>
+          <div class="v-rule" style="min-height:300px;"></div>
+          <div>
+            <h3 class="t-serif-label" style="font-size:32px; margin:0 0 20px;"><span class="placeholder">Sub-heading</span></h3>
+            <p class="t-sans" style="font-size:20px; line-height:1.6; margin:0;">
+              <span class="placeholder">Body paragraph — counterpart to the left column. Parallel structure helps the reader scan.</span>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-pageno">09</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         10 · CONTENT — Image left, text right
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="10 Image + Text">
+      <div class="photo-left" style="background-image:url('assets/deck/hero-rocket.jpeg');"></div>
+
+      <div style="position:absolute; left:45%; right:120px; top:200px; bottom:120px;">
+        <div class="t-sans" style="font-size:14px; letter-spacing:0.18em; text-transform:uppercase; color:var(--lc-red); margin-bottom:28px;">
+          <span class="placeholder">Eyebrow Label</span>
+        </div>
+        <h2 class="t-display" style="font-size:72px; margin:0 0 40px;">
+          <span class="placeholder">Title paired with an image.</span>
+        </h2>
+        <p class="t-sans" style="font-size:20px; line-height:1.6; margin:0 0 32px; max-width:56ch;">
+          <span class="placeholder">A 3–4 sentence paragraph that relates the image to the content. The image anchors the idea; the text delivers the substance.</span>
+        </p>
+        <ul class="t-sans" style="font-size:20px; line-height:1.8; padding-left:0; list-style:none; margin:0;">
+          <li style="padding-left:28px; position:relative;">
+            <span style="position:absolute; left:0; top:12px; width:10px; height:10px; background:var(--lc-red);"></span>
+            <span class="placeholder">Supporting point one</span>
+          </li>
+          <li style="padding-left:28px; position:relative;">
+            <span style="position:absolute; left:0; top:12px; width:10px; height:10px; background:var(--lc-red);"></span>
+            <span class="placeholder">Supporting point two</span>
+          </li>
+          <li style="padding-left:28px; position:relative;">
+            <span style="position:absolute; left:0; top:12px; width:10px; height:10px; background:var(--lc-red);"></span>
+            <span class="placeholder">Supporting point three</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="footer-pageno">10</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         11 · CONTENT — Awards / logo grid
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="11 Awards / Logo Grid">
+      <div class="chapter-tab"><span class="num">02</span>  ·  <span class="placeholder">Chapter Name</span></div>
+
+      <div class="slide-pad" style="top:180px;">
+        <h2 class="t-display" style="font-size:72px; margin:0 0 72px;">
+          <span class="placeholder">Awards &amp; Recognition</span>
+        </h2>
+
+        <div class="awards-grid">
+          <div class="award"><img src="assets/deck/award-euromoney.png" alt="Award placeholder"/></div>
+          <div class="award"><img src="assets/deck/award-apb-2024.png" alt="Award placeholder"/></div>
+          <div class="award"><img src="assets/deck/award-apb-2021.png" alt="Award placeholder"/></div>
+          <div class="award" style="color:var(--lc-black-80); font-family:var(--font-serif); font-size:16px; text-align:center;"><span class="placeholder">Logo</span></div>
+          <div class="award" style="color:var(--lc-black-80); font-family:var(--font-serif); font-size:16px; text-align:center;"><span class="placeholder">Logo</span></div>
+          <div class="award" style="color:var(--lc-black-80); font-family:var(--font-serif); font-size:16px; text-align:center;"><span class="placeholder">Logo</span></div>
+          <div class="award" style="color:var(--lc-black-80); font-family:var(--font-serif); font-size:16px; text-align:center;"><span class="placeholder">Logo</span></div>
+          <div class="award" style="color:var(--lc-black-80); font-family:var(--font-serif); font-size:16px; text-align:center;"><span class="placeholder">Logo</span></div>
+        </div>
+      </div>
+
+      <div class="footer-pageno">11</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         12 · CONTENT — Data table
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="12 Data Table">
+      <div class="chapter-tab"><span class="num">03</span>  ·  <span class="placeholder">Chapter Name</span></div>
+
+      <div class="slide-pad" style="top:180px;">
+        <h2 class="t-display" style="font-size:64px; margin:0 0 48px;">
+          <span class="placeholder">Data table with clean type.</span>
+        </h2>
+        <p class="t-sans" style="font-size:20px; color:var(--lc-black-80); max-width:64ch; margin:0 0 48px;">
+          <span class="placeholder">Optional one-line lead explaining what the numbers represent and the reporting period.</span>
+        </p>
+
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width:32%;">Column label</th>
+              <th>Description</th>
+              <th class="num" style="text-align:right; width:14%;">Metric one</th>
+              <th class="num" style="text-align:right; width:14%;">Metric two</th>
+              <th class="num" style="text-align:right; width:14%;">Metric three</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="placeholder">Row name</span></td>
+              <td style="color:var(--lc-black-80);"><span class="placeholder">Short description</span></td>
+              <td class="num"><span class="placeholder">0.00</span></td>
+              <td class="num"><span class="placeholder">0.00</span></td>
+              <td class="num"><span class="placeholder">0.00</span></td>
+            </tr>
+            <tr>
+              <td><span class="placeholder">Row name</span></td>
+              <td style="color:var(--lc-black-80);"><span class="placeholder">Short description</span></td>
+              <td class="num"><span class="placeholder">0.00</span></td>
+              <td class="num"><span class="placeholder">0.00</span></td>
+              <td class="num"><span class="placeholder">0.00</span></td>
+            </tr>
+            <tr>
+              <td><span class="placeholder">Row name</span></td>
+              <td style="color:var(--lc-black-80);"><span class="placeholder">Short description</span></td>
+              <td class="num"><span class="placeholder">0.00</span></td>
+              <td class="num"><span class="placeholder">0.00</span></td>
+              <td class="num"><span class="placeholder">0.00</span></td>
+            </tr>
+            <tr>
+              <td><span class="placeholder">Row name</span></td>
+              <td style="color:var(--lc-black-80);"><span class="placeholder">Short description</span></td>
+              <td class="num"><span class="placeholder">0.00</span></td>
+              <td class="num"><span class="placeholder">0.00</span></td>
+              <td class="num"><span class="placeholder">0.00</span></td>
+            </tr>
+            <tr>
+              <td><span class="placeholder">Row name</span></td>
+              <td style="color:var(--lc-black-80);"><span class="placeholder">Short description</span></td>
+              <td class="num"><span class="placeholder">0.00</span></td>
+              <td class="num"><span class="placeholder">0.00</span></td>
+              <td class="num"><span class="placeholder">0.00</span></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="t-sans" style="font-size:13px; color:var(--lc-black-80); margin-top:24px;">
+          <span class="placeholder">Source / footnote.  Past performance is not indicative of future results.</span>
+        </div>
+      </div>
+
+      <div class="footer-pageno">12</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         13 · CONTENT — Three-column process (serif numerals + labels)
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="13 Three-Column / Process">
+      <div class="chapter-tab"><span class="num">03</span>  ·  <span class="placeholder">Chapter Name</span></div>
+
+      <div class="slide-pad" style="top:180px;">
+        <h2 class="t-display" style="font-size:72px; margin:0 0 88px;">
+          <span class="placeholder">Process title across three steps.</span>
+        </h2>
+
+        <div class="cols-equal" style="align-items:stretch;">
+          <div style="padding-right:48px;">
+            <div class="t-serif-label" style="font-size:28px; color:var(--lc-red); margin-bottom:18px;">01</div>
+            <h3 class="t-serif-label" style="font-size:36px; margin:0 0 24px; line-height:1.15;">
+              <span class="placeholder">Step One Title</span>
+            </h3>
+            <p class="t-sans" style="font-size:18px; line-height:1.6; margin:0;">
+              <span class="placeholder">Describe this step in 2–3 sentences. Be specific about the action, the owner and the output.</span>
+            </p>
+          </div>
+          <div>
+            <div class="t-serif-label" style="font-size:28px; color:var(--lc-red); margin-bottom:18px;">02</div>
+            <h3 class="t-serif-label" style="font-size:36px; margin:0 0 24px; line-height:1.15;">
+              <span class="placeholder">Step Two Title</span>
+            </h3>
+            <p class="t-sans" style="font-size:18px; line-height:1.6; margin:0;">
+              <span class="placeholder">Describe this step in 2–3 sentences.</span>
+            </p>
+          </div>
+          <div>
+            <div class="t-serif-label" style="font-size:28px; color:var(--lc-red); margin-bottom:18px;">03</div>
+            <h3 class="t-serif-label" style="font-size:36px; margin:0 0 24px; line-height:1.15;">
+              <span class="placeholder">Step Three Title</span>
+            </h3>
+            <p class="t-sans" style="font-size:18px; line-height:1.6; margin:0;">
+              <span class="placeholder">Describe this step in 2–3 sentences.</span>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-pageno">13</div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         14 · CLOSING — Thank you + offices (4 major HQs)
+         Addresses below are VERBATIM from the master and MUST NOT be altered.
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="14 Closing / Thank You" style="background:#fff;">
+      <div class="slide-pad" style="display:flex; flex-direction:column;">
+        <div style="display:flex; flex-direction:column; justify-content:center; padding-top:24px;">
+          <h2 class="t-display" style="font-size:120px; margin:0; line-height:1;">Thank you<span style="color:var(--lc-red);">.</span></h2>
+          <p class="t-serif-label" style="font-style:italic; font-size:32px; margin:24px 0 0; color:var(--lc-black-80);">
+            Where Insight Meets Opportunity
+          </p>
+        </div>
+
+        <div style="margin-top:56px;">
+          <hr style="border:0; border-top:1px solid rgba(0,0,0,0.15); margin:0 0 28px;"/>
+          <div class="contacts-grid">
+            <div class="contact">
+              <h4>Singapore</h4>
+              16 Collyer Quay #11-02<br/>
+              Collyer Quay Centre<br/>
+              Singapore&ndash;049318<br/>
+              <br/>
+              +65 67130570
+            </div>
+            <div class="contact">
+              <h4>Dubai</h4>
+              The Exchange, Gate Village 11,<br/>
+              Unit 204, DIFC,<br/>
+              Dubai, UAE&ndash;507026<br/>
+              <br/>
+              +971 45 861500
+            </div>
+            <div class="contact">
+              <h4>India &mdash; New Delhi</h4>
+              Unit 104A, Worldmark 2 Asset,<br/>
+              Delhi Aerocity,<br/>
+              New Delhi 110037<br/>
+              <br/>
+              +91 9650473961
+            </div>
+            <div class="contact">
+              <h4>United Kingdom</h4>
+              24 Hanover Square,<br/>
+              London, W1S 1JD<br/>
+              <br/>
+              <br/>
+              lighthouse-canton.com
+            </div>
+          </div>
+          <div class="t-sans" style="font-size:12px; color:var(--lc-black-80); margin-top:20px;">
+            Additional offices: Mumbai · Bengaluru · Hyderabad · Chennai · GIFT City (Gandhinagar). See the dedicated Offices slide.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         15 · OFFICES — Complete multi-city address grid (all 9 locations)
+         MANDATORY in every external corporate deck. Addresses verbatim.
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section data-label="15 Offices / Contact" style="background:#fff;">
+      <div class="slide-pad" style="display:flex; flex-direction:column;">
+        <div style="margin-bottom:32px;">
+          <div class="t-serif-label" style="font-size:18px; color:var(--lc-red); margin-bottom:10px; font-style:italic;">Where we are</div>
+          <h2 class="t-display" style="font-size:64px; margin:0; line-height:1.05;">
+            Offices
+          </h2>
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:32px 40px; flex:1;">
+          <!-- Row 1: HQs -->
+          <div class="contact">
+            <h4 style="color:var(--lc-red);">Singapore <span style="color:var(--lc-black-80); font-weight:400; font-size:10px; letter-spacing:0.15em;">HQ</span></h4>
+            16 Collyer Quay #11-02<br/>
+            Collyer Quay Centre<br/>
+            Singapore&ndash;049318<br/>
+            <br/>
+            +65 67130570
+          </div>
+          <div class="contact">
+            <h4 style="color:var(--lc-red);">Dubai</h4>
+            The Exchange,<br/>
+            Gate Village 11, Unit 204,<br/>
+            DIFC, Dubai, UAE&ndash;507026<br/>
+            <br/>
+            +971 45 861500
+          </div>
+          <div class="contact">
+            <h4 style="color:var(--lc-red);">London</h4>
+            24 Hanover Square,<br/>
+            London, W1S 1JD<br/>
+            United Kingdom
+          </div>
+          <div class="contact">
+            <h4 style="color:var(--lc-red);">New Delhi</h4>
+            Unit 104A, Worldmark 2 Asset,<br/>
+            Delhi Aerocity,<br/>
+            New Delhi 110037<br/>
+            <br/>
+            +91 9650473961
+          </div>
+
+          <!-- Row 2: India offices -->
+          <div class="contact">
+            <h4>Mumbai</h4>
+            Unit 507/508, A Wing,<br/>
+            INS Tower, G Block, BKC,<br/>
+            Mumbai 400051
+          </div>
+          <div class="contact">
+            <h4>Bengaluru</h4>
+            1st Floor, WeWork 37,<br/>
+            Cunningham Cross Rd,<br/>
+            SRT Road, Vasant Nagar,<br/>
+            Bengaluru 560001<br/>
+            <br/>
+            +91 9900096873
+          </div>
+          <div class="contact">
+            <h4>Hyderabad</h4>
+            Suite 502, Building 450,<br/>
+            Central Plaza, Genome Valley,<br/>
+            Shameerpet, Hyderabad 500078<br/>
+            <br/>
+            +91 9900096873
+          </div>
+          <div class="contact">
+            <h4>Chennai</h4>
+            RK Swamy Centre, Hansa Building,<br/>
+            Door No:3, Thousand Lights,<br/>
+            Chennai 600006<br/>
+            <br/>
+            +91 9650473961
+          </div>
+
+          <!-- Row 3: GIFT + general + spacer -->
+          <div class="contact">
+            <h4>GIFT City</h4>
+            Unit FF-10, FF Floor,<br/>
+            Pragya Accelerator, Block 15T,<br/>
+            GIFT CITY, Gandhinagar,<br/>
+            Gujarat 382355<br/>
+            <br/>
+            +91 9650473961
+          </div>
+          <div class="contact" style="grid-column: span 3; border-top:2px solid var(--lc-red); padding-top:16px; margin-top:8px;">
+            <h4>Get in touch</h4>
+            <span style="font-family:var(--font-serif); font-weight:300; font-size:20px; color:var(--lc-black);">info@lighthouse-canton.com</span>
+            &nbsp;&nbsp;·&nbsp;&nbsp;
+            <span style="font-family:var(--font-serif); font-weight:300; font-size:20px; color:var(--lc-black);">service@lighthouse-canton.in</span>
+            &nbsp;&nbsp;·&nbsp;&nbsp;
+            <span style="font-family:var(--font-serif); font-weight:300; font-size:20px; color:var(--lc-black);">lighthouse-canton.com</span>
+          </div>
+        </div>
+      </div>
+      <div class="footer-pageno">15</div>
+    </section>
+
+  </deck-stage>
+
+</body>
+</html>

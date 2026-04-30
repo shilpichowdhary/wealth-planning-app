@@ -1,13 +1,7 @@
 "use client";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
-import {
-  KeyRound,
-  Check,
-  AlertTriangle,
-  PlugZap,
-  Loader2,
-} from "lucide-react";
+import { AlertTriangle, Check, PlugZap, Loader2 } from "lucide-react";
 
 interface SettingEntry {
   label: string;
@@ -116,21 +110,21 @@ export default function AdminSettingsPage() {
   }
 
   if (loading)
-    return <div className="max-w-3xl mx-auto px-8 py-10 text-ink-400 text-sm">Loading…</div>;
+    return <div className="max-w-2xl mx-auto px-8 py-10 text-ink-500 text-sm">Loading…</div>;
   if (session?.user?.role !== "admin")
     return (
-      <div className="max-w-3xl mx-auto px-8 py-16 text-ember-500">Access denied. Admins only.</div>
+      <div className="max-w-2xl mx-auto px-8 py-16 text-ember-500">Access denied. Admins only.</div>
     );
 
   return (
-    <div className="max-w-3xl mx-auto w-full px-8 py-10">
+    <div className="max-w-2xl mx-auto w-full px-8 py-10">
       <header className="mb-8 animate-fade-in-up">
-        <p className="text-[11px] uppercase tracking-[0.2em] text-ink-400 font-bold">Administration</p>
-        <h1 className="mt-2 font-display text-[38px] leading-[1.05] text-lc-white">
-          Settings<span className="text-lc-red">.</span>
+        <p className="text-[11px] uppercase tracking-[0.2em] text-ink-500 font-bold">Administration</p>
+        <h1 className="mt-2 font-display text-[38px] leading-[1.05] text-lc-black">
+          API keys &amp; settings<span className="text-lc-red">.</span>
         </h1>
-        <p className="mt-2 text-ink-300 text-[15px]">
-          API keys stored server-side and masked in the UI. Values override `.env`.
+        <p className="mt-2 text-ink-600 text-[15px]">
+          Manage API keys used by the system. Keys are stored encrypted and masked for display.
         </p>
       </header>
 
@@ -143,26 +137,29 @@ export default function AdminSettingsPage() {
 
       <div className="space-y-3 animate-fade-in-up" style={{ animationDelay: "0.05s" }}>
         {Object.entries(settings).map(([key, setting]) => (
-          <div key={key} className="rounded-2xl border border-ink-800 bg-ink-900 p-5">
+          <div
+            key={key}
+            className="rounded-2xl border border-ink-200 bg-white p-5 animate-fade-in-up"
+          >
             <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-bold text-lc-white flex items-center gap-2">
-                <KeyRound size={14} className="text-ink-400" />
+              <label className="text-sm font-bold text-ink-900">
                 {setting.label}
               </label>
               <span
-                className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold border ${
+                className={
                   setting.is_set
-                    ? "border-ink-600 bg-ink-800 text-lc-white"
-                    : "border-lc-red/50 bg-lc-red/10 text-lc-red"
-                }`}
+                    ? "lc-pill lc-pill-ok"
+                    : "lc-pill lc-pill-neutral"
+                }
               >
-                <span className={`h-1.5 w-1.5 rounded-full ${setting.is_set ? "bg-lc-white" : "bg-lc-red"}`} />
                 {setting.is_set ? "Configured" : "Not set"}
               </span>
             </div>
 
             {setting.is_set && setting.value && (
-              <p className="text-[11px] text-ink-400 font-mono mb-3 break-all">Current: {setting.value}</p>
+              <p className="text-xs text-ink-500 font-mono mb-2">
+                Current: {setting.value}
+              </p>
             )}
 
             <div className="flex flex-col sm:flex-row gap-2">
@@ -175,12 +172,12 @@ export default function AdminSettingsPage() {
                     ? "e.g. claude-sonnet-4-6"
                     : `Paste your ${setting.label}…`
                 }
-                className="flex-1 bg-ink-850 border border-ink-700 rounded-lg px-3 py-2.5 text-sm text-lc-white placeholder:text-ink-500 focus:outline-none focus:border-lc-red focus:ring-2 focus:ring-lc-red/20 transition"
+                className="flex-1 bg-ink-50 border border-ink-300 rounded-lg px-3 py-2 text-sm text-lc-black placeholder:text-ink-400 focus:outline-none focus:border-lc-red focus:ring-2 focus:ring-lc-red/20 transition"
               />
               <button
                 onClick={() => handleSave(key)}
                 disabled={!drafts[key]?.trim() || saving === key}
-                className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-lc-red text-lc-white px-4 py-2.5 text-sm font-bold hover:bg-lc-red/90 transition disabled:opacity-50"
+                className="lc-btn-primary"
               >
                 {saving === key ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
                 {saving === key ? "Saving…" : "Save"}
@@ -188,9 +185,9 @@ export default function AdminSettingsPage() {
             </div>
 
             {success === key && (
-              <p className="text-[12px] text-lc-white mt-2 inline-flex items-center gap-1">
-                <Check size={12} className="text-lc-red" />
-                Saved.
+              <p className="mt-2 inline-flex items-center gap-1 text-xs text-jade-500 font-bold">
+                <Check size={11} />
+                Saved successfully.
               </p>
             )}
           </div>

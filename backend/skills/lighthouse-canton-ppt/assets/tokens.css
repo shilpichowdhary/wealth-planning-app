@@ -1,0 +1,212 @@
+/* ============================================================
+   LIGHTHOUSE CANTON — DESIGN TOKENS
+   Derived from "LC Brand Guidelines" (© 2021 Lighthouse Canton)
+   ============================================================ */
+
+/* Typography — brand fonts self-hosted (variable) */
+@font-face {
+  font-family: 'Frank Ruhl Libre';
+  src: url('assets/fonts/FrankRuhlLibre-VariableFont_wght.ttf') format('truetype-variations'),
+       url('assets/fonts/FrankRuhlLibre-VariableFont_wght.ttf') format('truetype');
+  font-weight: 300 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Public Sans';
+  src: url('assets/fonts/PublicSans-VariableFont_wght.ttf') format('truetype-variations'),
+       url('assets/fonts/PublicSans-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Public Sans';
+  src: url('assets/fonts/PublicSans-Italic-VariableFont_wght.ttf') format('truetype-variations'),
+       url('assets/fonts/PublicSans-Italic-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+:root {
+  /* ------------ COLOUR PALETTE ------------ */
+  /* Primary */
+  --lc-red:          #E50025;   /* Agile Red   — primary, passionate energy */
+  --lc-black:        #000000;   /* Smart Black — primary */
+
+  /* Secondary */
+  --lc-white:        #FFFFFF;   /* Bright White */
+  --lc-grey:         #CCC6BE;   /* Warm Grey   — secondary */
+
+  /* Derived neutrals (not in guidelines — used sparingly for UI) */
+  --lc-grey-tint-95: #FAF9F8;   /* barely-there warm off-white */
+  --lc-grey-tint-85: #EFECE8;   /* light warm wash */
+  --lc-grey-tint-60: #7A7A76;   /* 60% K mid grey (email signature spec) */
+  --lc-black-80:     #333333;   /* text on warm backgrounds */
+  --lc-red-dark:     #B80020;   /* hover / pressed */
+
+  /* ------------ TYPEFACES ------------ */
+  --font-serif:  'Frank Ruhl Libre', 'Times New Roman', Georgia, serif;
+  --font-sans:   'Public Sans', Arial, 'Helvetica Neue', system-ui, sans-serif;
+  --font-fallback: Arial, 'Helvetica Neue', sans-serif;
+
+  /* ------------ TYPE SCALE (px @ 16px root) ------------ */
+  /* Calibrated from print specs: Hero 46pt, H1 25pt, sub 11pt, body 9-10pt */
+  --fs-display:  72px;   /* campaign display */
+  --fs-hero:     56px;   /* hero headline         (guideline: 46pt) */
+  --fs-h1:       40px;   /* section header        (guideline: 25pt main title) */
+  --fs-h2:       28px;
+  --fs-h3:       20px;
+  --fs-body-lg:  18px;
+  --fs-body:     15px;   /* default ui body */
+  --fs-body-sm:  13px;
+  --fs-caption:  12px;
+  --fs-micro:    10px;
+
+  /* Weights */
+  --fw-light:    300;
+  --fw-regular:  400;
+  --fw-medium:   500;
+  --fw-semibold: 600;
+  --fw-bold:     700;
+  --fw-black:    900;
+
+  /* Line heights */
+  --lh-tight:    1.05;
+  --lh-snug:     1.2;
+  --lh-normal:   1.45;
+  --lh-relaxed:  1.65;
+
+  /* Letter spacing — a touch of tracking on ALL-CAPS eyebrows */
+  --tracking-eyebrow: 0.14em;
+  --tracking-wide:    0.06em;
+  --tracking-tight:  -0.015em;
+
+  /* ------------ SPACING (4-based) ------------ */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+  --space-32: 128px;
+
+  /* ------------ RADII (minimal — brand leans rectilinear) ------------ */
+  --radius-none: 0;
+  --radius-xs:   2px;
+  --radius-sm:   4px;
+  --radius-md:   6px;
+  --radius-lg:   12px;
+  --radius-pill: 999px;
+
+  /* ------------ BORDERS ------------ */
+  --border-hair:  1px solid rgba(0,0,0,0.08);
+  --border-rule:  1px solid rgba(0,0,0,0.14);
+  --border-red:   2px solid var(--lc-red);
+
+  /* ------------ SHADOWS (subtle, print-feeling) ------------ */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04), 0 1px 1px rgba(0,0,0,0.03);
+  --shadow-md: 0 4px 14px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
+  --shadow-lg: 0 18px 48px rgba(0,0,0,0.10), 0 4px 10px rgba(0,0,0,0.04);
+
+  /* ------------ LAYOUT ------------ */
+  --container:     1280px;
+  --container-lg:  1440px;
+  --gutter:        32px;
+
+  /* ------------ GRID — from guidelines ------------
+     Portrait   → 6 rows
+     Landscape  → 6 columns
+     Square     → 3 rows                              */
+  --grid-landscape-cols: 6;
+  --grid-portrait-rows:  6;
+  --grid-square-rows:    3;
+
+  /* ------------ MOTION ------------ */
+  --ease-standard: cubic-bezier(0.2, 0, 0.15, 1);
+  --ease-out:      cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast:      120ms;
+  --dur-base:      220ms;
+  --dur-slow:      420ms;
+}
+
+/* ============================================================
+   BASE RESETS + DEFAULTS
+   ============================================================ */
+*,*::before,*::after { box-sizing: border-box; }
+
+html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-weight: var(--fw-light);
+  font-size: var(--fs-body);
+  line-height: var(--lh-relaxed);
+  color: var(--lc-black);
+  background: var(--lc-white);
+}
+
+/* Headlines default to Frank Ruhl Libre Light (per guidelines) */
+h1,h2,h3,.lc-headline {
+  font-family: var(--font-serif);
+  font-weight: var(--fw-light);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--lh-tight);
+  margin: 0;
+}
+h1 { font-size: var(--fs-hero); }
+h2 { font-size: var(--fs-h1); }
+h3 { font-size: var(--fs-h2); line-height: var(--lh-snug); }
+
+/* Eyebrows / sub-headers — Public Sans Bold, optionally red */
+.lc-eyebrow {
+  font-family: var(--font-sans);
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-caption);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--lc-red);
+  margin: 0;
+}
+
+.lc-sub { /* sub-headline */
+  font-family: var(--font-sans);
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-h3);
+  line-height: var(--lh-snug);
+  letter-spacing: 0;
+}
+
+p, .lc-body {
+  font-family: var(--font-sans);
+  font-weight: var(--fw-light);
+  font-size: var(--fs-body);
+  line-height: var(--lh-relaxed);
+  color: var(--lc-black);
+  max-width: 62ch;
+  margin: 0 0 var(--space-4);
+  text-wrap: pretty;
+}
+
+a { color: var(--lc-red); text-decoration: none; }
+a:hover { color: var(--lc-red-dark); text-decoration: underline; text-underline-offset: 3px; }
+
+hr.lc-rule {
+  border: 0;
+  border-top: var(--border-rule);
+  margin: var(--space-8) 0;
+}
+hr.lc-rule-red {
+  border: 0;
+  border-top: var(--border-red);
+  width: 48px;
+  margin: var(--space-6) 0;
+}

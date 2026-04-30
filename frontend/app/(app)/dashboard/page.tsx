@@ -53,12 +53,12 @@ export default function DashboardPage() {
       {/* Header */}
       <header className="mb-10 flex items-start justify-between gap-6 animate-fade-in-up">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.2em] text-ink-400 font-medium">Workspace</p>
-          <h1 className="mt-2 font-display text-[44px] leading-[1.05] tracking-tight text-ink-100">
+          <p className="text-[11px] uppercase tracking-[0.2em] text-ink-500 font-medium">Workspace</p>
+          <h1 className="mt-2 font-display text-[44px] leading-[1.05] tracking-tight text-ink-900">
             Cases
             <em className="italic text-brass-400 font-normal">.</em>
           </h1>
-          <p className="mt-2 text-ink-300 text-[15px]">
+          <p className="mt-2 text-ink-600 text-[15px]">
             {cases.length > 0
               ? `${cases.length} total — ${activeCount} active`
               : 'Start by creating your first case.'}
@@ -66,7 +66,7 @@ export default function DashboardPage() {
         </div>
         <Link
           href="/cases/new"
-          className="inline-flex items-center gap-2 rounded-lg bg-lc-red text-lc-white px-4 py-2.5 text-sm font-semibold hover:bg-lc-red/90 transition"
+          className="lc-btn-primary"
         >
           <Plus size={16} />
           New case
@@ -85,7 +85,7 @@ export default function DashboardPage() {
           {[...Array(3)].map((_, i) => (
             <div
               key={i}
-              className="h-36 rounded-2xl border border-ink-800 bg-ink-900/50 animate-pulse-soft"
+              className="h-36 rounded-2xl border border-ink-200 bg-white animate-pulse-soft"
             />
           ))}
         </div>
@@ -98,21 +98,21 @@ export default function DashboardPage() {
               key={c.case_id}
               href={`/cases/${c.case_id}`}
               style={{ animationDelay: `${i * 0.04}s` }}
-              className="group relative overflow-hidden rounded-2xl border border-ink-800 bg-ink-900 p-5 hover:border-lc-red/50 hover:bg-ink-850 hover:-translate-y-0.5 transition-all animate-fade-in-up"
+              className="group relative overflow-hidden rounded-2xl border border-ink-200 bg-white p-5 hover:border-lc-red/50 hover:bg-ink-50 hover:-translate-y-0.5 transition-all animate-fade-in-up"
             >
               <div className="relative">
                 <div className="flex items-start justify-between">
                   <div>
-                    <div className="text-[10px] uppercase tracking-[0.16em] text-ink-400 font-medium mb-1">
+                    <div className="text-[10px] uppercase tracking-[0.16em] text-ink-500 font-medium mb-1">
                       Client
                     </div>
-                    <h3 className="font-display text-lg font-semibold tracking-tight text-ink-100">
+                    <h3 className="font-display text-lg font-semibold tracking-tight text-ink-900">
                       {c.client_name}
                     </h3>
                   </div>
                   <ArrowUpRight
                     size={16}
-                    className="text-ink-500 group-hover:text-brass-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition"
+                    className="text-ink-400 group-hover:text-brass-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition"
                   />
                 </div>
                 <div className="mt-6 flex items-center gap-2">
@@ -120,7 +120,7 @@ export default function DashboardPage() {
                     className={`inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-full border ${
                       c.status === 'active'
                         ? 'border-jade-500/40 bg-jade-500/10 text-jade-500'
-                        : 'border-ink-700 bg-ink-850 text-ink-400'
+                        : 'border-ink-300 bg-ink-50 text-ink-500'
                     }`}
                   >
                     <span
@@ -130,7 +130,7 @@ export default function DashboardPage() {
                     />
                     {c.status}
                   </span>
-                  <span className="text-[11px] text-ink-400">
+                  <span className="text-[11px] text-ink-500">
                     Updated {new Date(c.last_updated).toLocaleDateString(undefined, {
                       day: 'numeric',
                       month: 'short',
@@ -148,17 +148,17 @@ export default function DashboardPage() {
 
 function EmptyState() {
   return (
-    <div className="rounded-2xl border border-dashed border-ink-700 bg-ink-900/30 p-12 text-center animate-fade-in-up">
+    <div className="rounded-2xl border border-dashed border-ink-300 bg-ink-50 p-12 text-center animate-fade-in-up">
       <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-brass-500/10 border border-brass-500/30 mb-4">
         <Sparkles size={20} className="text-brass-400" />
       </div>
-      <h3 className="font-display text-xl font-semibold text-ink-100">No cases yet</h3>
-      <p className="mt-2 text-sm text-ink-300 max-w-sm mx-auto">
+      <h3 className="font-display text-xl font-semibold text-ink-900">No cases yet</h3>
+      <p className="mt-2 text-sm text-ink-600 max-w-sm mx-auto">
         Create a case to start a private advisory dialogue. Each case remembers prior conversations and structures you build.
       </p>
       <Link
         href="/cases/new"
-        className="mt-6 inline-flex items-center gap-2 rounded-lg bg-lc-red text-lc-white px-4 py-2.5 text-sm font-semibold hover:bg-lc-red/90 transition"
+        className="lc-btn-primary mt-6"
       >
         <Plus size={16} />
         Create your first case

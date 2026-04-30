@@ -20,7 +20,21 @@ frontend/.next/
 backend.log
 backend.pid
 frontend.pid
+backend_live.log
+backend_live.log.err
 
 # Ingested KB source files (extracted from the export zip; reproducible)
 kb_files/
 kb_full_export_*.zip
+
+# Generated decks + curator spec caches (regenerated on demand)
+data/
+sample-deck-*.pptx
+sample-deck-*.pdf
+sample-pdf-*.pdf
+_spec-*.json
+_diagram-*.png
+_uns-*.png
+_uns-*.json
+ABCD-test-*.pdf
+*.db.bak.before_json_strip_*

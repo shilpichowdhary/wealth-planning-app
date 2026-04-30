@@ -85,18 +85,18 @@ export default function InviteAcceptPage({ params }: { params: { token: string }
   }
 
   return (
-    <div className="min-h-screen bg-lc-black flex items-center justify-center px-6 py-10">
+    <div className="min-h-screen bg-smoke flex items-center justify-center px-6 py-10">
       <div className="w-full max-w-[440px]">
         <div className="flex items-center gap-3 mb-8 justify-center">
           <LCLogoMark size={36} />
-          <span className="font-sans text-[12px] uppercase tracking-[0.16em] text-lc-white font-bold">
+          <span className="font-sans text-[12px] uppercase tracking-[0.16em] text-lc-black font-bold">
             Lighthouse <span className="text-lc-red">·</span> Canton
           </span>
         </div>
 
-        <div className="rounded-2xl border border-ink-800 bg-ink-900 p-8 animate-fade-in-up">
+        <div className="rounded-2xl border border-ink-200 bg-white p-8 animate-fade-in-up">
           {loading ? (
-            <p className="text-sm text-ink-400">Checking invite…</p>
+            <p className="text-sm text-ink-500">Checking invite…</p>
           ) : loadError ? (
             <InviteBroken message={loadError} />
           ) : preview ? (
@@ -104,11 +104,11 @@ export default function InviteAcceptPage({ params }: { params: { token: string }
               <p className="text-[11px] uppercase tracking-[0.18em] text-lc-red font-bold">
                 Invite ready
               </p>
-              <h1 className="mt-2 font-display text-[28px] leading-tight text-lc-white">
+              <h1 className="mt-2 font-display text-[28px] leading-tight text-lc-black">
                 Welcome, {preview.name.split(' ')[0]}.
               </h1>
-              <p className="mt-2 text-sm text-ink-300">
-                Set a password for <span className="text-lc-white">{preview.email}</span> to activate
+              <p className="mt-2 text-sm text-ink-600">
+                Set a password for <span className="text-lc-black">{preview.email}</span> to activate
                 your Wealth Planning console access.
               </p>
 
@@ -132,13 +132,13 @@ export default function InviteAcceptPage({ params }: { params: { token: string }
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-lc-red text-lc-white py-3 text-sm font-bold hover:bg-lc-red/90 transition disabled:opacity-50"
+                  className="lc-btn-primary w-full py-3"
                 >
                   <Lock size={14} />
                   {submitting ? 'Activating…' : 'Set password & sign in'}
                 </button>
 
-                <p className="text-[11px] text-ink-400 leading-relaxed">
+                <p className="text-[11px] text-ink-500 leading-relaxed">
                   Invite expires {new Date(preview.expires_at).toLocaleString()}. Internal use only.
                 </p>
               </form>
@@ -157,9 +157,9 @@ function InviteBroken({ message }: { message: string }) {
         <AlertTriangle size={16} />
         <span className="text-[11px] uppercase tracking-[0.18em] font-bold">Invite cannot be used</span>
       </div>
-      <h1 className="font-display text-[26px] leading-tight text-lc-white">Link not valid.</h1>
-      <p className="mt-2 text-sm text-ink-300">{message}</p>
-      <p className="mt-4 text-sm text-ink-300">
+      <h1 className="font-display text-[26px] leading-tight text-lc-black">Link not valid.</h1>
+      <p className="mt-2 text-sm text-ink-600">{message}</p>
+      <p className="mt-4 text-sm text-ink-600">
         Ask your administrator to issue a fresh invite — they can resend it from the Advisors page.
       </p>
     </>
@@ -179,7 +179,7 @@ function PasswordField({
 }) {
   return (
     <div>
-      <label className="block text-[11px] uppercase tracking-[0.16em] text-ink-300 font-bold mb-1.5">
+      <label className="block text-[11px] uppercase tracking-[0.16em] text-ink-600 font-bold mb-1.5">
         {label}
       </label>
       <input
@@ -191,7 +191,7 @@ function PasswordField({
         minLength={12}
         maxLength={72}
         required
-        className="w-full bg-ink-850 border border-ink-700 rounded-lg px-4 py-3 text-[15px] text-lc-white placeholder:text-ink-500 focus:outline-none focus:border-lc-red focus:ring-2 focus:ring-lc-red/20 transition"
+        className="w-full bg-ink-50 border border-ink-300 rounded-lg px-4 py-3 text-[15px] text-lc-black placeholder:text-ink-400 focus:outline-none focus:border-lc-red focus:ring-2 focus:ring-lc-red/20 transition"
       />
     </div>
   )
@@ -207,8 +207,8 @@ function PasswordChecklist({ pw, confirm }: { pw: string; confirm: string }) {
   return (
     <ul className="space-y-1 text-[12px]">
       {checks.map((c) => (
-        <li key={c.label} className={`flex items-center gap-2 ${c.ok ? 'text-lc-white' : 'text-ink-400'}`}>
-          <Check size={11} className={c.ok ? 'text-lc-red' : 'text-ink-500'} />
+        <li key={c.label} className={`flex items-center gap-2 ${c.ok ? 'text-lc-black' : 'text-ink-500'}`}>
+          <Check size={11} className={c.ok ? 'text-lc-red' : 'text-ink-400'} />
           {c.label}
         </li>
       ))}

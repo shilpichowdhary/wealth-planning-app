@@ -1,0 +1,405 @@
+/* ─────────────────────────────────────────────────────────────────
+   Lighthouse Canton — PowerPoint Template styles
+   Rebuilt from the actual LC Master Template.pptx
+   Canvas: 1920 × 1080 (16:9)
+   ───────────────────────────────────────────────────────────────── */
+
+/* Every slide is a positioned 1920x1080 canvas */
+deck-stage > section {
+  width: 1920px;
+  height: 1080px;
+  position: relative;
+  overflow: hidden;
+  background: var(--lc-white);
+  color: var(--lc-black);
+  font-family: var(--font-sans);
+}
+
+/* ───── Type helpers ───── */
+.t-display {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  line-height: 1.05;
+  letter-spacing: -0.008em;
+  color: var(--lc-black);
+}
+.t-title {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  line-height: 1.1;
+  letter-spacing: -0.005em;
+  color: var(--lc-black);
+}
+.t-serif-label {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  line-height: 1.15;
+  color: var(--lc-black);
+}
+.t-caps-serif {
+  /* section region labels: SINGAPORE, DUBAI, etc — serif, capitals */
+  font-family: var(--font-serif);
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  color: var(--lc-black);
+}
+.t-sans {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--lc-black);
+}
+.t-sans-sm {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 18px;
+  line-height: 1.5;
+  color: var(--lc-black);
+}
+.t-pageno {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-size: 22px;
+  color: var(--lc-black);
+}
+
+/* ───── The signature device: vertical red rule ───── */
+.v-rule {
+  width: 3px;
+  background: var(--lc-red);
+  flex: 0 0 auto;
+  align-self: stretch;
+}
+.v-rule-sm { width: 2px; }
+.v-rule-lg { width: 4px; }
+
+/* Horizontal thin underline used under eyebrows / region names */
+.h-rule-red {
+  display: block;
+  width: 80px;
+  height: 2px;
+  background: var(--lc-red);
+  border: 0;
+  margin: 18px 0;
+}
+
+/* Footer page number (bottom-right) */
+.footer-pageno {
+  position: absolute;
+  right: 120px;
+  bottom: 56px;
+}
+
+/* Top-right wordmark (used on cover) */
+.wordmark-tr {
+  position: absolute;
+  top: 64px;
+  right: 120px;
+  height: 42px;
+  width: auto;
+}
+.wordmark-bl {
+  position: absolute;
+  left: 120px;
+  bottom: 64px;
+  height: 42px;
+  width: auto;
+}
+
+/* ───── Full-bleed photo container ───── */
+.photo-full {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+.photo-left {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 40%;
+  background-size: cover;
+  background-position: center;
+}
+.photo-right {
+  position: absolute;
+  right: 0; top: 0; bottom: 0;
+  width: 40%;
+  background-size: cover;
+  background-position: center;
+}
+
+/* Soft tint overlay that lightens photos so text reads */
+.photo-soft::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: rgba(255,255,255,0.62);
+  pointer-events: none;
+}
+
+/* ───── Common slide content areas ───── */
+.slide-pad {
+  position: absolute;
+  left: 120px;
+  right: 120px;
+  top: 120px;
+  bottom: 120px;
+}
+.slide-pad-tight {
+  position: absolute;
+  left: 120px;
+  right: 120px;
+  top: 96px;
+  bottom: 96px;
+}
+
+/* ───── Utility layouts inside slides ───── */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 3px 2fr;
+  column-gap: 60px;
+  align-items: start;
+}
+.two-col .vsep {
+  background: var(--lc-red);
+  width: 3px;
+  align-self: stretch;
+  justify-self: center;
+  min-height: 140px;
+}
+
+/* 3-column equal with red vertical rules between */
+.cols-equal {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  column-gap: 0;
+  align-items: start;
+}
+.cols-equal > * {
+  padding: 0 48px;
+  border-left: 3px solid var(--lc-red);
+}
+.cols-equal > *:first-child {
+  border-left: 0;
+  padding-left: 0;
+}
+
+/* Region block (Singapore/Dubai/India/London) */
+.region {
+  text-align: center;
+}
+.region .region-name {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 28px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--lc-black);
+}
+.region .region-underline {
+  display: block;
+  width: 56px;
+  height: 2px;
+  background: var(--lc-red);
+  margin: 14px auto 22px;
+}
+.region .region-body {
+  font-family: var(--font-sans);
+  font-size: 18px;
+  line-height: 1.55;
+  color: var(--lc-black);
+  max-width: 24ch;
+  margin: 0 auto;
+}
+
+/* Section-divider slide: black bg + big red numeral + serif chapter */
+.section-black {
+  background: var(--lc-black);
+  color: var(--lc-white);
+}
+.section-black .chapter-num {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-size: 520px;
+  line-height: 0.85;
+  color: var(--lc-red);
+  letter-spacing: -0.04em;
+}
+.section-black .chapter-title {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-size: 64px;
+  line-height: 1.15;
+  color: var(--lc-white);
+}
+
+/* Black cover footer (only on s1 cover) */
+.cover-meta {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--lc-black-80);
+}
+
+/* Chapter-tab at top of content slides ("1 Chapter Name / 09") */
+.chapter-tab {
+  position: absolute;
+  top: 56px;
+  left: 120px;
+  right: 120px;
+  display: flex;
+  align-items: baseline;
+  gap: 20px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--lc-black-80);
+}
+.chapter-tab .num {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 18px;
+  color: var(--lc-red);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* Quote */
+.pull-quote {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-size: 64px;
+  line-height: 1.2;
+  letter-spacing: -0.005em;
+  color: var(--lc-black);
+}
+.pull-quote::before {
+  content: "";
+  display: block;
+  width: 4px;
+  height: 72px;
+  background: var(--lc-red);
+  margin-bottom: 32px;
+}
+
+/* Table of contents rows */
+.toc-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  padding: 28px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.12);
+}
+.toc-row:last-child { border-bottom: 0; }
+.toc-row .chapter {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-size: 44px;
+  line-height: 1.1;
+}
+.toc-row .pages {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-size: 32px;
+  color: var(--lc-black-80);
+  font-variant-numeric: tabular-nums;
+}
+.toc-row .subs {
+  grid-column: 1 / -1;
+  margin-top: 10px;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.8;
+  color: var(--lc-black-80);
+}
+
+/* Awards grid */
+.awards-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 28px 48px;
+  align-items: center;
+  justify-items: center;
+}
+.awards-grid .award {
+  width: 100%;
+  max-width: 200px;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  border: 1px solid rgba(0,0,0,0.1);
+  background: #fff;
+}
+.awards-grid .award img { max-width: 100%; max-height: 100%; display: block; }
+
+/* Data table */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-sans);
+  font-size: 18px;
+}
+.data-table th {
+  text-align: left;
+  font-weight: 500;
+  color: var(--lc-black);
+  padding: 14px 12px 12px;
+  border-bottom: 2px solid var(--lc-black);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 14px;
+}
+.data-table td {
+  padding: 18px 12px;
+  border-bottom: 1px solid rgba(0,0,0,0.12);
+  vertical-align: top;
+}
+.data-table td.num {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+  font-size: 22px;
+  text-align: right;
+}
+
+/* Closing contacts block */
+.contacts-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 40px;
+}
+.contact {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--lc-black);
+}
+.contact h4 {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 22px;
+  margin: 0 0 12px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--lc-red);
+  display: inline-block;
+  color: var(--lc-black);
+}
+.contacts-grid .contact {
+  font-size: 16px;
+  line-height: 1.55;
+}
+.contacts-grid .contact h4 {
+  font-size: 24px;
+  margin: 0 0 14px;
+  padding-bottom: 12px;
+}

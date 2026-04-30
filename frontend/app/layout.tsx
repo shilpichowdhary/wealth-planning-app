@@ -32,7 +32,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${display.variable} ${sans.variable}`}>
-      <body className="font-sans antialiased bg-lc-black text-lc-white selection:bg-lc-red selection:text-lc-white">
+      <body className="font-sans antialiased bg-smoke text-lc-black selection:bg-lc-red selection:text-lc-white">
         <Providers>{children}</Providers>
       </body>
     </html>
