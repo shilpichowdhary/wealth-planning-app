@@ -1,12 +1,22 @@
 "use client";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
-import { AlertTriangle, Check } from "lucide-react";
+import { AlertTriangle, Check, PlugZap, Loader2 } from "lucide-react";
 
 interface SettingEntry {
   label: string;
   value: string;
   is_set: boolean;
+}
+
+interface TestResult {
+  ok: boolean;
+  stage?: string;
+  detail: string;
+  raw?: string;
+  model?: string;
+  input_tokens?: number;
+  stop_reason?: string;
 }
 
 export default function AdminSettingsPage() {
@@ -20,11 +30,16 @@ export default function AdminSettingsPage() {
   const [saving, setSaving] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // Editable values per key
   const [drafts, setDrafts] = useState<Record<string, string>>({});
 
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState<TestResult | null>(null);
+
   useEffect(() => {
-    if (!token || session?.user?.role !== "admin") { setLoading(false); return; }
+    if (!token || session?.user?.role !== "admin") {
+      setLoading(false);
+      return;
+    }
     loadSettings();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, session?.user?.role]);
@@ -63,12 +78,34 @@ export default function AdminSettingsPage() {
       }
       setDrafts((prev) => ({ ...prev, [key]: "" }));
       setSuccess(key);
+      setTestResult(null);
       setTimeout(() => setSuccess(null), 3000);
       await loadSettings();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to save setting");
     } finally {
       setSaving(null);
+    }
+  }
+
+  async function handleTestAnthropic() {
+    setTesting(true);
+    setTestResult(null);
+    try {
+      const res = await fetch(`${apiUrl}/admin/settings/test-anthropic`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      setTestResult(data);
+    } catch (e: unknown) {
+      setTestResult({
+        ok: false,
+        stage: "client",
+        detail: e instanceof Error ? e.message : "Request failed from the browser.",
+      });
+    } finally {
+      setTesting(false);
     }
   }
 
@@ -98,7 +135,7 @@ export default function AdminSettingsPage() {
         </div>
       )}
 
-      <div className="space-y-4">
+      <div className="space-y-3 animate-fade-in-up" style={{ animationDelay: "0.05s" }}>
         {Object.entries(settings).map(([key, setting]) => (
           <div
             key={key}
@@ -125,13 +162,11 @@ export default function AdminSettingsPage() {
               </p>
             )}
 
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <input
-                type="password"
+                type={key === "claude_model" ? "text" : "password"}
                 value={drafts[key] || ""}
-                onChange={(e) =>
-                  setDrafts((prev) => ({ ...prev, [key]: e.target.value }))
-                }
+                onChange={(e) => setDrafts((prev) => ({ ...prev, [key]: e.target.value }))}
                 placeholder={
                   key === "claude_model"
                     ? "e.g. claude-sonnet-4-6"
@@ -144,6 +179,7 @@ export default function AdminSettingsPage() {
                 disabled={!drafts[key]?.trim() || saving === key}
                 className="lc-btn-primary"
               >
+                {saving === key ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
                 {saving === key ? "Saving…" : "Save"}
               </button>
             </div>
@@ -156,6 +192,63 @@ export default function AdminSettingsPage() {
             )}
           </div>
         ))}
+      </div>
+
+      {/* Diagnostics */}
+      <div
+        className="mt-6 rounded-2xl border border-ink-800 bg-ink-900 p-5 animate-fade-in-up"
+        style={{ animationDelay: "0.1s" }}
+      >
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.16em] text-ink-400 font-bold flex items-center gap-2">
+              <PlugZap size={12} />
+              Diagnostics
+            </p>
+            <h2 className="mt-1 font-display text-lg text-lc-white">Test Anthropic connection</h2>
+            <p className="mt-1 text-[13px] text-ink-300 max-w-lg">
+              Pings Anthropic with the currently-saved key + model. Surfaces the exact failure
+              mode (auth, model, network, rate-limit) so you don&apos;t need to read server logs.
+            </p>
+          </div>
+          <button
+            onClick={handleTestAnthropic}
+            disabled={testing}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-lc-red text-lc-white px-4 py-2 text-sm font-bold hover:bg-lc-red/90 transition disabled:opacity-50"
+          >
+            {testing ? <Loader2 size={14} className="animate-spin" /> : <PlugZap size={14} />}
+            {testing ? "Testing…" : "Run test"}
+          </button>
+        </div>
+
+        {testResult && (
+          <div
+            className={`mt-4 rounded-lg border px-4 py-3 ${
+              testResult.ok ? "border-ink-600 bg-ink-850" : "border-lc-red/50 bg-lc-red/5"
+            }`}
+          >
+            <div className="flex items-center gap-2 mb-1.5">
+              {testResult.ok ? (
+                <Check size={14} className="text-lc-white" />
+              ) : (
+                <AlertTriangle size={14} className="text-lc-red" />
+              )}
+              <span className={`text-[11px] uppercase tracking-[0.16em] font-bold ${testResult.ok ? "text-lc-white" : "text-lc-red"}`}>
+                {testResult.ok ? "Success" : `Failed — ${testResult.stage ?? "error"}`}
+              </span>
+            </div>
+            <p className="text-[13px] text-ink-200">{testResult.detail}</p>
+            {testResult.ok && testResult.model && (
+              <p className="mt-1.5 text-[11px] text-ink-400 font-mono">
+                model={testResult.model} · input_tokens={testResult.input_tokens} ·
+                stop_reason={testResult.stop_reason}
+              </p>
+            )}
+            {testResult.raw && (
+              <p className="mt-1.5 text-[11px] text-ink-400 font-mono break-all">Raw: {testResult.raw}</p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
