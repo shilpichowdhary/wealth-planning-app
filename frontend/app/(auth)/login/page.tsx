@@ -3,7 +3,6 @@ import { Suspense, useState, useEffect, useRef } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { PublicClientApplication, type Configuration } from '@azure/msal-browser'
-import { LCLogoMark, LCWordmark } from '@/components/brand/LCLogo'
 
 const AZURE_CLIENT_ID = process.env.NEXT_PUBLIC_AZURE_CLIENT_ID || ''
 const AZURE_TENANT_ID = process.env.NEXT_PUBLIC_AZURE_TENANT_ID || ''
@@ -33,6 +32,7 @@ function LoginForm() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [ssoLoading, setSsoLoading] = useState(false)
+  const [showPasswordForm, setShowPasswordForm] = useState(false)
   const msalRef = useRef<PublicClientApplication | null>(null)
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -75,111 +75,193 @@ function LoginForm() {
   const ssoEnabled = Boolean(AZURE_CLIENT_ID)
 
   return (
-    <div className="min-h-screen bg-lc-black flex items-center justify-center px-6 py-10">
-      <div className="w-full max-w-[1080px] grid grid-cols-1 lg:grid-cols-[1.15fr_1fr] gap-16 items-center">
-        {/* Editorial left panel */}
-        <div className="hidden lg:block animate-fade-in-up">
-          <div className="flex items-center gap-3 mb-10">
-            <LCLogoMark size={36} />
-            <LCWordmark className="text-lc-white" />
+    <div className="login-grid">
+      {/* Editorial column ------------------------------------------------ */}
+      <div className="login-editorial">
+        <div className="login-editorial__bg" />
+        <svg className="login-editorial__grid" width="100%" height="100%" aria-hidden>
+          <defs>
+            <pattern id="editorial-grid" width="88" height="88" patternUnits="userSpaceOnUse">
+              <path d="M88 0H0V88" fill="none" stroke="#ffffff" strokeWidth="0.5" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#editorial-grid)" />
+        </svg>
+
+        {/* Brand top-left */}
+        <div className="login-brand">
+          <BrandMark />
+          <div className="login-brand__name">Lighthouse Canton</div>
+        </div>
+
+        {/* Vertically centred centrepiece */}
+        <div className="login-editorial__hero">
+          <div className="login-editorial__rule" />
+          <div className="login-editorial__product">Wealth Planning Console</div>
+          <div className="login-editorial__headline">
+            Private wealth planning, with <em>institutional</em> depth across seven jurisdictions.
           </div>
-
-          <h1 className="font-display text-[64px] leading-[1.04] text-lc-white text-balance">
-            Private wealth planning,
-            <br />
-            with <span className="text-lc-red">institutional</span> depth.
-          </h1>
-          <p className="mt-6 text-ink-300 text-[15px] leading-relaxed max-w-md text-pretty">
-            Research, draft, and reason across seven jurisdictions — with a knowledge base purpose-built for
-            Lighthouse Canton advisors.
-          </p>
-
-          <div className="mt-10 flex flex-wrap gap-2">
-            {['India', 'Singapore', 'UAE', 'USA', 'UK', 'Taiwan', 'China', 'Cross-border'].map(j => (
-              <span key={j} className="chip">{j}</span>
-            ))}
+          <div className="login-editorial__sub">
+            Research, draft, and reason against a knowledge base purpose-built for Lighthouse Canton
+            advisors. Every recommendation grounded in firm-approved sources.
           </div>
         </div>
 
-        {/* Auth card */}
-        <div className="animate-fade-in-up" style={{ animationDelay: '0.08s' }}>
-          <div className="rounded-2xl bg-ink-900 border border-ink-800 p-8">
-            <h2 className="font-display text-2xl text-lc-white">Sign in</h2>
-            <p className="mt-1 text-sm text-ink-400">Use your Lighthouse Canton credentials.</p>
+        <div className="login-editorial__footer">
+          <div className="login-editorial__regulators">
+            <span className="label">Regulated by</span>
+            <div className="badge">MAS</div>
+            <div className="badge">DFSA</div>
+            <div className="badge">SEBI</div>
+            <div className="badge">FCA</div>
+          </div>
+          <div className="login-editorial__ver">Wealth Planning · Apr 2026</div>
+        </div>
+      </div>
 
-            {ssoEnabled && (
-              <>
-                <button
-                  type="button"
-                  onClick={handleSSO}
-                  disabled={ssoLoading}
-                  className="mt-6 w-full rounded-lg bg-lc-white text-lc-black py-3 text-sm font-bold tracking-wide hover:bg-ink-100 transition disabled:opacity-50"
-                >
-                  {ssoLoading ? 'Redirecting…' : 'Sign in with LC Account'}
-                </button>
-                <div className="flex items-center gap-3 my-5">
-                  <div className="flex-1 h-px bg-ink-800" />
-                  <span className="text-[10px] uppercase tracking-[0.18em] text-ink-500">or email & password</span>
-                  <div className="flex-1 h-px bg-ink-800" />
-                </div>
-              </>
-            )}
+      {/* Sign-in column -------------------------------------------------- */}
+      <div className="login-signin">
+        <div className="login-signin__body">
+          <div className="login-eyebrow">Secure access · Single sign-on</div>
+          <h1 className="login-h1">Sign in</h1>
+          <p className="login-lead">
+            Use your Lighthouse Canton Microsoft account. Wealth Planning inherits your firm roles
+            and entity access automatically.
+          </p>
 
-            <form onSubmit={handleSubmit} className={`${ssoEnabled ? '' : 'mt-7'} space-y-4`}>
-              <Field label="Email">
+          {displayError && (
+            <div
+              className="mb-4 px-3 py-2 text-[13px] border-l-[3px]"
+              style={{ background: '#fdecec', color: '#8a1b1b', borderColor: '#c62828' }}
+            >
+              {displayError}
+            </div>
+          )}
+
+          {ssoEnabled ? (
+            <button
+              type="button"
+              onClick={handleSSO}
+              disabled={ssoLoading}
+              className="login-sso"
+            >
+              <svg width="19" height="19" viewBox="0 0 23 23" aria-hidden>
+                <rect x="1" y="1" width="10" height="10" fill="#F25022" />
+                <rect x="12" y="1" width="10" height="10" fill="#7FBA00" />
+                <rect x="1" y="12" width="10" height="10" fill="#00A4EF" />
+                <rect x="12" y="12" width="10" height="10" fill="#FFB900" />
+              </svg>
+              <span>{ssoLoading ? 'Redirecting…' : 'Continue with LC Account'}</span>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 14 14"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                aria-hidden
+                style={{ marginLeft: 4 }}
+              >
+                <path d="M3 7h8M7 3l4 4-4 4" />
+              </svg>
+            </button>
+          ) : null}
+
+          {/* Password fallback — secondary, disclosure-style. Hidden behind a
+              link so the SSO CTA remains the only visible primary action. */}
+          {!showPasswordForm ? (
+            <button
+              type="button"
+              onClick={() => setShowPasswordForm(true)}
+              className="mt-6 text-[12px] text-ink-500 hover:text-lc-black underline-offset-2 hover:underline self-start"
+            >
+              Sign in with email &amp; password instead
+            </button>
+          ) : (
+            <form onSubmit={handleSubmit} className="mt-8 space-y-3">
+              <div>
+                <label className="block text-[11px] uppercase tracking-[0.16em] text-ink-600 font-bold mb-1.5">
+                  Email
+                </label>
                 <input
                   type="email"
                   placeholder="you@lighthouse-canton.com"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  className="w-full bg-ink-850 border border-ink-700 rounded-lg px-4 py-3 text-[15px] text-lc-white placeholder:text-ink-500 focus:outline-none focus:border-lc-red focus:ring-2 focus:ring-lc-red/20 transition"
+                  className="w-full bg-white border border-ink-300 px-3 py-2.5 text-[14px] text-lc-black placeholder:text-ink-400 focus:outline-none focus:border-lc-red focus:ring-2 focus:ring-lc-red/20 transition"
                   required
                 />
-              </Field>
-              <Field label="Password">
+              </div>
+              <div>
+                <label className="block text-[11px] uppercase tracking-[0.16em] text-ink-600 font-bold mb-1.5">
+                  Password
+                </label>
                 <input
                   type="password"
                   placeholder="••••••••"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  className="w-full bg-ink-850 border border-ink-700 rounded-lg px-4 py-3 text-[15px] text-lc-white placeholder:text-ink-500 focus:outline-none focus:border-lc-red focus:ring-2 focus:ring-lc-red/20 transition"
+                  className="w-full bg-white border border-ink-300 px-3 py-2.5 text-[14px] text-lc-black placeholder:text-ink-400 focus:outline-none focus:border-lc-red focus:ring-2 focus:ring-lc-red/20 transition"
                   required
                 />
-              </Field>
-              {displayError && (
-                <div className="rounded-lg border border-lc-red bg-lc-red/10 px-3 py-2 text-sm text-lc-red">
-                  {displayError}
-                </div>
-              )}
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full rounded-lg bg-lc-red text-lc-white py-3 text-sm font-bold tracking-wide hover:bg-lc-red/90 transition disabled:opacity-50"
-              >
-                {loading ? 'Signing in…' : 'Continue'}
-              </button>
+              </div>
+              <div className="flex items-center justify-between gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordForm(false)}
+                  className="text-[12px] text-ink-500 hover:text-lc-black"
+                >
+                  ← Back to SSO
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="lc-btn-primary"
+                >
+                  {loading ? 'Signing in…' : 'Continue'}
+                </button>
+              </div>
             </form>
+          )}
+        </div>
 
-            <p className="mt-6 text-[11px] text-ink-400 leading-relaxed">
-              Internal use only. Anonymise client data before sharing queries.
-            </p>
+        <div className="login-signin__footer">
+          <div>
+            Trouble signing in? <a href="mailto:ai_lab@lighthouse-canton.com">AI Lab Support</a>
           </div>
-          <p className="mt-3 text-center text-[10px] uppercase tracking-[0.2em] text-ink-500">
-            lighthouse-canton.com
-          </p>
+          <div className="copy">© 2026 Lighthouse Canton</div>
         </div>
       </div>
     </div>
   )
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+/**
+ * 44×44 crimson square with a white serif "L" — DCMS canonical brand mark
+ * for the login screen. Larger than the in-app sidebar mark.
+ */
+function BrandMark() {
   return (
-    <div>
-      <label className="block text-[11px] uppercase tracking-[0.16em] text-ink-300 font-bold mb-1.5">
-        {label}
-      </label>
-      {children}
-    </div>
+    <span
+      role="img"
+      aria-label="Lighthouse Canton"
+      style={{
+        width: 44,
+        height: 44,
+        background: '#E50025',
+        color: '#fff',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: 'var(--font-display)',
+        fontSize: 24,
+        fontWeight: 500,
+        lineHeight: 1,
+        flexShrink: 0,
+      }}
+    >
+      L
+    </span>
   )
 }

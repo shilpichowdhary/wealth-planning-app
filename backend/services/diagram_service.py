@@ -8,33 +8,23 @@ class NodeType(str, Enum):
     COMPANY = "company"
     INDIVIDUAL = "individual"
 
-# Layout constants
-NODE_WIDTH = 180
-NODE_HEIGHT = 80
+# Initial position grid — only used as a fallback. The frontend re-runs dagre
+# layout on every load, so these coordinates are overwritten.
 HORIZONTAL_GAP = 220
 VERTICAL_GAP = 140
 
 
 class DiagramService:
-    @staticmethod
-    def _node_style(node_type: str) -> dict:
-        base = {"fontSize": 12, "fontWeight": 500}
-        if node_type == NodeType.TRUST:
-            return {**base, "background": "transparent", "border": "none"}
-        if node_type == NodeType.COMPANY:
-            return {
-                **base,
-                "background": "#f8fafc",
-                "border": "1.5px solid #334155",
-                "borderRadius": "6px",
-                "padding": "10px 16px",
-                "minWidth": f"{NODE_WIDTH}px",
-            }
-        # individual and unknown
-        return {**base, "background": "transparent", "border": "none"}
+    """Convert LLM-emitted entities/edges into React Flow node/edge JSON.
+
+    Visual styling lives entirely in the frontend custom node components
+    (TrustNode, CompanyNode, IndividualNode) and the StructureDiagram's
+    defaultEdgeOptions. This service emits structural data only — assigning
+    inline `style` props here would produce a doubled outline (React Flow's
+    node wrapper + the inner component's wrapper).
+    """
 
     def build_diagram_data(self, raw: dict) -> dict:
-        """Convert LLM recommendation entity list into React Flow node/edge JSON."""
         entities = raw.get("entities", [])
         raw_edges = raw.get("edges", [])
 
@@ -54,7 +44,6 @@ class DiagramService:
                     "rationale": entity.get("rationale", ""),
                     "source": entity.get("source", ""),
                 },
-                "style": DiagramService._node_style(entity.get("type", "company")),
             })
 
         edges = []
@@ -76,8 +65,6 @@ class DiagramService:
                 "target": f"node_{tgt_idx}",
                 "label": e.get("label", ""),
                 "animated": False,
-                "style": {"stroke": "#64748b", "strokeWidth": 1.5},
-                "labelStyle": {"fontSize": 11, "fill": "#475569"},
             })
 
         return {"nodes": nodes, "edges": edges}

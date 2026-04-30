@@ -68,7 +68,7 @@ export default function KBReviewPage() {
   };
 
   if (loading)
-    return <div className="max-w-4xl mx-auto px-8 py-10 text-ink-400 text-sm">Loading…</div>;
+    return <div className="max-w-4xl mx-auto px-8 py-10 text-ink-500 text-sm">Loading…</div>;
   if (!["admin", "advisor"].includes(session?.user?.role ?? ""))
     return (
       <div className="max-w-4xl mx-auto px-8 py-16 text-ember-500">
@@ -79,12 +79,12 @@ export default function KBReviewPage() {
   return (
     <div className="max-w-4xl mx-auto w-full px-8 py-10">
       <header className="mb-8 animate-fade-in-up">
-        <p className="text-[11px] uppercase tracking-[0.2em] text-ink-400 font-medium">Knowledge base</p>
-        <h1 className="mt-2 font-display text-[38px] leading-[1.05] tracking-tight text-ink-100">
+        <p className="text-[11px] uppercase tracking-[0.2em] text-ink-500 font-medium">Knowledge base</p>
+        <h1 className="mt-2 font-display text-[38px] leading-[1.05] tracking-tight text-ink-900">
           Review queue
           <em className="italic text-brass-400 font-normal">.</em>
         </h1>
-        <p className="mt-2 text-ink-300 text-[15px]">
+        <p className="mt-2 text-ink-600 text-[15px]">
           Web-sourced content awaiting approval into the knowledge base.
         </p>
       </header>
@@ -96,9 +96,9 @@ export default function KBReviewPage() {
       )}
 
       {entries.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-ink-700 bg-ink-900/30 p-12 text-center animate-fade-in-up">
-          <ClipboardCheck size={28} className="mx-auto text-ink-500 mb-3" />
-          <p className="text-sm text-ink-300">No entries pending review.</p>
+        <div className="rounded-2xl border border-dashed border-ink-300 bg-white/30 p-12 text-center animate-fade-in-up">
+          <ClipboardCheck size={28} className="mx-auto text-ink-400 mb-3" />
+          <p className="text-sm text-ink-600">No entries pending review.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -106,7 +106,7 @@ export default function KBReviewPage() {
             <article
               key={entry.entry_id}
               style={{ animationDelay: `${i * 0.04}s` }}
-              className="rounded-2xl border border-ink-800 bg-ink-900 p-5 animate-fade-in-up"
+              className="rounded-2xl border border-ink-200 bg-white p-5 animate-fade-in-up"
             >
               <div className="flex flex-wrap items-center gap-2 mb-3">
                 {entry.jurisdiction && (
@@ -117,7 +117,7 @@ export default function KBReviewPage() {
                 )}
                 {entry.topic && <span className="chip">{entry.topic}</span>}
                 {entry.date_retrieved && (
-                  <span className="text-[11px] text-ink-400">
+                  <span className="text-[11px] text-ink-500">
                     {new Date(entry.date_retrieved).toLocaleDateString()}
                   </span>
                 )}
@@ -135,7 +135,7 @@ export default function KBReviewPage() {
                 </a>
               )}
 
-              <p className="text-[14px] text-ink-200 leading-relaxed line-clamp-4 mb-4">{entry.content}</p>
+              <p className="text-[14px] text-ink-800 leading-relaxed line-clamp-4 mb-4">{entry.content}</p>
 
               <div className="flex gap-2">
                 <button

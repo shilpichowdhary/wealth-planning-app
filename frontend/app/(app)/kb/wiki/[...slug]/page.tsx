@@ -69,14 +69,14 @@ export default function WikiViewerPage() {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto px-8 py-10 text-ink-400 text-sm">Loading…</div>
+      <div className="max-w-4xl mx-auto px-8 py-10 text-ink-500 text-sm">Loading…</div>
     );
   }
 
   if (error) {
     return (
       <div className="max-w-4xl mx-auto px-8 py-10">
-        <Link href="/kb/documents" className="inline-flex items-center gap-1.5 text-ink-400 hover:text-ink-100 text-sm mb-6">
+        <Link href="/kb/documents" className="inline-flex items-center gap-1.5 text-ink-500 hover:text-ink-900 text-sm mb-6">
           <ArrowLeft size={14} /> Back to documents
         </Link>
         <div className="rounded-lg border border-ember-500/40 bg-ember-500/10 px-4 py-3 text-sm text-ember-500">
@@ -93,17 +93,17 @@ export default function WikiViewerPage() {
     <div className="max-w-4xl mx-auto w-full px-8 py-10">
       <Link
         href="/kb/documents"
-        className="inline-flex items-center gap-1.5 text-ink-400 hover:text-ink-100 text-sm mb-6 transition"
+        className="inline-flex items-center gap-1.5 text-ink-500 hover:text-ink-900 text-sm mb-6 transition"
       >
         <ArrowLeft size={14} /> Back to documents
       </Link>
 
       <header className="mb-8 animate-fade-in-up">
-        <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-ink-400 font-medium mb-3">
+        <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-ink-500 font-medium mb-3">
           <FileText size={12} />
           <span>{path}</span>
         </div>
-        <h1 className="font-display text-[38px] leading-[1.1] tracking-tight text-ink-100">
+        <h1 className="font-display text-[38px] leading-[1.1] tracking-tight text-ink-900">
           {meta.title || basename.replace(/\.md$/, "")}
         </h1>
         {(meta.jurisdiction || meta.topic || meta.last_compiled) && (

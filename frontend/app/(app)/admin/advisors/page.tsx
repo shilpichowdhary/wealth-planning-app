@@ -6,14 +6,14 @@ import {
   UserPlus,
   KeyRound,
   AlertTriangle,
-  Link2,
   Copy,
   Check,
   Send,
-  RotateCcw,
+  Mail,
+  MailWarning,
   X,
-  type LucideIcon,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 interface Advisor {
   user_id: string;
@@ -27,15 +27,10 @@ interface Advisor {
 
 interface InviteResult {
   advisor: Advisor;
-  invite: { token: string; url: string; expires_at: string };
-}
-
-interface ResendResult {
-  advisor: Advisor;
-  token: string;
-  url: string;
-  expires_at: string;
-  purpose?: 'invite' | 'reset';
+  login_url: string;
+  email_sent?: boolean;
+  email_error?: string | null;
+  purpose?: "invite" | "reset";
 }
 
 type FormMode = "invite" | "password";
@@ -58,8 +53,8 @@ export default function AdminAdvisorsPage() {
   const [password, setPassword] = useState("");
   const [creating, setCreating] = useState(false);
 
-  // Post-action results shown above the table
-  const [inviteResult, setInviteResult] = useState<InviteResult | ResendResult | null>(null);
+  // Post-action result shown above the table
+  const [inviteResult, setInviteResult] = useState<InviteResult | null>(null);
   const [acting, setActing] = useState<string | null>(null);
 
   useEffect(() => {
@@ -103,7 +98,7 @@ export default function AdminAdvisorsPage() {
         }
         const data: InviteResult = await res.json();
         setAdvisors((prev) => [data.advisor, ...prev]);
-        setInviteResult(data);
+        setInviteResult({ ...data, purpose: "invite" });
       } else {
         const res = await fetch(`${apiUrl}/admin/advisors`, {
           method: "POST",
@@ -138,12 +133,12 @@ export default function AdminAdvisorsPage() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ detail: "Failed" }));
-        throw new Error(err.detail || "Failed to generate new invite");
+        throw new Error(err.detail || "Failed to resend access email");
       }
       const data = await res.json();
-      setInviteResult({ advisor, ...data } as ResendResult);
+      setInviteResult({ advisor, ...data, purpose: "invite" } as InviteResult);
     } catch (e: unknown) {
-      setActionError(e instanceof Error ? e.message : "Failed to generate new invite");
+      setActionError(e instanceof Error ? e.message : "Failed to resend access email");
     } finally {
       setActing(null);
     }
@@ -169,31 +164,8 @@ export default function AdminAdvisorsPage() {
     }
   }
 
-  async function handleResetPassword(advisor: Advisor) {
-    if (!confirm(`Send ${advisor.name} a password-reset link? Any outstanding invite links will be revoked.`))
-      return;
-    setActing(advisor.user_id);
-    setActionError(null);
-    try {
-      const res = await fetch(`${apiUrl}/admin/advisors/${advisor.user_id}/reset-password`, {
-        method: "PATCH",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ detail: "Failed" }));
-        throw new Error(err.detail || "Failed to issue reset link");
-      }
-      const data = await res.json();
-      setInviteResult({ advisor, ...data } as ResendResult);
-    } catch (e: unknown) {
-      setActionError(e instanceof Error ? e.message : "Failed to issue reset link");
-    } finally {
-      setActing(null);
-    }
-  }
-
   if (loading)
-    return <div className="max-w-5xl mx-auto px-8 py-10 text-ink-400 text-sm">Loading…</div>;
+    return <div className="max-w-5xl mx-auto px-8 py-10 text-ink-500 text-sm">Loading…</div>;
   if (session?.user?.role !== "admin")
     return (
       <div className="max-w-5xl mx-auto px-8 py-16 text-ember-500">Access denied. Admins only.</div>
@@ -205,11 +177,11 @@ export default function AdminAdvisorsPage() {
     <div className="max-w-5xl mx-auto w-full px-8 py-10">
       <header className="mb-8 flex items-start justify-between gap-6 animate-fade-in-up">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.2em] text-ink-400 font-bold">Administration</p>
-          <h1 className="mt-2 font-display text-[38px] leading-[1.05] text-lc-white">
+          <p className="text-[11px] uppercase tracking-[0.2em] text-ink-500 font-bold">Administration</p>
+          <h1 className="mt-2 font-display text-[38px] leading-[1.05] text-lc-black">
             Advisors<span className="text-lc-red">.</span>
           </h1>
-          <p className="mt-2 text-ink-300 text-[15px]">
+          <p className="mt-2 text-ink-600 text-[15px]">
             {active} active · {advisors.length - active} inactive · {advisors.length} total
           </p>
         </div>
@@ -218,7 +190,7 @@ export default function AdminAdvisorsPage() {
             setShowForm((v) => !v);
             setActionError(null);
           }}
-          className="inline-flex items-center gap-2 rounded-lg bg-lc-red text-lc-white px-4 py-2.5 text-sm font-bold hover:bg-lc-red/90 transition"
+          className="lc-btn-primary"
         >
           <UserPlus size={16} />
           {showForm ? "Cancel" : "Add advisor"}
@@ -229,11 +201,11 @@ export default function AdminAdvisorsPage() {
       {showForm && (
         <form
           onSubmit={handleSubmit}
-          className="rounded-2xl border border-ink-800 bg-ink-900 p-5 mb-6 space-y-4 animate-fade-in-up"
+          className="rounded-2xl border border-ink-200 bg-white p-5 mb-6 space-y-4 animate-fade-in-up"
         >
           {/* Mode toggle */}
-          <div className="inline-flex rounded-lg border border-ink-700 overflow-hidden">
-            <ModeTab active={mode === "invite"} onClick={() => setMode("invite")} icon={Send} label="Send invite link" />
+          <div className="inline-flex rounded-lg border border-ink-300 overflow-hidden">
+            <ModeTab active={mode === "invite"} onClick={() => setMode("invite")} icon={Send} label="Email SSO sign-in" />
             <ModeTab active={mode === "password"} onClick={() => setMode("password")} icon={KeyRound} label="Set password" />
           </div>
 
@@ -243,7 +215,7 @@ export default function AdminAdvisorsPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Full name"
-              className="bg-ink-850 border border-ink-700 rounded-lg px-3 py-2.5 text-sm text-lc-white placeholder:text-ink-500 focus:outline-none focus:border-lc-red focus:ring-2 focus:ring-lc-red/20 transition"
+              className="bg-ink-50 border border-ink-300 rounded-lg px-3 py-2.5 text-sm text-lc-black placeholder:text-ink-400 focus:outline-none focus:border-lc-red focus:ring-2 focus:ring-lc-red/20 transition"
             />
             <input
               required
@@ -251,7 +223,7 @@ export default function AdminAdvisorsPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Email address"
-              className="bg-ink-850 border border-ink-700 rounded-lg px-3 py-2.5 text-sm text-lc-white placeholder:text-ink-500 focus:outline-none focus:border-lc-red focus:ring-2 focus:ring-lc-red/20 transition"
+              className="bg-ink-50 border border-ink-300 rounded-lg px-3 py-2.5 text-sm text-lc-black placeholder:text-ink-400 focus:outline-none focus:border-lc-red focus:ring-2 focus:ring-lc-red/20 transition"
             />
           </div>
 
@@ -263,22 +235,22 @@ export default function AdminAdvisorsPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Initial password (min 12 chars)"
               minLength={12}
-              className="w-full bg-ink-850 border border-ink-700 rounded-lg px-3 py-2.5 text-sm text-lc-white placeholder:text-ink-500 focus:outline-none focus:border-lc-red focus:ring-2 focus:ring-lc-red/20 transition"
+              className="w-full bg-ink-50 border border-ink-300 rounded-lg px-3 py-2.5 text-sm text-lc-black placeholder:text-ink-400 focus:outline-none focus:border-lc-red focus:ring-2 focus:ring-lc-red/20 transition"
             />
           )}
 
-          <p className="text-[11px] text-ink-400 leading-relaxed">
+          <p className="text-[11px] text-ink-500 leading-relaxed">
             {mode === "invite"
-              ? "A one-time invite link will be generated. Share it with the advisor — they set their own password on first use. The link expires in 7 days."
-              : "The advisor will use this password to sign in. You'll need to share it with them securely out-of-band."}
+              ? "We'll create the advisor's account and email them a sign-in link. They authenticate via Microsoft SSO (\"Sign in with LC Account\") — no password to set or share."
+              : "Use this only if SSO isn't available for the advisor. You'll need to share the password with them securely out-of-band."}
           </p>
           <button
             type="submit"
             disabled={creating}
-            className="inline-flex items-center gap-2 rounded-lg bg-lc-red text-lc-white px-4 py-2 text-sm font-bold hover:bg-lc-red/90 transition disabled:opacity-50"
+            className="lc-btn-primary"
           >
             {mode === "invite" ? <Send size={14} /> : <Plus size={14} />}
-            {creating ? "Working…" : mode === "invite" ? "Send invite" : "Create advisor"}
+            {creating ? "Working…" : mode === "invite" ? "Send sign-in email" : "Create advisor"}
           </button>
         </form>
       )}
@@ -295,13 +267,13 @@ export default function AdminAdvisorsPage() {
       )}
 
       {advisors.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-ink-700 bg-ink-900/30 p-12 text-center">
-          <p className="text-sm text-ink-300">No advisors yet. Add your first advisor above.</p>
+        <div className="rounded-2xl border border-dashed border-ink-300 bg-white/30 p-12 text-center">
+          <p className="text-sm text-ink-600">No advisors yet. Add your first advisor above.</p>
         </div>
       ) : (
-        <div className="rounded-2xl border border-ink-800 bg-ink-900 overflow-hidden animate-fade-in-up">
+        <div className="rounded-2xl border border-ink-200 bg-white overflow-hidden animate-fade-in-up">
           <table className="w-full text-sm">
-            <thead className="bg-ink-850 border-b border-ink-800">
+            <thead className="bg-ink-50 border-b border-ink-200">
               <tr>
                 <Th>Name</Th>
                 <Th>Email</Th>
@@ -311,21 +283,21 @@ export default function AdminAdvisorsPage() {
                 <Th className="text-right">Actions</Th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-ink-800">
+            <tbody className="divide-y divide-ink-200">
               {advisors.map((advisor) => (
                 <tr
                   key={advisor.user_id}
-                  className={`hover:bg-ink-850 transition ${!advisor.is_active ? "opacity-60" : ""}`}
+                  className={`hover:bg-ink-50 transition ${!advisor.is_active ? "opacity-60" : ""}`}
                 >
-                  <td className="px-4 py-3 font-bold text-lc-white">{advisor.name}</td>
-                  <td className="px-4 py-3 text-ink-300">{advisor.email}</td>
-                  <td className="px-4 py-3 text-ink-300 text-right tabular-nums">{advisor.case_count}</td>
+                  <td className="px-4 py-3 font-bold text-lc-black">{advisor.name}</td>
+                  <td className="px-4 py-3 text-ink-600">{advisor.email}</td>
+                  <td className="px-4 py-3 text-ink-600 text-right tabular-nums">{advisor.case_count}</td>
                   <td className="px-4 py-3">
                     <span
                       className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold border ${
                         advisor.is_active
-                          ? "border-ink-600 bg-ink-800 text-lc-white"
-                          : "border-ink-700 bg-ink-850 text-ink-400"
+                          ? "border-ink-400 bg-ink-100 text-lc-black"
+                          : "border-ink-300 bg-ink-50 text-ink-500"
                       }`}
                     >
                       <span
@@ -336,7 +308,7 @@ export default function AdminAdvisorsPage() {
                       {advisor.is_active ? "Active" : "Inactive"}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-ink-400">
+                  <td className="px-4 py-3 text-ink-500">
                     {new Date(advisor.created_at).toLocaleDateString()}
                   </td>
                   <td className="px-4 py-3">
@@ -344,26 +316,17 @@ export default function AdminAdvisorsPage() {
                       <button
                         onClick={() => handleResendInvite(advisor)}
                         disabled={acting === advisor.user_id}
-                        className="inline-flex items-center gap-1 text-[12px] text-ink-300 hover:text-lc-red transition disabled:opacity-40"
-                        title="Generate a fresh invite link"
+                        className="inline-flex items-center gap-1 text-[12px] text-ink-600 hover:text-lc-red transition disabled:opacity-40"
+                        title="Re-email the SSO sign-in link"
                       >
-                        <Link2 size={12} />
-                        Resend invite
-                      </button>
-                      <button
-                        onClick={() => handleResetPassword(advisor)}
-                        disabled={acting === advisor.user_id}
-                        className="inline-flex items-center gap-1 text-[12px] text-ink-400 hover:text-lc-red transition disabled:opacity-40"
-                        title="Issue a magic link for the advisor to set a new password"
-                      >
-                        <KeyRound size={12} />
-                        Send reset link
+                        <Mail size={12} />
+                        Resend sign-in email
                       </button>
                       <button
                         onClick={() => handleToggleActive(advisor)}
                         disabled={acting === advisor.user_id}
                         className={`text-[12px] font-bold transition disabled:opacity-40 ${
-                          advisor.is_active ? "text-lc-red hover:text-lc-red/70" : "text-lc-white hover:text-ink-200"
+                          advisor.is_active ? "text-lc-red hover:text-lc-red/70" : "text-lc-black hover:text-ink-800"
                         }`}
                       >
                         {acting === advisor.user_id
@@ -387,7 +350,7 @@ export default function AdminAdvisorsPage() {
 function Th({ children, className = "" }: { children?: React.ReactNode; className?: string }) {
   return (
     <th
-      className={`text-left px-4 py-2.5 text-[11px] uppercase tracking-[0.14em] font-bold text-ink-400 ${className}`}
+      className={`text-left px-4 py-2.5 text-[11px] uppercase tracking-[0.14em] font-bold text-ink-500 ${className}`}
     >
       {children}
     </th>
@@ -409,8 +372,10 @@ function ModeTab({
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex items-center gap-2 px-3 py-1.5 text-[12px] font-bold transition ${
-        active ? "bg-lc-red text-lc-white" : "bg-ink-900 text-ink-300 hover:bg-ink-850 hover:text-lc-white"
+      className={`inline-flex items-center gap-2 px-3 py-1.5 text-[12px] font-bold border-b-2 transition ${
+        active
+          ? "border-lc-red text-lc-black"
+          : "border-transparent text-ink-500 hover:text-lc-black"
       }`}
     >
       <Icon size={12} />
@@ -420,62 +385,62 @@ function ModeTab({
 }
 
 /**
- * Big success panel that appears after invite / resend-invite / password-reset.
- * Shows the magic link + a ready-to-paste message with one-click copy.
+ * Status panel shown after add-advisor / resend-sign-in.
+ * Confirms the SSO sign-in email was sent. If SMTP failed, shows the login URL
+ * so the admin can pass it to the advisor manually.
  */
 function InvitePanel({
   result,
   onDismiss,
 }: {
-  result: InviteResult | ResendResult;
+  result: InviteResult;
   onDismiss: () => void;
 }) {
   const advisor = result.advisor;
-  const url = "invite" in result ? result.invite.url : result.url;
-  const expiresAt = "invite" in result ? result.invite.expires_at : result.expires_at;
-  const isReset = !("invite" in result) && result.purpose === "reset";
-
-  const firstName = advisor.name.split(" ")[0];
-  const expiryHuman = new Date(expiresAt).toLocaleString();
-  const headline = isReset
-    ? `Password reset link ready for ${advisor.name}`
-    : `Invite ready for ${advisor.name}`;
-  const message = isReset
-    ? `Hi ${firstName},\n\n` +
-      `A password reset has been issued for your Lighthouse Canton Wealth Planning console account.\n\n` +
-      `Click the link below to set a new password:\n${url}\n\n` +
-      `Your login email is ${advisor.email}. The link expires on ${expiryHuman}.\n\n` +
-      `If you didn't request this, tell your administrator immediately. Internal use only — do not forward.`
-    : `Hi ${firstName},\n\n` +
-      `You've been invited to the Lighthouse Canton Wealth Planning console.\n\n` +
-      `Click the link below to set your password and sign in:\n${url}\n\n` +
-      `Your login email is ${advisor.email}. The link expires on ${expiryHuman}.\n\n` +
-      `Internal use only — please do not forward.`;
+  const loginUrl = result.login_url;
+  const emailSent = result.email_sent === true;
+  const emailError = result.email_error ?? null;
+  const headline = emailSent
+    ? `Sign-in email sent to ${advisor.name}`
+    : `Couldn't email ${advisor.name}`;
 
   return (
     <div className="mb-4 rounded-2xl border border-lc-red/40 bg-lc-red/5 p-5 animate-fade-in-up">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-[11px] uppercase tracking-[0.18em] text-lc-red font-bold flex items-center gap-2">
-            {isReset ? <KeyRound size={12} /> : <Link2 size={12} />}
+            {emailSent ? <Mail size={12} /> : <MailWarning size={12} />}
             {headline}
           </p>
-          <p className="mt-1 text-[13px] text-ink-200">
-            Expires {expiryHuman} · one-time use · 12-character minimum password
+          <p className="mt-1 text-[13px] text-ink-800">
+            {advisor.email} · authenticates via Microsoft SSO ("Sign in with LC Account")
           </p>
         </div>
         <button
           onClick={onDismiss}
-          className="p-1 rounded-md text-ink-400 hover:text-lc-white hover:bg-ink-800 transition"
+          className="p-1 rounded-md text-ink-500 hover:text-lc-black hover:bg-ink-100 transition"
           title="Dismiss"
         >
           <X size={14} />
         </button>
       </div>
 
-      <CopyBlock label={isReset ? "Reset URL" : "Invite URL"} value={url} mono />
-      <div className="h-2" />
-      <CopyBlock label="Ready-to-send message" value={message} multiline />
+      {emailSent ? (
+        <div className="mt-3 flex items-center gap-2 rounded-lg border border-ink-300 bg-ink-50 px-3 py-2 text-[12px] text-ink-800">
+          <Check size={12} className="text-lc-red" />
+          Delivered to <span className="text-lc-black">{advisor.email}</span>. They can sign in immediately.
+        </div>
+      ) : (
+        <>
+          <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-400 bg-amber-600 px-3 py-2 text-[12px] text-amber-500">
+            <MailWarning size={14} className="mt-0.5 shrink-0" />
+            <span>
+              Email not sent{emailError ? `: ${emailError}` : ""}. Share the sign-in link below directly with the advisor.
+            </span>
+          </div>
+          <CopyBlock label="Sign-in URL" value={loginUrl} mono />
+        </>
+      )}
     </div>
   );
 }
@@ -505,17 +470,17 @@ function CopyBlock({
   return (
     <div className="mt-3">
       <div className="flex items-center justify-between mb-1.5">
-        <p className="text-[10px] uppercase tracking-[0.16em] text-ink-400 font-bold">{label}</p>
+        <p className="text-[10px] uppercase tracking-[0.16em] text-ink-500 font-bold">{label}</p>
         <button
           onClick={doCopy}
-          className="inline-flex items-center gap-1 rounded-md border border-ink-700 bg-ink-900 px-2 py-1 text-[11px] font-bold text-ink-200 hover:bg-ink-850 hover:text-lc-white transition"
+          className="inline-flex items-center gap-1 rounded-md border border-ink-300 bg-white px-2 py-1 text-[11px] font-bold text-ink-800 hover:bg-ink-50 hover:text-lc-black transition"
         >
           {copied ? <Check size={11} className="text-lc-red" /> : <Copy size={11} />}
           {copied ? "Copied" : "Copy"}
         </button>
       </div>
       <div
-        className={`rounded-lg border border-ink-700 bg-ink-850 px-3 py-2 text-[12px] leading-relaxed text-ink-200 ${
+        className={`rounded-lg border border-ink-300 bg-ink-50 px-3 py-2 text-[12px] leading-relaxed text-ink-800 ${
           mono ? "font-mono break-all" : ""
         } ${multiline ? "whitespace-pre-wrap" : "truncate"}`}
       >

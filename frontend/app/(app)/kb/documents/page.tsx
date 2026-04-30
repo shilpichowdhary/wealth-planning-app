@@ -76,7 +76,7 @@ export default function KBDocumentsPage() {
 
   if (loading)
     return (
-      <div className="max-w-6xl mx-auto px-8 py-10 text-ink-400 text-sm">Loading…</div>
+      <div className="max-w-6xl mx-auto px-8 py-10 text-ink-500 text-sm">Loading…</div>
     );
 
   if (!["admin", "advisor"].includes(session?.user?.role ?? ""))
@@ -90,19 +90,19 @@ export default function KBDocumentsPage() {
     <div className="max-w-6xl mx-auto w-full px-8 py-10">
       <header className="mb-8 flex items-start justify-between gap-6 animate-fade-in-up">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.2em] text-ink-400 font-medium">Knowledge base</p>
-          <h1 className="mt-2 font-display text-[38px] leading-[1.05] tracking-tight text-ink-100">
+          <p className="text-[11px] uppercase tracking-[0.2em] text-ink-500 font-medium">Knowledge base</p>
+          <h1 className="mt-2 font-display text-[38px] leading-[1.05] tracking-tight text-ink-900">
             Documents
             <em className="italic text-brass-400 font-normal">.</em>
           </h1>
-          <p className="mt-2 text-ink-300 text-[15px]">
+          <p className="mt-2 text-ink-600 text-[15px]">
             {docs.length} document{docs.length !== 1 ? "s" : ""} across {Object.keys(countsByJ).length} jurisdiction
             {Object.keys(countsByJ).length !== 1 ? "s" : ""}
           </p>
         </div>
         <Link
           href="/kb/upload"
-          className="inline-flex items-center gap-2 rounded-lg bg-lc-red text-lc-white px-4 py-2.5 text-sm font-semibold hover:bg-lc-red/90 transition"
+          className="lc-btn-primary"
         >
           <Plus size={16} />
           Upload
@@ -118,13 +118,13 @@ export default function KBDocumentsPage() {
       {/* Filters */}
       <div className="mb-5 flex flex-col md:flex-row md:items-center gap-3 animate-fade-in-up" style={{ animationDelay: '0.05s' }}>
         <div className="relative flex-1 max-w-md">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-500" />
           <input
             type="search"
             placeholder="Search by filename…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-2.5 bg-ink-900 border border-ink-800 rounded-lg text-sm text-ink-100 placeholder:text-ink-500 focus:outline-none focus:border-brass-500 focus:ring-2 focus:ring-brass-500/20 transition"
+            className="w-full pl-9 pr-3 py-2.5 bg-white border border-ink-200 rounded-lg text-sm text-ink-900 placeholder:text-ink-400 focus:outline-none focus:border-brass-500 focus:ring-2 focus:ring-brass-500/20 transition"
           />
         </div>
 
@@ -145,9 +145,9 @@ export default function KBDocumentsPage() {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-ink-700 bg-ink-900/30 p-12 text-center">
-          <FileText size={28} className="mx-auto text-ink-500 mb-3" />
-          <p className="text-sm text-ink-300">
+        <div className="rounded-2xl border border-dashed border-ink-300 bg-white/30 p-12 text-center">
+          <FileText size={28} className="mx-auto text-ink-400 mb-3" />
+          <p className="text-sm text-ink-600">
             {docs.length === 0
               ? "No documents uploaded yet."
               : "No documents match your filters."}
@@ -162,9 +162,9 @@ export default function KBDocumentsPage() {
           )}
         </div>
       ) : (
-        <div className="rounded-2xl border border-ink-800 bg-ink-900 overflow-hidden animate-fade-in-up" style={{ animationDelay: '0.08s' }}>
+        <div className="rounded-2xl border border-ink-200 bg-white overflow-hidden animate-fade-in-up" style={{ animationDelay: '0.08s' }}>
           <table className="w-full text-sm">
-            <thead className="bg-ink-850 border-b border-ink-800">
+            <thead className="bg-ink-50 border-b border-ink-200">
               <tr>
                 <Th>File</Th>
                 <Th>Jurisdiction</Th>
@@ -174,10 +174,10 @@ export default function KBDocumentsPage() {
                 <Th className="w-10" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-ink-800">
+            <tbody className="divide-y divide-ink-200">
               {filtered.map((doc) => (
-                <tr key={doc.source_file} className="hover:bg-ink-850 transition group">
-                  <td className="px-4 py-3 font-medium text-ink-100 max-w-xs truncate" title={doc.source_file}>
+                <tr key={doc.source_file} className="hover:bg-ink-50 transition group">
+                  <td className="px-4 py-3 font-medium text-ink-900 max-w-xs truncate" title={doc.source_file}>
                     {doc.source_type === "kb_l2_wiki" ? (
                       <Link
                         href={`/kb/wiki/${doc.source_file.split("/").map(encodeURIComponent).join("/")}`}
@@ -196,12 +196,12 @@ export default function KBDocumentsPage() {
                         {jurisdictionLabel(doc.jurisdiction)}
                       </span>
                     ) : (
-                      <span className="text-ink-500">—</span>
+                      <span className="text-ink-400">—</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-ink-300">{doc.topic || <span className="text-ink-500">—</span>}</td>
-                  <td className="px-4 py-3 text-ink-300 text-right tabular-nums">{doc.chunk_count}</td>
-                  <td className="px-4 py-3 text-ink-400">
+                  <td className="px-4 py-3 text-ink-600">{doc.topic || <span className="text-ink-400">—</span>}</td>
+                  <td className="px-4 py-3 text-ink-600 text-right tabular-nums">{doc.chunk_count}</td>
+                  <td className="px-4 py-3 text-ink-500">
                     {doc.last_updated ? new Date(doc.last_updated).toLocaleDateString() : "—"}
                   </td>
                   <td className="px-4 py-3 text-right">
@@ -209,7 +209,7 @@ export default function KBDocumentsPage() {
                       onClick={() => handleDelete(doc.source_file)}
                       disabled={deleting === doc.source_file}
                       title="Delete"
-                      className="p-1.5 rounded-md text-ink-400 hover:text-ember-500 hover:bg-ember-500/10 disabled:opacity-40 transition opacity-0 group-hover:opacity-100"
+                      className="p-1.5 rounded-md text-ink-500 hover:text-ember-500 hover:bg-ember-500/10 disabled:opacity-40 transition opacity-0 group-hover:opacity-100"
                     >
                       <Trash2 size={14} />
                     </button>
@@ -227,7 +227,7 @@ export default function KBDocumentsPage() {
 function Th({ children, className = "" }: { children?: React.ReactNode; className?: string }) {
   return (
     <th
-      className={`text-left px-4 py-2.5 text-[11px] uppercase tracking-[0.14em] font-medium text-ink-400 ${className}`}
+      className={`text-left px-4 py-2.5 text-[11px] uppercase tracking-[0.14em] font-medium text-ink-500 ${className}`}
     >
       {children}
     </th>
@@ -251,11 +251,11 @@ function FilterPill({
       className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[12px] font-medium transition ${
         active
           ? "border-brass-500/60 bg-brass-500/10 text-brass-300"
-          : "border-ink-800 bg-ink-900 text-ink-300 hover:border-ink-700 hover:text-ink-100"
+          : "border-ink-200 bg-white text-ink-600 hover:border-ink-300 hover:text-ink-900"
       }`}
     >
       {label}
-      <span className={`text-[10px] font-normal ${active ? "text-brass-400" : "text-ink-500"}`}>{count}</span>
+      <span className={`text-[10px] font-normal ${active ? "text-brass-400" : "text-ink-400"}`}>{count}</span>
     </button>
   );
 }

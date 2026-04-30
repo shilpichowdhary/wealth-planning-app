@@ -1,6 +1,7 @@
 "use client";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
+import { AlertTriangle, Check } from "lucide-react";
 
 interface SettingEntry {
   label: string;
@@ -25,6 +26,7 @@ export default function AdminSettingsPage() {
   useEffect(() => {
     if (!token || session?.user?.role !== "admin") { setLoading(false); return; }
     loadSettings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, session?.user?.role]);
 
   async function loadSettings() {
@@ -70,21 +72,28 @@ export default function AdminSettingsPage() {
     }
   }
 
-  if (loading) return <div className="p-8 text-slate-500">Loading...</div>;
+  if (loading)
+    return <div className="max-w-2xl mx-auto px-8 py-10 text-ink-500 text-sm">Loading…</div>;
   if (session?.user?.role !== "admin")
-    return <div className="p-8 text-red-600">Access denied. Admins only.</div>;
+    return (
+      <div className="max-w-2xl mx-auto px-8 py-16 text-ember-500">Access denied. Admins only.</div>
+    );
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">API Keys & Settings</h1>
-        <p className="text-slate-500 text-sm mt-1">
+    <div className="max-w-2xl mx-auto w-full px-8 py-10">
+      <header className="mb-8 animate-fade-in-up">
+        <p className="text-[11px] uppercase tracking-[0.2em] text-ink-500 font-bold">Administration</p>
+        <h1 className="mt-2 font-display text-[38px] leading-[1.05] text-lc-black">
+          API keys &amp; settings<span className="text-lc-red">.</span>
+        </h1>
+        <p className="mt-2 text-ink-600 text-[15px]">
           Manage API keys used by the system. Keys are stored encrypted and masked for display.
         </p>
-      </div>
+      </header>
 
       {error && (
-        <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+        <div className="mb-4 flex items-center gap-2 rounded-lg border border-lc-red bg-lc-red/10 px-4 py-3 text-sm text-lc-red">
+          <AlertTriangle size={14} />
           {error}
         </div>
       )}
@@ -93,25 +102,25 @@ export default function AdminSettingsPage() {
         {Object.entries(settings).map(([key, setting]) => (
           <div
             key={key}
-            className="bg-white rounded-xl border border-slate-200 p-5"
+            className="rounded-2xl border border-ink-200 bg-white p-5 animate-fade-in-up"
           >
             <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-semibold text-slate-800">
+              <label className="text-sm font-bold text-ink-900">
                 {setting.label}
               </label>
               <span
-                className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                className={
                   setting.is_set
-                    ? "bg-green-100 text-green-700"
-                    : "bg-amber-100 text-amber-700"
-                }`}
+                    ? "lc-pill lc-pill-ok"
+                    : "lc-pill lc-pill-neutral"
+                }
               >
-                {setting.is_set ? "Configured" : "Not Set"}
+                {setting.is_set ? "Configured" : "Not set"}
               </span>
             </div>
 
             {setting.is_set && setting.value && (
-              <p className="text-xs text-slate-400 font-mono mb-2">
+              <p className="text-xs text-ink-500 font-mono mb-2">
                 Current: {setting.value}
               </p>
             )}
@@ -126,21 +135,24 @@ export default function AdminSettingsPage() {
                 placeholder={
                   key === "claude_model"
                     ? "e.g. claude-sonnet-4-6"
-                    : `Paste your ${setting.label}...`
+                    : `Paste your ${setting.label}…`
                 }
-                className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 bg-ink-50 border border-ink-300 rounded-lg px-3 py-2 text-sm text-lc-black placeholder:text-ink-400 focus:outline-none focus:border-lc-red focus:ring-2 focus:ring-lc-red/20 transition"
               />
               <button
                 onClick={() => handleSave(key)}
                 disabled={!drafts[key]?.trim() || saving === key}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition disabled:opacity-50"
+                className="lc-btn-primary"
               >
-                {saving === key ? "Saving..." : "Save"}
+                {saving === key ? "Saving…" : "Save"}
               </button>
             </div>
 
             {success === key && (
-              <p className="text-xs text-green-600 mt-2">Saved successfully.</p>
+              <p className="mt-2 inline-flex items-center gap-1 text-xs text-jade-500 font-bold">
+                <Check size={11} />
+                Saved successfully.
+              </p>
             )}
           </div>
         ))}

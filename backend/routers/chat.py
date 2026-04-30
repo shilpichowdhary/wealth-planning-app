@@ -10,11 +10,12 @@ from backend.database import get_db, AsyncSessionLocal
 from backend.models.case import Case
 from backend.models.conversation import Conversation, MessageRole
 from backend.models.client_profile import ClientProfile
+from backend.models.case_diagram import CaseDiagram
 from backend.schemas.chat import ChatRequest
 from backend.routers.auth import get_current_user, is_staff
 from backend.models.user import User, UserRole
 from backend.services.rag_service import RAGService, get_rag_service
-from backend.services.llm_service import stream_chat, extract_diagram_json
+from backend.services.llm_service import stream_chat
 from backend.services.diagram_service import DiagramService
 from backend.services.summary_service import generate_compact_summary
 
@@ -163,17 +164,25 @@ async def chat_stream(
         yield f"data: {json.dumps(source_event, default=str)}\n\n"
 
         try:
-            # Stream LLM tokens
-            full_response_parts = []
-            async for token in stream_chat(
+            # Stream LLM events. Text deltas are forwarded to the client as
+            # token SSE events; a tool_use event from record_structure_diagram
+            # is converted into a diagram_update SSE event. The chat content
+            # stored in the DB is pure markdown — no embedded JSON.
+            full_response_parts: list[str] = []
+            diagram_raw: dict | None = None
+            async for event in stream_chat(
                 messages=messages_for_llm,
                 retrieval=retrieval,
                 profile=profile,
                 prior_summary=prior_summary,
                 kb_has_documents=kb_has_documents,
             ):
-                full_response_parts.append(token)
-                yield f"data: {json.dumps({'type': 'token', 'text': token})}\n\n"
+                if event.get("type") == "text":
+                    text = event.get("text", "")
+                    full_response_parts.append(text)
+                    yield f"data: {json.dumps({'type': 'token', 'text': text})}\n\n"
+                elif event.get("type") == "diagram":
+                    diagram_raw = event.get("diagram")
 
             full_text = "".join(full_response_parts)
 
@@ -188,11 +197,27 @@ async def chat_stream(
                 bg_db.add(asst_msg)
                 await bg_db.commit()
 
-            # Extract and emit diagram if present
-            diagram_raw = extract_diagram_json(full_text)
+            # Emit diagram from the tool call (no text parsing).
+            # Auto-persist to case_diagrams when none exists yet — otherwise
+            # a recommendation that the advisor doesn't manually click "Save"
+            # on is lost on reload (the bug that left ABCD with no diagram).
+            # We do NOT auto-overwrite an existing diagram, since the advisor
+            # may have edited it.
             if diagram_raw:
                 diagram_service = DiagramService()
                 diagram_data = diagram_service.build_diagram_data(diagram_raw)
+                async with AsyncSessionLocal() as bg_db:
+                    existing = await bg_db.execute(
+                        select(CaseDiagram).where(CaseDiagram.case_id == payload.case_id)
+                    )
+                    if not existing.scalar_one_or_none():
+                        bg_db.add(CaseDiagram(
+                            case_id=payload.case_id,
+                            nodes_json=json.dumps(diagram_data["nodes"]),
+                            edges_json=json.dumps(diagram_data["edges"]),
+                            updated_by="auto_save",
+                        ))
+                        await bg_db.commit()
                 diagram_event = json.dumps({"type": "diagram_update", "diagram": diagram_data}, default=str)
                 yield f"data: {diagram_event}\n\n"
 

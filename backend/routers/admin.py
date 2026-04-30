@@ -1,23 +1,19 @@
-import os
 import secrets
 import string
-from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, update
+from sqlalchemy import select, func
+from backend.config import settings
 from backend.database import get_db
 from backend.models.user import User, UserRole
 from backend.models.case import Case
-from backend.models.invite_token import InviteToken
 from backend.routers.auth import get_current_user
 from backend.services.auth_service import hash_password
+from backend.services.email_service import send_invite_email
 from backend.services.settings_service import get_all_admin_settings, set_setting, ADMIN_KEYS
 
 router = APIRouter(prefix="/admin", tags=["admin"])
-
-# Invite tokens expire after this many days.
-INVITE_TTL_DAYS = 7
 
 
 def require_admin(current_user: User = Depends(get_current_user)) -> User:
@@ -56,46 +52,24 @@ async def update_setting(
     return {"status": "saved", "key": payload.key}
 
 
-# ── Invite helpers ─────────────────────────────────────────────
+# ── URL helper ─────────────────────────────────────────────────
 
 
 def _app_base_url(req: Request) -> str:
-    """Derive the base URL to embed in the invite link.
+    """Derive the public base URL for the SSO login link in the email.
 
-    Priority: APP_BASE_URL env var (set this in prod) → Origin header from the
-    admin's browser → request host. This lets dev (localhost:3001) and prod
-    (lighthouse-canton.internal) work without code changes.
+    Priority: settings.app_base_url (from .env / APP_BASE_URL, the canonical
+    public URL set by the admin) → Origin header from the admin's browser
+    → request host. The settings path used to be missed because the helper
+    only consulted os.environ, but Pydantic's BaseSettings reads .env into
+    the settings object, not into os.environ — so the override never fired.
     """
-    override = os.environ.get("APP_BASE_URL")
-    if override:
-        return override.rstrip("/")
+    if settings.app_base_url:
+        return settings.app_base_url.rstrip("/")
     origin = req.headers.get("origin")
     if origin:
         return origin.rstrip("/")
     return str(req.base_url).rstrip("/")
-
-
-def _generate_invite(db_user_id: str, created_by: str) -> InviteToken:
-    """Mint a fresh InviteToken — 32-byte URL-safe random, 7-day TTL."""
-    return InviteToken(
-        token=secrets.token_urlsafe(32),
-        user_id=db_user_id,
-        expires_at=datetime.utcnow() + timedelta(days=INVITE_TTL_DAYS),
-        created_by=created_by,
-    )
-
-
-async def _revoke_outstanding_invites(db: AsyncSession, user_id: str) -> None:
-    """Mark any unused, non-revoked invites for this user as revoked."""
-    await db.execute(
-        update(InviteToken)
-        .where(
-            InviteToken.user_id == user_id,
-            InviteToken.used_at.is_(None),
-            InviteToken.revoked.is_(False),
-        )
-        .values(revoked=True)
-    )
 
 
 # ── Advisor management ─────────────────────────────────────────
@@ -196,17 +170,18 @@ async def invite_advisor(
     db: AsyncSession = Depends(get_db),
     current_admin: User = Depends(require_admin),
 ):
-    """Create an advisor account and issue a magic-link invite token.
+    """Create an advisor account and email them an SSO sign-in link.
 
-    The advisor is created with a random, unknown password (they cannot log in
-    with password auth until they redeem the invite). Admin gets back the
-    invite URL to share out-of-band.
+    Advisors authenticate via Microsoft Entra SSO ("Sign in with LC Account")
+    so no password is ever set or shared. The user row is created immediately,
+    which is all SSO requires; the email simply directs them to /login.
     """
     existing = await db.execute(select(User).where(User.email == payload.email))
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=409, detail="Email already registered")
 
-    # Random password the admin never learns — advisor sets their own via invite.
+    # The User schema requires hashed_password NOT NULL but password auth is
+    # disabled for SSO advisors — store an unguessable throwaway nobody sees.
     throwaway = secrets.token_urlsafe(24)
     user = User(
         name=payload.name,
@@ -217,14 +192,13 @@ async def invite_advisor(
         is_active=True,
     )
     db.add(user)
-    await db.flush()  # populate user.user_id without committing yet
-
-    invite = _generate_invite(user.user_id, current_admin.user_id)
-    db.add(invite)
     await db.commit()
     await db.refresh(user)
 
-    base = _app_base_url(request)
+    login_url = f"{_app_base_url(request)}/"
+    email_sent, email_error = await send_invite_email(
+        to_email=user.email, name=user.name, login_url=login_url, kind="invite",
+    )
     return {
         "advisor": {
             "user_id": user.user_id,
@@ -235,11 +209,9 @@ async def invite_advisor(
             "created_at": user.created_at.isoformat(),
             "case_count": 0,
         },
-        "invite": {
-            "token": invite.token,
-            "url": f"{base}/invite/{invite.token}",
-            "expires_at": invite.expires_at.isoformat(),
-        },
+        "login_url": login_url,
+        "email_sent": email_sent,
+        "email_error": email_error,
     }
 
 
@@ -250,10 +222,7 @@ async def resend_advisor_invite(
     db: AsyncSession = Depends(get_db),
     current_admin: User = Depends(require_admin),
 ):
-    """Issue a fresh invite for an existing advisor and revoke any outstanding ones.
-
-    Useful when the original link expired or was lost.
-    """
+    """Re-email the SSO sign-in link to an existing advisor."""
     result = await db.execute(
         select(User).where(User.user_id == user_id, User.role == UserRole.ADVISOR)
     )
@@ -261,16 +230,14 @@ async def resend_advisor_invite(
     if not user:
         raise HTTPException(status_code=404, detail="Advisor not found")
 
-    await _revoke_outstanding_invites(db, user_id)
-    invite = _generate_invite(user_id, current_admin.user_id)
-    db.add(invite)
-    await db.commit()
-
-    base = _app_base_url(request)
+    login_url = f"{_app_base_url(request)}/"
+    email_sent, email_error = await send_invite_email(
+        to_email=user.email, name=user.name, login_url=login_url, kind="invite",
+    )
     return {
-        "token": invite.token,
-        "url": f"{base}/invite/{invite.token}",
-        "expires_at": invite.expires_at.isoformat(),
+        "login_url": login_url,
+        "email_sent": email_sent,
+        "email_error": email_error,
     }
 
 
@@ -317,12 +284,12 @@ async def reset_advisor_password(
     db: AsyncSession = Depends(get_db),
     current_admin: User = Depends(require_admin),
 ):
-    """Issue a magic-link password reset for an advisor.
+    """Re-email the SSO sign-in link to an advisor.
 
-    Historically this generated a random password that the admin had to share.
-    Now it uses the same single-use invite-token flow so admins never see (or
-    need to email) a plaintext password. Any outstanding invites for this user
-    are revoked so only the latest link can be redeemed.
+    Kept under the historical "/reset-password" URL so the admin UI doesn't
+    need to know a separate endpoint, but advisors use SSO — there is no
+    password to reset. The email reuses the SSO sign-in template with slightly
+    different framing ("access refreshed") via kind="reset".
     """
     result = await db.execute(
         select(User).where(User.user_id == user_id, User.role == UserRole.ADVISOR)
@@ -331,15 +298,13 @@ async def reset_advisor_password(
     if not user:
         raise HTTPException(status_code=404, detail="Advisor not found")
 
-    await _revoke_outstanding_invites(db, user_id)
-    invite = _generate_invite(user_id, current_admin.user_id)
-    db.add(invite)
-    await db.commit()
-
-    base = _app_base_url(request)
+    login_url = f"{_app_base_url(request)}/"
+    email_sent, email_error = await send_invite_email(
+        to_email=user.email, name=user.name, login_url=login_url, kind="reset",
+    )
     return {
-        "token": invite.token,
-        "url": f"{base}/invite/{invite.token}",
-        "expires_at": invite.expires_at.isoformat(),
+        "login_url": login_url,
         "purpose": "reset",
+        "email_sent": email_sent,
+        "email_error": email_error,
     }

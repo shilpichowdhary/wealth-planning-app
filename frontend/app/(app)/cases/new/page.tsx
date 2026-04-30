@@ -108,15 +108,15 @@ export default function NewCasePage() {
   }
 
   const inputCls =
-    'w-full bg-ink-850 border border-ink-700 rounded-lg px-4 py-2.5 text-sm text-ink-100 placeholder:text-ink-500 focus:outline-none focus:border-brass-500 focus:ring-2 focus:ring-brass-500/20 transition'
+    'w-full bg-ink-50 border border-ink-300 rounded-lg px-4 py-2.5 text-sm text-ink-900 placeholder:text-ink-400 focus:outline-none focus:border-brass-500 focus:ring-2 focus:ring-brass-500/20 transition'
 
   return (
     <div className="max-w-2xl mx-auto w-full px-8 py-10">
       <header className="mb-8 animate-fade-in-up">
-        <p className="text-[11px] uppercase tracking-[0.2em] text-ink-400 font-medium">
+        <p className="text-[11px] uppercase tracking-[0.2em] text-ink-500 font-medium">
           Step {step + 1} of {STEPS.length} — {STEPS[step]}
         </p>
-        <h1 className="mt-2 font-display text-[38px] leading-[1.05] tracking-tight text-ink-100">
+        <h1 className="mt-2 font-display text-[38px] leading-[1.05] tracking-tight text-ink-900">
           New case<em className="italic text-brass-400 font-normal">.</em>
         </h1>
 
@@ -130,12 +130,12 @@ export default function NewCasePage() {
                     ? 'bg-brass-500'
                     : i === step
                     ? 'bg-lc-red'
-                    : 'bg-ink-800'
+                    : 'bg-ink-100'
                 }`}
               />
               <p
                 className={`text-[10px] uppercase tracking-[0.14em] font-medium ${
-                  i === step ? 'text-ink-100' : 'text-ink-500'
+                  i === step ? 'text-ink-900' : 'text-ink-400'
                 }`}
               >
                 {label}
@@ -145,7 +145,7 @@ export default function NewCasePage() {
         </div>
       </header>
 
-      <div className="rounded-2xl border border-ink-800 bg-ink-900 p-6 space-y-5 animate-fade-in-up" style={{ animationDelay: '0.05s' }}>
+      <div className="rounded-2xl border border-ink-200 bg-white p-6 space-y-5 animate-fade-in-up" style={{ animationDelay: '0.05s' }}>
         {step === 0 && (
           <>
             <Field label="Client name" required>
@@ -236,7 +236,7 @@ export default function NewCasePage() {
           <button
             onClick={() => setStep(s => s - 1)}
             disabled={step === 0}
-            className="inline-flex items-center gap-2 px-3 py-2 text-sm text-ink-300 border border-ink-700 rounded-lg hover:bg-ink-800 hover:text-ink-100 transition disabled:opacity-30 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 px-3 py-2 text-sm text-ink-600 border border-ink-300 rounded-lg hover:bg-ink-100 hover:text-ink-900 transition disabled:opacity-30 disabled:cursor-not-allowed"
           >
             <ArrowLeft size={14} />
             Back
@@ -251,7 +251,7 @@ export default function NewCasePage() {
                 setError('')
                 setStep(s => s + 1)
               }}
-              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm bg-lc-red text-lc-white rounded-lg hover:bg-lc-red/90 transition font-semibold"
+              className="lc-btn-primary"
             >
               Next
               <ArrowRight size={14} />
@@ -260,7 +260,7 @@ export default function NewCasePage() {
             <button
               onClick={handleSubmit}
               disabled={submitting}
-              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm bg-lc-red text-lc-white rounded-lg hover:bg-lc-red/90 transition font-semibold disabled:opacity-50"
+              className="lc-btn-primary"
             >
               <Check size={14} />
               {submitting ? 'Creating…' : 'Create case'}
@@ -283,7 +283,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block text-[11px] uppercase tracking-[0.16em] text-ink-400 font-medium mb-1.5">
+      <label className="block text-[11px] uppercase tracking-[0.16em] text-ink-500 font-medium mb-1.5">
         {label}
         {required && <span className="text-brass-400 ml-1">*</span>}
       </label>
@@ -308,7 +308,7 @@ function ChipGroup({
 
   return (
     <div>
-      <p className="text-[11px] uppercase tracking-[0.16em] text-ink-400 font-medium mb-2">{label}</p>
+      <p className="text-[11px] uppercase tracking-[0.16em] text-ink-500 font-medium mb-2">{label}</p>
       <div className="flex flex-wrap gap-2">
         {options.map(opt => {
           const active = selected.includes(opt)
@@ -320,7 +320,7 @@ function ChipGroup({
               className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] transition ${
                 active
                   ? 'border-brass-500/60 bg-brass-500/10 text-brass-300'
-                  : 'border-ink-700 bg-ink-850 text-ink-300 hover:border-ink-600 hover:text-ink-100'
+                  : 'border-ink-300 bg-ink-50 text-ink-600 hover:border-ink-400 hover:text-ink-900'
               }`}
             >
               {active && <Check size={12} />}

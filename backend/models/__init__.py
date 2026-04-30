@@ -8,3 +8,4 @@ from backend.models.document import Document, FileType
 from backend.models.system_setting import SystemSetting
 from backend.models.case_diagram import CaseDiagram
 from backend.models.invite_token import InviteToken
+from backend.models.case_deck import CaseDeck
