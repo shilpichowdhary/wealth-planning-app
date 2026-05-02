@@ -16,12 +16,15 @@ frontend/.next/
 # Claude Code local state
 .claude/
 
-# Runtime artifacts (created by run_server.ps1)
+# Runtime artifacts (created by start_server.ps1)
 backend.log
 backend.pid
 frontend.pid
 backend_live.log
 backend_live.log.err
+logs/
+server.pid
+server.mode
 
 # Ingested KB source files (extracted from the export zip; reproducible)
 kb_files/
