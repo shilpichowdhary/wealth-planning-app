@@ -286,11 +286,16 @@
     background: var(--lc-agile-red);
     margin-bottom: 26px;
   }
+  /* Sentence-case serif product label — LC canonical (rule #4).
+     NEVER ALL-CAPS faded grey; that pattern is pre-LC-DS legacy drift. */
   .login-editorial__product {
-    font-size: 12px; font-weight: 700;
-    letter-spacing: 0.24em; text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.55);
-    margin-bottom: 22px;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 26px;
+    line-height: 1.2;
+    letter-spacing: -0.005em;
+    color: rgba(255, 255, 255, 0.92);
+    margin-bottom: 18px;
   }
   .login-editorial__headline {
     font-family: var(--font-display);

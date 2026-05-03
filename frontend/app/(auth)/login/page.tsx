@@ -94,10 +94,10 @@ function LoginForm() {
           <div className="login-brand__name">Lighthouse Canton</div>
         </div>
 
-        {/* Vertically centred centrepiece */}
+        {/* Vertically centred centrepiece — order is product → rule → headline. */}
         <div className="login-editorial__hero">
-          <div className="login-editorial__rule" />
           <div className="login-editorial__product">Wealth Planning Console</div>
+          <div className="login-editorial__rule" />
           <div className="login-editorial__headline">
             Private wealth planning, with <em>institutional</em> depth across seven jurisdictions.
           </div>
