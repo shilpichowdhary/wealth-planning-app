@@ -37,6 +37,9 @@ sample-deck-*.pdf
 sample-pdf-*.pdf
 _spec-*.json
 _diagram-*.png
+
+# One-shot brand-alignment probe artifacts
+frontend/scripts/probe_*.png
 _uns-*.png
 _uns-*.json
 ABCD-test-*.pdf
