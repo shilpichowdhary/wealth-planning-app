@@ -9,15 +9,27 @@ logger = logging.getLogger(__name__)
 
 
 def extract_diagram_json(text: str) -> dict | None:
-    """Extract diagram JSON from LLM response if present."""
-    # Find all ```json ... ``` blocks and try to parse each for entities
+    """Extract and validate diagram JSON from the LLM response.
+
+    Returns the parsed dict (Pydantic-validated shape) or None if no valid
+    block is present.
+    """
+    from pydantic import ValidationError
+    from backend.schemas.diagram import Diagram
+
     for match in re.finditer(r'```json\s*([\s\S]*?)\s*```', text):
         try:
             data = json.loads(match.group(1))
-            if isinstance(data, dict) and "entities" in data:
-                return data
         except json.JSONDecodeError:
             continue
+        if not isinstance(data, dict) or "entities" not in data:
+            continue
+        try:
+            Diagram.model_validate(data)
+        except ValidationError as e:
+            logger.warning("Diagram JSON failed schema validation: %s", e)
+            continue
+        return data
     return None
 
 

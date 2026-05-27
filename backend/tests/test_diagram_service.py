@@ -1,5 +1,6 @@
 import pytest
 from backend.services.diagram_service import DiagramService, NodeType
+from backend.services.llm_service import extract_diagram_json
 
 def test_builds_nodes_from_recommendation():
     svc = DiagramService()
@@ -37,3 +38,40 @@ def test_out_of_bounds_edges_skipped():
     # Out-of-bounds edge should be skipped
     assert len(result["edges"]) == 1
     assert result["edges"][0]["label"] == "Valid"
+
+
+def test_extract_diagram_json_returns_none_for_malformed_entity():
+    """An entity missing its required `type` field is invalid; the validator
+    must reject the whole diagram rather than letting the bad entity reach React Flow."""
+    text = '''Here is the diagram:
+```json
+{"entities": [{"label": "Trust"}], "edges": []}
+```
+'''
+    assert extract_diagram_json(text) is None
+
+
+def test_extract_diagram_json_returns_none_for_invalid_entity_type():
+    """The `type` field is constrained to individual/trust/company."""
+    text = '''```json
+{"entities": [{"type": "spaceship", "label": "X"}], "edges": []}
+```'''
+    assert extract_diagram_json(text) is None
+
+
+def test_extract_diagram_json_returns_dict_for_well_formed_input():
+    text = '''```json
+{"entities": [{"type": "trust", "label": "T", "jurisdiction": "Jersey"}], "edges": []}
+```'''
+    result = extract_diagram_json(text)
+    assert result is not None
+    assert len(result["entities"]) == 1
+    assert result["entities"][0]["type"] == "trust"
+
+
+def test_extract_diagram_json_returns_none_for_negative_edge_index():
+    """The Pydantic schema constrains source/target to non-negative."""
+    text = '''```json
+{"entities": [{"type": "trust", "label": "T"}], "edges": [{"source": -1, "target": 0, "label": "owns 100%"}]}
+```'''
+    assert extract_diagram_json(text) is None
