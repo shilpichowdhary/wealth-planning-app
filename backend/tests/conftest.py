@@ -1,4 +1,5 @@
 import os
+# Set before any backend import so validate_secrets() doesn't trip in TestClient lifespan.
 os.environ.setdefault("SECRET_KEY", "test-only-secret-key-32-bytes-minimum-aaaa")
 
 import pytest

@@ -1,7 +1,7 @@
 from pydantic_settings import BaseSettings
 
 
-KNOWN_DEFAULT_SECRET_KEYS = {
+_KNOWN_DEFAULT_SECRET_KEYS = {
     "dev-secret-key-change-in-production-min32",
     "change-me",
     "secret",
@@ -38,20 +38,21 @@ class Settings(BaseSettings):
         env_file = ".env"
 
 
-def validate_secrets(s: "Settings") -> None:
+def validate_secrets(s: Settings) -> None:
     if not s.secret_key:
         raise RuntimeError(
             "SECRET_KEY is required and must be set in the environment "
-            "(min length 32, not a known default)."
+            "(min length 32, not a known default). "
+            "Generate one with: python -c 'import secrets; print(secrets.token_urlsafe(48))'"
+        )
+    if s.secret_key in _KNOWN_DEFAULT_SECRET_KEYS:
+        raise RuntimeError(
+            "SECRET_KEY is set to a known default sentinel. "
+            "Generate one with: python -c 'import secrets; print(secrets.token_urlsafe(48))'"
         )
     if len(s.secret_key) < 32:
         raise RuntimeError(
             f"SECRET_KEY must be at least 32 characters long (got {len(s.secret_key)})."
-        )
-    if s.secret_key in KNOWN_DEFAULT_SECRET_KEYS:
-        raise RuntimeError(
-            "SECRET_KEY is set to a known default sentinel. "
-            "Generate a random value before starting the service."
         )
 
 

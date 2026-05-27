@@ -21,9 +21,13 @@ def _reload_config():
 
 
 def test_secret_key_empty_default_when_env_unset(monkeypatch):
+    """Assert the code-level default for secret_key is empty.
+
+    `_env_file=None` bypasses the developer's local .env so this test is
+    asserting on the field default declared in `Settings`, not whatever
+    happens to be set on the contributor's machine.
+    """
     monkeypatch.delenv("SECRET_KEY", raising=False)
-    # Disable .env loading so the test asserts on the *code* default,
-    # not whatever the developer happens to have in their local .env.
     cfg = _reload_config()
     fresh = cfg.Settings(_env_file=None)
     assert fresh.secret_key == ""
