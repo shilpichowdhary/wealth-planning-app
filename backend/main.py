@@ -1,8 +1,12 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 from backend.config import settings, validate_secrets
 from backend.database import create_tables
+from backend.services.rate_limit import limiter, user_limiter
 import backend.models  # noqa: F401 — ensures all models are registered with Base.metadata
 
 @asynccontextmanager
@@ -23,6 +27,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Rate limiting (SEC-02, AI-07). Two limiters share one middleware:
+# - `limiter` keys by IP (auth endpoints, pre-login)
+# - `user_limiter` keys by authenticated user_id (chat endpoints)
+app.state.limiter = limiter
+app.state.user_limiter = user_limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 from backend.routers import auth as auth_router
 app.include_router(auth_router.router)

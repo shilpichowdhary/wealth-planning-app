@@ -10,6 +10,19 @@ from backend.main import app
 from backend.database import Base, get_db
 from backend.models.user import User, UserRole
 from backend.services.auth_service import hash_password
+from backend.services.rate_limit import limiter, user_limiter
+
+
+@pytest.fixture(autouse=True)
+def _reset_rate_limiters():
+    """slowapi keeps an in-memory counter that survives across tests; reset
+    between each test so /auth/token calls in different tests don't bleed
+    into each other's 5/minute budget."""
+    limiter.reset()
+    user_limiter.reset()
+    yield
+    limiter.reset()
+    user_limiter.reset()
 
 TEST_DB = "sqlite+aiosqlite:///:memory:"
 

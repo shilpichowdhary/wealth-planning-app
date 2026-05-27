@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,6 +14,7 @@ from backend.services.auth_service import (
     AuthService,
     validate_azure_id_token_async,
 )
+from backend.services.rate_limit import limiter
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +27,8 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
 
 @router.post("/token")
-async def login(form: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)):
+@limiter.limit("5/minute")
+async def login(request: Request, form: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User).where(User.email == form.username, User.is_active == True))
     user = result.scalar_one_or_none()
     if not user or not verify_password(form.password, user.hashed_password):
@@ -42,7 +44,8 @@ class SSORequest(BaseModel):
 
 
 @router.post("/sso")
-async def sso_login(payload: SSORequest, db: AsyncSession = Depends(get_db)):
+@limiter.limit("5/minute")
+async def sso_login(request: Request, payload: SSORequest, db: AsyncSession = Depends(get_db)):
     """Exchange an Azure AD ID token for an app JWT.
 
     Only users pre-created by an admin can log in via SSO.
@@ -150,7 +153,9 @@ class AcceptInviteRequest(BaseModel):
 
 
 @router.post("/invite/{token}/accept")
+@limiter.limit("5/minute")
 async def accept_invite(
+    request: Request,
     token: str,
     payload: AcceptInviteRequest,
     db: AsyncSession = Depends(get_db),

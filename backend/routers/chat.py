@@ -2,7 +2,7 @@ import asyncio
 import json
 import logging
 from typing import Any
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -17,6 +17,7 @@ from backend.services.rag_service import RAGService, get_rag_service
 from backend.services.llm_service import stream_chat, extract_diagram_json
 from backend.services.diagram_service import DiagramService
 from backend.services.summary_service import generate_compact_summary
+from backend.services.rate_limit import user_limiter
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/chat", tags=["chat"])
@@ -32,12 +33,18 @@ def _safe_json_loads(s: str | None, default: Any) -> Any:
 
 
 @router.post("/stream", response_class=StreamingResponse)
+@user_limiter.limit("30/hour")
 async def chat_stream(
+    request: Request,
     payload: ChatRequest,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
     rag: RAGService = Depends(get_rag_service),
 ):
+    # Expose the authenticated user to slowapi's key function so the limit
+    # buckets by user_id rather than IP (matters when multiple advisors share
+    # an office NAT).
+    request.state.current_user = current_user
     # Verify case exists and user has access
     result = await db.execute(select(Case).where(Case.case_id == payload.case_id))
     case = result.scalar_one_or_none()
