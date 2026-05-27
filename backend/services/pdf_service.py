@@ -34,7 +34,10 @@ def build_report_html(case_data: dict, profile: dict, recommendations: list[dict
                 sources = json.loads(sources)
             except (json.JSONDecodeError, ValueError):
                 sources = []
-        sources_html = "".join(f'<li class="source">{s}</li>' for s in (sources or []))
+        sources_html = "".join(
+            f'<li class="source">{html_lib.escape(str(s))}</li>'
+            for s in (sources or [])
+        )
         confidence = r.get("confidence_level", "high")
         # Handle enum values
         if hasattr(confidence, 'value'):

@@ -59,3 +59,29 @@ async def test_generate_pdf_raises_on_nonzero_exit():
     with patch("asyncio.create_subprocess_exec", return_value=mock_proc):
         with pytest.raises((RuntimeError, Exception)):
             await generate_pdf("<html><body>test</body></html>")
+
+
+from backend.services.pdf_service import build_report_html
+
+
+def test_source_strings_are_html_escaped():
+    """A source string containing HTML must be rendered as text, not as live markup.
+
+    Other user-supplied fields (structure_name, rationale, etc.) already escape via
+    html_lib.escape; this test pins the same behaviour for the sources list.
+    """
+    rec = {
+        "structure_name": "X",
+        "rationale": "Y",
+        "confidence_level": "high",
+        "sources": ["<script>alert(1)</script>", "ok.pdf"],
+    }
+    html = build_report_html(
+        case_data={"client_name": "C"},
+        profile={},
+        recommendations=[rec],
+        diagrams={},
+    )
+    assert "<script>alert(1)</script>" not in html
+    assert "&lt;script&gt;alert(1)&lt;/script&gt;" in html
+    assert "ok.pdf" in html
