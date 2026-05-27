@@ -175,6 +175,11 @@ async def review_queue_action(
     entry.review_count += 1
 
     if payload.action == "approve":
+        if entry.current_status not in (ReviewStatus.PENDING, ReviewStatus.RESUBMITTED):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Cannot approve entry in status {entry.current_status.value}",
+            )
         entry.current_status = ReviewStatus.APPROVED
         await kb.upload_kb_file(
             content=entry.content,
@@ -184,13 +189,29 @@ async def review_queue_action(
             source_type="web_sourced_approved",
         )
     elif payload.action == "reject":
-        entry.current_status = ReviewStatus.REJECTED
+        if entry.current_status == ReviewStatus.RESUBMITTED:
+            entry.current_status = ReviewStatus.RE_REJECTED
+        elif entry.current_status == ReviewStatus.PENDING:
+            entry.current_status = ReviewStatus.REJECTED
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Cannot reject entry in status {entry.current_status.value}",
+            )
         entry.rejection_note = payload.note
     elif payload.action == "resubmit":
-        if entry.current_status not in (ReviewStatus.REJECTED, ReviewStatus.RE_REJECTED):
-            raise HTTPException(status_code=400, detail="Can only resubmit rejected entries")
+        if entry.current_status != ReviewStatus.REJECTED:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "Can only resubmit entries in REJECTED state — "
+                    f"current status is {entry.current_status.value}"
+                ),
+            )
         entry.current_status = ReviewStatus.RESUBMITTED
         entry.resubmission_note = payload.note
+    else:
+        raise HTTPException(status_code=400, detail=f"Unknown action: {payload.action}")
 
     await db.commit()
     return {"status": entry.current_status}
