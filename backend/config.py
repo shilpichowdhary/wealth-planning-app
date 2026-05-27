@@ -1,8 +1,16 @@
 from pydantic_settings import BaseSettings
 
+
+KNOWN_DEFAULT_SECRET_KEYS = {
+    "dev-secret-key-change-in-production-min32",
+    "change-me",
+    "secret",
+}
+
+
 class Settings(BaseSettings):
     database_url: str = "sqlite+aiosqlite:///./wealth_planning.db"
-    secret_key: str = "dev-secret-key-change-in-production-min32"
+    secret_key: str = ""
     anthropic_api_key: str = "placeholder"
     tavily_api_key: str = "placeholder"
     chroma_db_path: str = "./chroma_db"
@@ -28,5 +36,23 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
+
+
+def validate_secrets(s: "Settings") -> None:
+    if not s.secret_key:
+        raise RuntimeError(
+            "SECRET_KEY is required and must be set in the environment "
+            "(min length 32, not a known default)."
+        )
+    if len(s.secret_key) < 32:
+        raise RuntimeError(
+            f"SECRET_KEY must be at least 32 characters long (got {len(s.secret_key)})."
+        )
+    if s.secret_key in KNOWN_DEFAULT_SECRET_KEYS:
+        raise RuntimeError(
+            "SECRET_KEY is set to a known default sentinel. "
+            "Generate a random value before starting the service."
+        )
+
 
 settings = Settings()

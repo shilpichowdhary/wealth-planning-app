@@ -1,3 +1,6 @@
+import os
+os.environ.setdefault("SECRET_KEY", "test-only-secret-key-32-bytes-minimum-aaaa")
+
 import pytest
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
