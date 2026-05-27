@@ -15,7 +15,7 @@ class CaseDiagram(Base):
     __tablename__ = "case_diagrams"
 
     case_id: Mapped[str] = mapped_column(
-        String, ForeignKey("cases.case_id"), primary_key=True
+        String, ForeignKey("cases.case_id", ondelete="CASCADE"), primary_key=True
     )
     nodes_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
     edges_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")

@@ -14,7 +14,7 @@ class Document(Base):
     __tablename__ = "documents"
 
     document_id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    case_id: Mapped[str] = mapped_column(String, ForeignKey("cases.case_id"), nullable=False)
+    case_id: Mapped[str] = mapped_column(String, ForeignKey("cases.case_id", ondelete="CASCADE"), nullable=False)
     filename: Mapped[str] = mapped_column(String, nullable=False)
     file_path: Mapped[str] = mapped_column(String, nullable=False)
     file_type: Mapped[FileType] = mapped_column(Enum(FileType), nullable=False)

@@ -7,7 +7,7 @@ class ClientProfile(Base):
     __tablename__ = "client_profiles"
 
     profile_id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    case_id: Mapped[str] = mapped_column(String, ForeignKey("cases.case_id"), unique=True, nullable=False)
+    case_id: Mapped[str] = mapped_column(String, ForeignKey("cases.case_id", ondelete="CASCADE"), unique=True, nullable=False)
     nationality: Mapped[str | None] = mapped_column(String)
     domicile: Mapped[str | None] = mapped_column(String)
     tax_residency: Mapped[str | None] = mapped_column(String)

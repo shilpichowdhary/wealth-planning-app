@@ -3,6 +3,7 @@ chroma_db/
 uploads/
 *.db
 *.db.bak_*
+wealth_planning.db*
 __pycache__/
 .venv/
 venv/

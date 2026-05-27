@@ -4,6 +4,7 @@ os.environ.setdefault("SECRET_KEY", "test-only-secret-key-32-bytes-minimum-aaaa"
 
 import pytest
 from httpx import AsyncClient, ASGITransport
+from sqlalchemy import event
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from backend.main import app
@@ -29,6 +30,17 @@ TEST_DB = "sqlite+aiosqlite:///:memory:"
 @pytest.fixture(scope="function")
 async def db_session():
     engine = create_async_engine(TEST_DB)
+
+    # Mirror the production database.py PRAGMA listener so SQLite enforces
+    # ondelete=CASCADE in tests. Without this, child rows survive parent
+    # deletes silently and cascade tests would report false negatives.
+    @event.listens_for(engine.sync_engine, "connect")
+    def _enable_sqlite_fk(dbapi_conn, _conn_record):
+        if engine.dialect.name == "sqlite":
+            cursor = dbapi_conn.cursor()
+            cursor.execute("PRAGMA foreign_keys=ON")
+            cursor.close()
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     TestSession = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
