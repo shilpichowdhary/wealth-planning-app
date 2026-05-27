@@ -5,7 +5,7 @@ Auth endpoints key by IP (pre-auth, no user identity yet).
 Chat endpoints key by authenticated user_id, with a second daily token budget
 applied manually inside the chat handler using Anthropic's response.usage.
 """
-from datetime import datetime, timezone
+from datetime import datetime
 
 from fastapi import Request
 from slowapi import Limiter
@@ -48,7 +48,7 @@ _token_counter: dict[str, tuple[str, int]] = {}
 # Until then this helper is unused — kept here so Phase-2/3 work has the bucket shape ready.
 def record_chat_tokens(user_id: str, tokens: int) -> bool:
     """Add tokens to today's bucket. Returns False if the daily budget is now exceeded."""
-    today = datetime.now(timezone.utc).date().isoformat()
+    today = datetime.utcnow().date().isoformat()
     date_seen, used = _token_counter.get(user_id, (today, 0))
     if date_seen != today:
         date_seen, used = today, 0

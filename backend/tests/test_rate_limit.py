@@ -92,6 +92,32 @@ def test_user_key_case_insensitive_authorization_header():
 
 
 @pytest.mark.asyncio
+async def test_chat_rate_limit_returns_429_after_30_per_hour(async_client, auth_headers):
+    """SPEC §3.2 / CTO+CISO checklist §6.2: prove the 30/hour per-user chat
+    limit fires on the 31st request.
+
+    We deliberately POST a non-existent case_id so the handler short-circuits
+    on the 404 lookup before reaching RAG / Anthropic — slowapi's @limit
+    decorator runs before the function body, so the 404 still counts toward
+    the bucket. This keeps the test fast and dependency-free while exercising
+    the same code path the checklist names directly.
+    """
+    statuses = []
+    for _ in range(31):
+        r = await async_client.post(
+            "/chat/stream",
+            headers=auth_headers,
+            json={"case_id": "does-not-exist", "message": "ping"},
+        )
+        statuses.append(r.status_code)
+
+    # First 30 must not be server errors — we don't care whether they 404 or
+    # 403 or anything else, only that slowapi counted each one.
+    assert all(s < 500 for s in statuses[:30]), statuses
+    assert statuses[30] == 429, statuses
+
+
+@pytest.mark.asyncio
 async def test_health_endpoint_not_rate_limited(async_client):
     """The original code applied a 60/min default to EVERY endpoint via
     SlowAPIMiddleware. After dropping default_limits, /health should accept
