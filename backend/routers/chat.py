@@ -41,10 +41,6 @@ async def chat_stream(
     current_user: User = Depends(get_current_user),
     rag: RAGService = Depends(get_rag_service),
 ):
-    # Expose the authenticated user to slowapi's key function so the limit
-    # buckets by user_id rather than IP (matters when multiple advisors share
-    # an office NAT).
-    request.state.current_user = current_user
     # Verify case exists and user has access
     result = await db.execute(select(Case).where(Case.case_id == payload.case_id))
     case = result.scalar_one_or_none()
