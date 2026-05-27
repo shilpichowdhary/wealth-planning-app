@@ -20,6 +20,18 @@ def validate_mime_type(file_path: str) -> str:
     return ALLOWED_MIMES[mime]
 
 
+def validate_mime_type_from_buffer(buf: bytes) -> str:
+    """Buffer variant — used by upload handler so we can reject before writing to disk.
+
+    Returns one of {'txt','pdf','docx'} or raises ValueError.
+    """
+    import magic
+    mime = magic.from_buffer(buf, mime=True)
+    if mime not in ALLOWED_MIMES:
+        raise ValueError(f"Invalid file type: {mime}. Accepted: txt, pdf, docx")
+    return ALLOWED_MIMES[mime]
+
+
 def extract_text(file_path: str, file_type: str) -> str:
     if file_type == "txt":
         return Path(file_path).read_text(encoding="utf-8", errors="replace")

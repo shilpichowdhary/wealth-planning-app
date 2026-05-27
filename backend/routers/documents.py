@@ -7,7 +7,7 @@ from backend.database import get_db
 from backend.models.document import Document, FileType
 from backend.models.user import User, UserRole
 from backend.routers.auth import get_current_user, is_staff
-from backend.services.document_service import process_and_embed_document, validate_mime_type
+from backend.services.document_service import process_and_embed_document
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/documents", tags=["documents"])
@@ -20,15 +20,21 @@ async def upload_document(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    from backend.services.document_service import validate_mime_type_from_buffer
+
     if not is_staff(current_user):
         raise HTTPException(status_code=403, detail="Advisors only")
 
-    # Read and size-check
     content = await file.read()
     if len(content) > settings.max_upload_bytes:
         raise HTTPException(status_code=413, detail="File exceeds 20MB limit")
 
-    # Save to disk
+    # MIME validation BEFORE touching disk — rejects executables disguised as PDFs.
+    try:
+        file_type = validate_mime_type_from_buffer(content)
+    except ValueError as e:
+        raise HTTPException(status_code=415, detail=str(e))
+
     upload_dir = os.path.join(settings.uploads_path, "cases", case_id)
     os.makedirs(upload_dir, exist_ok=True)
     safe_filename = os.path.basename(file.filename or "upload")
@@ -38,14 +44,6 @@ async def upload_document(
     with open(file_path, "wb") as f:
         f.write(content)
 
-    # MIME validation (after saving, before embedding)
-    try:
-        file_type = validate_mime_type(file_path)
-    except ValueError as e:
-        os.unlink(file_path)
-        raise HTTPException(status_code=415, detail=str(e))
-
-    # Save metadata to DB
     doc = Document(
         case_id=case_id,
         filename=safe_filename,
@@ -58,7 +56,6 @@ async def upload_document(
     await db.commit()
     await db.refresh(doc)
 
-    # Process and embed (synchronous but acceptable for V1)
     try:
         chunk_count = await process_and_embed_document(file_path, file_type, case_id, file.filename)
         doc.parsed = True
