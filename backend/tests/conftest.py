@@ -6,6 +6,10 @@ os.environ.setdefault("SECRET_KEY", "test-only-secret-key-32-bytes-minimum-aaaa"
 # lifespan's create_tables(), it falls back to create_all on this engine
 # rather than trying to run migrations against an in-memory DB.
 os.environ.setdefault("ALEMBIC_BOOTSTRAP", "skip")
+os.environ.setdefault("ALLOW_LOCAL_FERNET_KEY", "true")
+# Fernet keys must be url-safe base64-encoded 32-byte random values.
+# This is a fixed test key — production reads from Azure Key Vault.
+os.environ.setdefault("LOCAL_FERNET_KEY", "OPEy7gV7c0sFNV6yEvg49iFEFRwY7sN1lWQOZsClkFc=")
 
 import pytest
 from httpx import AsyncClient, ASGITransport

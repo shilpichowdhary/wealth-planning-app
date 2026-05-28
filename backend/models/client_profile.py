@@ -2,6 +2,7 @@ import uuid
 from sqlalchemy import String, Text, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 from backend.database import Base
+from backend.models.types import EncryptedString
 
 class ClientProfile(Base):
     __tablename__ = "client_profiles"
@@ -11,8 +12,8 @@ class ClientProfile(Base):
     nationality: Mapped[str | None] = mapped_column(String)
     domicile: Mapped[str | None] = mapped_column(String)
     tax_residency: Mapped[str | None] = mapped_column(String)
-    family_members: Mapped[str | None] = mapped_column(Text)
+    family_members: Mapped[str | None] = mapped_column(EncryptedString)  # encrypted
     asset_classes: Mapped[str | None] = mapped_column(Text)
     asset_jurisdictions: Mapped[str | None] = mapped_column(Text)
-    existing_structures: Mapped[str | None] = mapped_column(Text)
-    objectives: Mapped[str | None] = mapped_column(Text)
+    existing_structures: Mapped[str | None] = mapped_column(EncryptedString)  # encrypted
+    objectives: Mapped[str | None] = mapped_column(EncryptedString)  # encrypted
