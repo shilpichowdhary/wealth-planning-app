@@ -59,7 +59,7 @@ async def test_settings_service_encrypts_anthropic_key(db_session):
 async def test_settings_service_does_not_encrypt_claude_model(db_session):
     """claude_model is not in SECRET_KEYS — stored as plaintext."""
     from sqlalchemy import select
-    from backend.services.settings_service import set_setting, get_setting
+    from backend.services.settings_service import set_setting
     from backend.models.system_setting import SystemSetting
 
     await set_setting("claude_model", "claude-opus-4-7", db_session)
