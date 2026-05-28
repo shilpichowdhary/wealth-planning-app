@@ -1,6 +1,11 @@
 import os
 # Set before any backend import so validate_secrets() doesn't trip in TestClient lifespan.
 os.environ.setdefault("SECRET_KEY", "test-only-secret-key-32-bytes-minimum-aaaa")
+# Bypass Alembic during tests; conftest builds its own in-memory engine and
+# calls Base.metadata.create_all directly. If a test path reaches the
+# lifespan's create_tables(), it falls back to create_all on this engine
+# rather than trying to run migrations against an in-memory DB.
+os.environ.setdefault("ALEMBIC_BOOTSTRAP", "skip")
 
 import pytest
 from httpx import AsyncClient, ASGITransport
