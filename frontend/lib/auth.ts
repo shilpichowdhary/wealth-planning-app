@@ -79,5 +79,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return session
     },
   },
+  useSecureCookies: process.env.NEXTAUTH_USE_SECURE_COOKIES === 'true',
+  cookies: {
+    sessionToken: {
+      name: process.env.NEXTAUTH_USE_SECURE_COOKIES === 'true'
+        ? '__Secure-next-auth.session-token'
+        : 'next-auth.session-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NEXTAUTH_USE_SECURE_COOKIES === 'true',
+      },
+    },
+  },
   pages: { signIn: '/login' },
 })

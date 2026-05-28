@@ -35,6 +35,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# HTTPS enforcement (SEC-07). Tolerant by default — only rejects non-HTTPS
+# requests when ENFORCE_HTTPS=true. Phase 3 cutover flips the switch.
+# Ordering note: CORS must remain outermost so preflight OPTIONS responses
+# include CORS headers even when other middleware would reject the request.
+from backend.middleware.https_enforce import EnforceHttpsMiddleware
+app.add_middleware(EnforceHttpsMiddleware)
+
 # Rate limiting (SEC-02, AI-07). Two limiters share one middleware:
 # - `limiter` keys by IP (auth endpoints, pre-login)
 # - `user_limiter` keys by authenticated user_id (chat endpoints)
