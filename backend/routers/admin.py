@@ -13,6 +13,7 @@ from backend.models.invite_token import InviteToken
 from backend.routers.auth import get_current_user
 from backend.services.auth_service import hash_password
 from backend.services.settings_service import get_all_admin_settings, set_setting, ADMIN_KEYS
+from backend.services.audit_service import log_event
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -46,13 +47,25 @@ async def list_settings(
 @router.put("/settings")
 async def update_setting(
     payload: UpdateSettingRequest,
+    request: Request,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_admin),
+    current_admin: User = Depends(require_admin),
 ):
     """Set an API key or config value."""
     if payload.key not in ADMIN_KEYS:
         raise HTTPException(status_code=400, detail=f"Unknown setting: {payload.key}")
     await set_setting(payload.key, payload.value, db)
+    # Record the key only — values may be secrets (Anthropic key etc.)
+    # and must never reach the audit log.
+    await log_event(
+        db,
+        event_type="admin.settings.change",
+        actor_user_id=current_admin.user_id,
+        request=request,
+        target_type="setting",
+        target_id=payload.key,
+        detail={"setting_key": payload.key},
+    )
     return {"status": "saved", "key": payload.key}
 
 
@@ -256,6 +269,7 @@ async def list_advisors(
 @router.post("/advisors", status_code=201)
 async def create_advisor(
     payload: CreateAdvisorRequest,
+    request: Request,
     db: AsyncSession = Depends(get_db),
     current_admin: User = Depends(require_admin),
 ):
@@ -276,6 +290,15 @@ async def create_advisor(
     db.add(user)
     await db.commit()
     await db.refresh(user)
+    await log_event(
+        db,
+        event_type="admin.user.create",
+        actor_user_id=current_admin.user_id,
+        request=request,
+        target_type="user",
+        target_id=user.user_id,
+        detail={"email": user.email, "via": "direct"},
+    )
     return {
         "user_id": user.user_id,
         "name": user.name,
@@ -321,6 +344,15 @@ async def invite_advisor(
     db.add(invite)
     await db.commit()
     await db.refresh(user)
+    await log_event(
+        db,
+        event_type="admin.user.create",
+        actor_user_id=current_admin.user_id,
+        request=request,
+        target_type="user",
+        target_id=user.user_id,
+        detail={"email": user.email, "via": "invite"},
+    )
 
     base = _app_base_url(request)
     return {
@@ -375,6 +407,7 @@ async def resend_advisor_invite(
 @router.patch("/advisors/{user_id}/deactivate")
 async def deactivate_advisor(
     user_id: str,
+    request: Request,
     db: AsyncSession = Depends(get_db),
     current_admin: User = Depends(require_admin),
 ):
@@ -387,6 +420,14 @@ async def deactivate_advisor(
         raise HTTPException(status_code=404, detail="Advisor not found")
     user.is_active = False
     await db.commit()
+    await log_event(
+        db,
+        event_type="admin.user.deactivate",
+        actor_user_id=current_admin.user_id,
+        request=request,
+        target_type="user",
+        target_id=user_id,
+    )
     return {"status": "deactivated", "user_id": user_id}
 
 
@@ -433,6 +474,14 @@ async def reset_advisor_password(
     invite = _generate_invite(user_id, current_admin.user_id)
     db.add(invite)
     await db.commit()
+    await log_event(
+        db,
+        event_type="admin.user.reset_password",
+        actor_user_id=current_admin.user_id,
+        request=request,
+        target_type="user",
+        target_id=user_id,
+    )
 
     base = _app_base_url(request)
     return {

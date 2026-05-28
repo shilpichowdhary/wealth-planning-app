@@ -13,6 +13,13 @@ import backend.models  # noqa: F401 — ensures all models are registered with B
 async def lifespan(app: FastAPI):
     validate_secrets(settings)
     await create_tables()
+    # Audit the process boot. Deferred imports so the audit module isn't
+    # pulled in before create_tables() has guaranteed the audit_log table
+    # exists (relevant for the test bootstrap that uses create_all).
+    from backend.services.audit_service import log_event
+    from backend.database import AsyncSessionLocal
+    async with AsyncSessionLocal() as db:
+        await log_event(db, event_type="system.startup")
     yield
 
 app = FastAPI(title="Wealth Planning API", version="1.0.0", lifespan=lifespan)
@@ -56,6 +63,9 @@ app.include_router(documents.router)
 
 from backend.routers import admin as admin_router
 app.include_router(admin_router.router)
+
+from backend.routers import audit as audit_router
+app.include_router(audit_router.router)
 
 @app.get("/health")
 async def health():

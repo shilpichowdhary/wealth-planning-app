@@ -1,6 +1,6 @@
 import json
 from typing import Any
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -12,6 +12,7 @@ from backend.models.conversation import Conversation
 from backend.models.user import User, UserRole
 from backend.schemas.case import CaseCreate, CaseResponse
 from backend.routers.auth import get_current_user, is_staff
+from backend.services.audit_service import log_event
 
 router = APIRouter(prefix="/cases", tags=["cases"])
 
@@ -44,6 +45,7 @@ class SaveProfileResponse(BaseModel):
 @router.post("/", response_model=CaseResponse, status_code=201)
 async def create_case(
     payload: CaseCreate,
+    request: Request,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -53,6 +55,14 @@ async def create_case(
     db.add(case)
     await db.commit()
     await db.refresh(case)
+    await log_event(
+        db,
+        event_type="case.open",
+        actor_user_id=current_user.user_id,
+        request=request,
+        target_type="case",
+        target_id=case.case_id,
+    )
     return case
 
 @router.get("/", response_model=list[CaseResponse])
@@ -66,8 +76,22 @@ async def list_cases(db: AsyncSession = Depends(get_db), current_user: User = De
     return result.scalars().all()
 
 @router.get("/{case_id}", response_model=CaseResponse)
-async def get_case(case_id: str, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
-    return await _get_case_with_access(case_id, current_user, db)
+async def get_case(
+    case_id: str,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    case = await _get_case_with_access(case_id, current_user, db)
+    await log_event(
+        db,
+        event_type="case.view",
+        actor_user_id=current_user.user_id,
+        request=request,
+        target_type="case",
+        target_id=case_id,
+    )
+    return case
 
 
 @router.post("/{case_id}/profile", status_code=200, response_model=SaveProfileResponse)

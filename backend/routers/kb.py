@@ -1,5 +1,5 @@
 from pathlib import Path
-from fastapi import APIRouter, UploadFile, File, Form, Depends, HTTPException
+from fastapi import APIRouter, UploadFile, File, Form, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from backend.kb.kb_manager import KBManager
@@ -7,6 +7,7 @@ from backend.routers.auth import get_current_user, is_staff
 from backend.models.user import User, UserRole
 from backend.models.kb_review_queue import KBReviewQueue, ReviewStatus
 from backend.database import get_db
+from backend.services.audit_service import log_event
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/kb", tags=["knowledge-base"])
@@ -158,6 +159,7 @@ async def list_review_queue(
 async def review_queue_action(
     entry_id: str,
     payload: ReviewAction,
+    request: Request,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
     kb: KBManager = Depends(get_kb_manager),
@@ -214,4 +216,24 @@ async def review_queue_action(
         raise HTTPException(status_code=400, detail=f"Unknown action: {payload.action}")
 
     await db.commit()
+
+    # Map the final landed status to the audit event so re_reject (reject
+    # from RESUBMITTED) is distinguishable from a first-time reject.
+    _event_by_status = {
+        ReviewStatus.APPROVED: "kb.review.approve",
+        ReviewStatus.REJECTED: "kb.review.reject",
+        ReviewStatus.RESUBMITTED: "kb.review.resubmit",
+        ReviewStatus.RE_REJECTED: "kb.review.re_reject",
+    }
+    event_type = _event_by_status.get(entry.current_status)
+    if event_type:
+        await log_event(
+            db,
+            event_type=event_type,
+            actor_user_id=current_user.user_id,
+            request=request,
+            target_type="kb_entry",
+            target_id=entry_id,
+        )
+
     return {"status": entry.current_status}

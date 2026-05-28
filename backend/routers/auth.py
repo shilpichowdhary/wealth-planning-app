@@ -15,6 +15,7 @@ from backend.services.auth_service import (
     validate_azure_id_token_async,
 )
 from backend.services.rate_limit import limiter
+from backend.services.audit_service import log_event
 
 logger = logging.getLogger(__name__)
 
@@ -32,8 +33,23 @@ async def login(request: Request, form: OAuth2PasswordRequestForm = Depends(), d
     result = await db.execute(select(User).where(User.email == form.username, User.is_active == True))
     user = result.scalar_one_or_none()
     if not user or not verify_password(form.password, user.hashed_password):
+        # Log the attempted email (not the password) so credential-stuffing
+        # patterns can be spotted in the audit trail.
+        await log_event(
+            db,
+            event_type="auth.login.failure",
+            request=request,
+            outcome="failure",
+            detail={"email": form.username},
+        )
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
     token = AuthService.create_access_token({"sub": user.user_id, "role": user.role})
+    await log_event(
+        db,
+        event_type="auth.login.success",
+        actor_user_id=user.user_id,
+        request=request,
+    )
     return {"access_token": token, "token_type": "bearer"}
 
 
@@ -54,21 +70,50 @@ async def sso_login(request: Request, payload: SSORequest, db: AsyncSession = De
         claims = await validate_azure_id_token_async(payload.id_token)
     except Exception as e:
         logger.warning("SSO token validation failed: %s", e)
+        await log_event(
+            db,
+            event_type="auth.sso.failure",
+            request=request,
+            outcome="failure",
+            detail={"reason": "invalid_token"},
+        )
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid SSO token")
 
     email = (claims.get("preferred_username") or claims.get("email") or "").lower()
     if not email:
+        await log_event(
+            db,
+            event_type="auth.sso.failure",
+            request=request,
+            outcome="failure",
+            detail={"reason": "no_email_in_token"},
+        )
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="No email in SSO token")
 
     # Only allow pre-created users
     result = await db.execute(select(User).where(User.email == email))
     user = result.scalar_one_or_none()
     if not user:
+        await log_event(
+            db,
+            event_type="auth.sso.failure",
+            request=request,
+            outcome="failure",
+            detail={"reason": "account_not_registered", "email": email},
+        )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Account not registered. Contact your administrator.",
         )
     if not user.is_active:
+        await log_event(
+            db,
+            event_type="auth.sso.failure",
+            actor_user_id=user.user_id,
+            request=request,
+            outcome="failure",
+            detail={"reason": "account_deactivated"},
+        )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Account is deactivated. Contact your administrator.",
@@ -81,6 +126,12 @@ async def sso_login(request: Request, payload: SSORequest, db: AsyncSession = De
         await db.commit()
 
     token = AuthService.create_access_token({"sub": user.user_id, "role": user.role})
+    await log_event(
+        db,
+        event_type="auth.sso.success",
+        actor_user_id=user.user_id,
+        request=request,
+    )
     return {
         "access_token": token,
         "token_type": "bearer",
@@ -174,6 +225,14 @@ async def accept_invite(
     await db.commit()
 
     access_token = AuthService.create_access_token({"sub": user.user_id, "role": user.role})
+    await log_event(
+        db,
+        event_type="auth.invite.accept",
+        actor_user_id=user.user_id,
+        request=request,
+        target_type="user",
+        target_id=user.user_id,
+    )
     return {
         "access_token": access_token,
         "token_type": "bearer",
