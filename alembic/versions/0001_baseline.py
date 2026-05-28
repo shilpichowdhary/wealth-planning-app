@@ -36,6 +36,14 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    # NOTE: `alembic check` will report drift on databases stamped with this
+    # baseline. That is by design — see this module's docstring above.
+    # Operators stamping pre-Alembic deployments must use
+    #   alembic stamp 0001
+    # rather than `alembic upgrade head`; the latter would attempt these
+    # ALTERs against tables that were created via SQLAlchemy create_all.
+    # Phase 3's Postgres cutover replaces this baseline with a fresh
+    # create-everything revision.
     with op.batch_alter_table("case_diagrams", schema=None) as batch_op:
         batch_op.drop_constraint(None, type_="foreignkey")
         batch_op.create_foreign_key(

@@ -39,9 +39,18 @@ async def create_tables():
         return
 
     import asyncio as _asyncio
+    from pathlib import Path
     from alembic.config import Config
     from alembic import command
-    cfg = Config("alembic.ini")
+
+    alembic_ini = Path(__file__).resolve().parent.parent / "alembic.ini"
+    if not alembic_ini.exists():
+        raise RuntimeError(
+            f"alembic.ini not found at {alembic_ini}. Set ALEMBIC_BOOTSTRAP=skip "
+            "to bypass migrations (tests do this); otherwise ensure the file ships "
+            "with the deployment."
+        )
+    cfg = Config(str(alembic_ini))
     await _asyncio.to_thread(command.upgrade, cfg, "head")
 
 
