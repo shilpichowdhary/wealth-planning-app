@@ -1,0 +1,57 @@
+# Local engines for proving Azure portability: Postgres + Chroma server + Azurite (blob).
+# This is a LOCAL DEV harness only — IT replaces these with managed Azure services
+# (Azure Database for PostgreSQL, a Chroma container/service, and a real Storage account).
+#
+# Host ports are deliberately offset so they never clash with the native PostgreSQL 17
+# service (5432) or the running production app:
+#   Postgres  -> localhost:5433
+#   Chroma    -> localhost:8001
+#   Azurite   -> localhost:10000
+#
+# Bring up:   docker compose up -d
+# Tear down:  docker compose down        (add -v to also drop the data volumes)
+
+services:
+  postgres:
+    image: postgres:17
+    container_name: wpapp-postgres
+    environment:
+      POSTGRES_USER: wpapp
+      POSTGRES_PASSWORD: wpapp_local_pw
+      POSTGRES_DB: wealth_planning
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wpapp -d wealth_planning"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  chroma:
+    # Pinned to match the client (chromadb==0.5.20) — client/server protocol is coupled.
+    image: chromadb/chroma:0.5.20
+    container_name: wpapp-chroma
+    environment:
+      IS_PERSISTENT: "TRUE"
+      PERSIST_DIRECTORY: /data
+      ANONYMIZED_TELEMETRY: "FALSE"
+    ports:
+      - "8001:8000"
+    volumes:
+      # Seeded with a COPY of ./chroma_db (never the live dir prod has open).
+      - ./chroma_server_data:/data
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: wpapp-azurite
+    command: azurite-blob --blobHost 0.0.0.0 --blobPort 10000
+    ports:
+      - "10000:10000"
+    volumes:
+      - azurite:/data
+
+volumes:
+  pgdata:
+  azurite:

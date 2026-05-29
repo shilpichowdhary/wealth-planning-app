@@ -8,6 +8,7 @@ from backend.models.document import Document, FileType
 from backend.models.user import User, UserRole
 from backend.routers.auth import get_current_user, is_staff
 from backend.services.document_service import process_and_embed_document, validate_mime_type
+from backend.storage import get_storage
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/documents", tags=["documents"])
@@ -28,44 +29,43 @@ async def upload_document(
     if len(content) > settings.max_upload_bytes:
         raise HTTPException(status_code=413, detail="File exceeds 20MB limit")
 
-    # Save to disk
-    upload_dir = os.path.join(settings.uploads_path, "cases", case_id)
-    os.makedirs(upload_dir, exist_ok=True)
+    # Persist the upload via the storage backend (local filesystem or Azure Blob)
     safe_filename = os.path.basename(file.filename or "upload")
     if not safe_filename:
         raise HTTPException(status_code=400, detail="Invalid filename")
-    file_path = os.path.join(upload_dir, safe_filename)
-    with open(file_path, "wb") as f:
-        f.write(content)
+    storage = get_storage()
+    key = f"uploads/cases/{case_id}/{safe_filename}"
+    storage.save_bytes(key, content, content_type=file.content_type)
 
-    # MIME validation (after saving, before embedding)
-    try:
-        file_type = validate_mime_type(file_path)
-    except ValueError as e:
-        os.unlink(file_path)
-        raise HTTPException(status_code=415, detail=str(e))
+    # MIME validation + embedding need a real local path (python-magic / PyMuPDF / docx).
+    with storage.as_local_path(key) as local_path:
+        try:
+            file_type = validate_mime_type(str(local_path))
+        except ValueError as e:
+            storage.delete(key)
+            raise HTTPException(status_code=415, detail=str(e))
 
-    # Save metadata to DB
-    doc = Document(
-        case_id=case_id,
-        filename=safe_filename,
-        file_path=file_path,
-        file_type=FileType(file_type),
-        file_size_bytes=len(content),
-        uploaded_by=current_user.user_id,
-    )
-    db.add(doc)
-    await db.commit()
-    await db.refresh(doc)
-
-    # Process and embed (synchronous but acceptable for V1)
-    try:
-        chunk_count = await process_and_embed_document(file_path, file_type, case_id, file.filename)
-        doc.parsed = True
+        # Save metadata to DB (file_path stores the portable storage key)
+        doc = Document(
+            case_id=case_id,
+            filename=safe_filename,
+            file_path=key,
+            file_type=FileType(file_type),
+            file_size_bytes=len(content),
+            uploaded_by=current_user.user_id,
+        )
+        db.add(doc)
         await db.commit()
-    except Exception as e:
-        logger.error("Embedding failed for document %s: %s", file.filename, e)
-        chunk_count = 0
+        await db.refresh(doc)
+
+        # Process and embed (synchronous but acceptable for V1)
+        try:
+            chunk_count = await process_and_embed_document(str(local_path), file_type, case_id, file.filename)
+            doc.parsed = True
+            await db.commit()
+        except Exception as e:
+            logger.error("Embedding failed for document %s: %s", file.filename, e)
+            chunk_count = 0
 
     return {
         "message": f"Uploaded and embedded {chunk_count} chunks",

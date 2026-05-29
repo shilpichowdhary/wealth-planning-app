@@ -1,5 +1,7 @@
 .env
+.env.test
 chroma_db/
+chroma_server_data/
 uploads/
 *.db
 *.db.bak_*

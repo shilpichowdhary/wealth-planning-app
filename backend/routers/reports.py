@@ -12,10 +12,8 @@ Access control mirrors the rest of the case API: admin sees all, advisor
 sees own cases, client sees only their own case.
 """
 import logging
-from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.database import get_db
@@ -23,6 +21,7 @@ from backend.models.case import Case
 from backend.models.user import User, UserRole
 from backend.routers.auth import get_current_user, is_staff
 from backend.services import deck_service
+from backend.storage import get_storage
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/reports", tags=["reports"])
@@ -70,7 +69,7 @@ async def get_deck_status(
         "generated_by": deck.generated_by,
         "model_used": deck.model_used,
         "stale": stale,
-        "has_pdf": bool(deck.pdf_path and Path(deck.pdf_path).exists()),
+        "has_pdf": bool(deck.pdf_path and get_storage().exists(deck.pdf_path)),
     }
 
 
@@ -111,14 +110,15 @@ async def download_pptx(
 ):
     case = await _check_access(case_id, db, current_user)
     deck = await deck_service.latest_deck(case_id, db)
-    if not deck or not deck.pptx_path or not Path(deck.pptx_path).exists():
+    storage = get_storage()
+    if not deck or not deck.pptx_path or not storage.exists(deck.pptx_path):
         raise HTTPException(status_code=404, detail="No deck generated yet")
-    return FileResponse(
+    return storage.response(
         deck.pptx_path,
         media_type=(
             "application/vnd.openxmlformats-officedocument.presentationml.presentation"
         ),
-        filename=f"wealth-plan-{(case.client_name or case_id)[:24]}.pptx",
+        download_name=f"wealth-plan-{(case.client_name or case_id)[:24]}.pptx",
     )
 
 
@@ -133,12 +133,12 @@ async def download_pdf(
     if not deck:
         raise HTTPException(status_code=404, detail="No deck generated yet")
     try:
-        pdf_path = await deck_service.ensure_pdf(deck, db)
+        pdf_key = await deck_service.ensure_pdf(deck, db)
     except (FileNotFoundError, RuntimeError) as e:
         logger.error("PDF conversion failed for %s: %s", case_id, e)
         raise HTTPException(status_code=500, detail="PDF conversion failed")
-    return FileResponse(
-        str(pdf_path),
+    return get_storage().response(
+        pdf_key,
         media_type="application/pdf",
-        filename=f"wealth-plan-{(case.client_name or case_id)[:24]}.pdf",
+        download_name=f"wealth-plan-{(case.client_name or case_id)[:24]}.pdf",
     )

@@ -14,6 +14,15 @@ def get_embedding_model() -> SentenceTransformer:
     return _model
 
 def get_chroma_client(path: str | None = None) -> chromadb.Client:
+    # Server mode (distributed/Azure): all instances share one Chroma service.
+    if settings.chroma_mode == "http":
+        return chromadb.HttpClient(
+            host=settings.chroma_host,
+            port=settings.chroma_port,
+            ssl=settings.chroma_ssl,
+            settings=ChromaSettings(anonymized_telemetry=False),
+        )
+    # Embedded mode (default): in-process, on-disk store. `path` arg ignored in http mode.
     return chromadb.PersistentClient(
         path=path or settings.chroma_db_path,
         settings=ChromaSettings(anonymized_telemetry=False),
