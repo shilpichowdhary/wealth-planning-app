@@ -85,6 +85,33 @@ async def delete_kb_document(
     return {"deleted_chunks": deleted, "source_file": source_file}
 
 
+@router.post("/rechunk")
+async def rechunk_kb(
+    current_user: User = Depends(get_current_user),
+    kb: KBManager = Depends(get_kb_manager),
+):
+    """Re-chunk every KB document at the current chunk size.
+
+    Maintenance op: reconstructs each document's text from its stored chunks
+    and re-embeds it at the current (smaller) chunk size, so documents ingested
+    under the old 800-word chunking gain the sharper retrieval of the new
+    220-word chunking. Admin-only — it re-embeds the whole KB and briefly
+    replaces each document's chunks."""
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    report = await kb.rechunk_all()
+    total_old = sum(r.get("old_chunks", 0) for r in report.values())
+    total_new = sum(max(r.get("new_chunks", 0), 0) for r in report.values())
+    failed = [sf for sf, r in report.items() if r.get("new_chunks") == -1]
+    return {
+        "documents": len(report),
+        "total_old_chunks": total_old,
+        "total_new_chunks": total_new,
+        "failed": failed,
+        "detail": report,
+    }
+
+
 @router.get("/wiki/{path:path}")
 async def read_wiki_file(
     path: str,

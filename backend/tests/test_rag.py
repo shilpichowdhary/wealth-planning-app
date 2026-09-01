@@ -37,6 +37,58 @@ async def test_replace_on_reupload(kb_manager):
     assert len(second_ids.intersection(first_ids)) == 0
     assert len(second_ids) > 0
 
+from backend.kb import kb_manager as _kbm
+
+
+def _chunk_with(text: str, size: int, overlap: int) -> list[str]:
+    """Reproduce the fixed-overlap chunker for an arbitrary size/overlap so we
+    can test reconstruction against the OLD (800/100) scheme too."""
+    words = text.split()
+    out, i, step = [], 0, max(1, size - overlap)
+    while i < len(words):
+        piece = " ".join(words[i:i + size])
+        if piece.strip():
+            out.append(piece)
+        i += step
+    return out
+
+
+def test_reconstruct_text_is_lossless_old_scheme():
+    original = " ".join(f"w{n}" for n in range(2000))  # 2000 distinct words
+    chunks = _chunk_with(original, size=800, overlap=100)  # old scheme
+    assert len(chunks) > 1  # actually overlapping
+    assert _kbm._reconstruct_text(chunks) == original
+
+
+def test_reconstruct_text_is_lossless_new_scheme():
+    original = " ".join(f"t{n}" for n in range(1000))
+    chunks = _kbm._chunk_text(original)  # current 220/40 scheme
+    assert len(chunks) > 1
+    assert _kbm._reconstruct_text(chunks) == original
+
+
+def test_reconstruct_single_chunk_and_empty():
+    assert _kbm._reconstruct_text(["only one chunk here"]) == "only one chunk here"
+    assert _kbm._reconstruct_text([]) == ""
+
+
+def test_reconstruct_handles_repeated_words():
+    # A document with a repeated phrase must not lose or duplicate words at the
+    # join, even though shorter accidental overlaps exist.
+    original = "the trust holds the shares the trust holds the assets " * 3
+    original = original.strip()
+    chunks = _chunk_with(original, size=8, overlap=3)
+    assert len(chunks) > 1
+    assert _kbm._reconstruct_text(chunks) == original
+
+
+def test_chunk_index_parsing():
+    assert _kbm._chunk_index("uk/bpr.md_0_ab12cd34", "uk/bpr.md") == 0
+    assert _kbm._chunk_index("uk/bpr.md_12_ab12cd34", "uk/bpr.md") == 12
+    # source_file with underscores stays robust
+    assert _kbm._chunk_index("a_b_c.txt_3_deadbeef", "a_b_c.txt") == 3
+
+
 @pytest.mark.asyncio
 async def test_lexical_recall_for_number_and_acronym(kb_manager):
     """Regression for the '2.5mn UK business relief' gap: a query using the

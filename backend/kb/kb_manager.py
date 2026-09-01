@@ -73,6 +73,48 @@ def _chunk_text(text: str) -> list[str]:
     return [c for c in chunks if c.strip()]
 
 
+def _chunk_index(chunk_id: str, source_file: str) -> int:
+    """Extract the ordinal index i from a chunk id of the form
+    ``{source_file}_{i}_{hash8}``. Robust to underscores in source_file
+    because source_file is a known literal prefix. Falls back to a large
+    sentinel so malformed ids sort last (deterministically) rather than
+    crashing the sort."""
+    prefix = f"{source_file}_"
+    if chunk_id.startswith(prefix):
+        rest = chunk_id[len(prefix):]
+        head = rest.split("_", 1)[0]
+        if head.isdigit():
+            return int(head)
+    return 1_000_000_000
+
+
+def _reconstruct_text(chunks_in_order: list[str]) -> str:
+    """Rebuild a document's original text from its (overlapping) chunks.
+
+    Chunking overlaps consecutive chunks by a fixed number of words, so the
+    tail of chunk *i* is duplicated at the head of chunk *i+1*. We stitch the
+    chunks back together by detecting, at each join, the largest word-overlap
+    where the suffix of the accumulated text equals the prefix of the next
+    chunk, and dropping that duplicated region. For the deterministic
+    fixed-overlap chunker this is lossless; the largest-overlap rule recovers
+    the exact boundary (a shorter accidental match on a common word would
+    leave duplicated text, so we never prefer it)."""
+    words_acc: list[str] = []
+    for chunk in chunks_in_order:
+        w = chunk.split()
+        if not words_acc:
+            words_acc = w
+            continue
+        max_k = min(len(words_acc), len(w))
+        overlap = 0
+        for k in range(max_k, 0, -1):
+            if words_acc[-k:] == w[:k]:
+                overlap = k
+                break
+        words_acc.extend(w[overlap:])
+    return " ".join(words_acc)
+
+
 # ── Lexical (BM25) index ──────────────────────────────────────────────
 #
 # ChromaDB 0.5.x has no built-in keyword search, so we keep a small in-memory
@@ -353,3 +395,67 @@ class KBManager:
         self._invalidate_lexical_cache()
         idx = self._lexical_index()
         return len(idx.ids)
+
+    def _grouped_chunks(self) -> dict[str, list[tuple[str, str, dict]]]:
+        """Return {source_file: [(chunk_id, text, metadata), ...]} for the
+        whole collection, each list ordered by the chunk's ordinal index."""
+        raw = self.collection.get(include=["documents", "metadatas"])
+        ids = raw.get("ids") or []
+        docs = raw.get("documents") or []
+        metas = raw.get("metadatas") or []
+        groups: dict[str, list[tuple[str, str, dict]]] = {}
+        for cid, doc, meta in zip(ids, docs, metas):
+            sf = (meta or {}).get("source_file", "unknown")
+            groups.setdefault(sf, []).append((cid, doc, meta or {}))
+        for sf, items in groups.items():
+            items.sort(key=lambda t: _chunk_index(t[0], sf))
+        return groups
+
+    async def rechunk_document(self, source_file: str) -> dict[str, int]:
+        """Re-chunk a single document at the current CHUNK_SIZE.
+
+        Reconstructs the original text from its stored (overlapping) chunks,
+        then re-uploads it — which deletes the old chunks and re-embeds new
+        ones at the current chunk size. Returns {old_chunks, new_chunks}.
+        Requires the embedding model (re-embedding happens on upload)."""
+        items = self._grouped_chunks().get(source_file)
+        if not items:
+            return {"old_chunks": 0, "new_chunks": 0}
+        meta0 = items[0][2]
+        text = _reconstruct_text([doc for _, doc, _ in items])
+        new_count = await self.upload_kb_file(
+            content=text,
+            source_file=source_file,
+            jurisdiction=meta0.get("jurisdiction", ""),
+            topic=meta0.get("topic", "general"),
+            last_updated=meta0.get("last_updated"),
+            source_type=meta0.get("source_type", "kb_upload"),
+        )
+        return {"old_chunks": len(items), "new_chunks": new_count}
+
+    async def rechunk_all(self) -> dict[str, dict[str, Any]]:
+        """Re-chunk every document in the collection at the current
+        CHUNK_SIZE. Returns {source_file: {old_chunks, new_chunks}}.
+
+        Safe to run repeatedly (idempotent — re-chunking an already-current
+        document reproduces the same chunks). Requires the embedding model.
+        Operates one document at a time so a failure on one file does not
+        abort the rest; failures are recorded in the report."""
+        report: dict[str, dict[str, Any]] = {}
+        for source_file, items in self._grouped_chunks().items():
+            meta0 = items[0][2]
+            text = _reconstruct_text([doc for _, doc, _ in items])
+            try:
+                new_count = await self.upload_kb_file(
+                    content=text,
+                    source_file=source_file,
+                    jurisdiction=meta0.get("jurisdiction", ""),
+                    topic=meta0.get("topic", "general"),
+                    last_updated=meta0.get("last_updated"),
+                    source_type=meta0.get("source_type", "kb_upload"),
+                )
+                report[source_file] = {"old_chunks": len(items), "new_chunks": new_count}
+            except Exception as e:  # noqa: BLE001 — record and continue
+                report[source_file] = {"old_chunks": len(items), "new_chunks": -1, "error": str(e)[:200]}
+        self._invalidate_lexical_cache()
+        return report
