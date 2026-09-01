@@ -171,7 +171,21 @@ def _build_static_system_block() -> str:
         "renderer's column is wide; let body lines breathe.\n"
         "11. Drop secondary detail. A regulator-grade deck is sparse; if a "
         "fact didn't come up in the chat, it doesn't belong on a slide.\n"
-        "12. Aim for 6-10 slides total (excluding auto-disclaimer + offices)."
+        "12. Aim for 6-10 slides total (excluding auto-disclaimer + offices).\n"
+        "13. BRAND VOICE — non-negotiable: NO emoji, NO decorative icons, NO "
+        "markdown symbols (#, *, -, backticks) inside any slide field; the "
+        "renderer styles text, you supply clean prose. Do not use ALL-CAPS in "
+        "titles, ledes, or body (eyebrows excepted — the renderer uppercases "
+        "those). Prefer specific figures ('USD 5M', 'Q1 2026') over vague "
+        "adjectives ('leading', 'world-class', 'robust').\n"
+        "14. COMPLIANCE FRAMING — this deck may reach a client. Frame content "
+        "as draft analysis and considerations, NOT as definitive advice or a "
+        "recommendation to act. Do NOT invent figures, tax rates, thresholds, "
+        "deadlines, statute/section numbers, fund names, or dates that are not "
+        "present in the chat history or client profile — if a number wasn't "
+        "stated in the inputs, do not put it on a slide. The renderer appends "
+        "the mandatory LC disclaimer and offices slides; never restate or "
+        "contradict them."
     )
 
 

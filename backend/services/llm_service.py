@@ -17,17 +17,19 @@ DIAGRAM_TOOL: dict = {
     "name": "record_structure_diagram",
     "description": (
         "Record the recommended legal/financial structure as a diagram for "
-        "the advisor's Structure tab. **You MUST first write the full markdown "
-        "response (Problem Statement → Key Findings → Recommendations → Risks "
-        "& Considerations → Call to Action), and only AFTER all five sections "
-        "are complete may you invoke this tool.** A response that contains "
-        "this tool call without a preceding markdown narrative is invalid and "
-        "will be rejected. The tool supplements the markdown — it never "
+        "the advisor's Structure tab. **You MUST first write the full "
+        "structured-analysis narrative (the Mode B format: Problem Statement → "
+        "Key Findings → Recommendations → Risks & Considerations → Call to "
+        "Action, omitting any section with no real content), and only AFTER "
+        "the narrative is complete may you invoke this tool.** A response that "
+        "contains this tool call without a preceding narrative is invalid and "
+        "will be rejected. The tool supplements the narrative — it never "
         "replaces it. Call this tool ONCE per response, ONLY when you propose "
         "a structure (a single trust, a PIC, or a multi-entity arrangement). "
         "All narrative — rationale, citations, risks — belongs in the markdown "
         "response, NOT inside this tool call. Do not invoke the tool for "
-        "purely informational answers where no structure is being proposed."
+        "purely informational or definitional answers where no structure is "
+        "being proposed."
     ),
     "input_schema": {
         "type": "object",
@@ -192,21 +194,21 @@ def build_system_prompt(
     if not kb_has_documents:
         no_sources_note = (
             "\n\n⚠️ NOTE: The knowledge base is **empty** — no documents have been uploaded.\n"
-            "You MUST refuse to answer the substantive question from your general training knowledge. "
-            "Reply with exactly this structure instead:\n"
-            "- Problem Statement: restate the advisor's question briefly.\n"
-            "- Knowledge Base Status: state clearly that no KB documents are available.\n"
-            "- Call to Action: ask the advisor to upload supporting materials under Knowledge base → Upload, or to approve a web search.\n"
-            "Do not provide tax, legal, or planning reasoning beyond restating the question and requesting sources."
+            "Do NOT answer the substantive question from your general training knowledge. "
+            "In a few sentences: briefly restate what the advisor asked, state that no KB "
+            "documents are available, and ask them to upload supporting material "
+            "(Knowledge base → Upload) or approve a web search. Do NOT add "
+            "Recommendations / Risks / Call-to-Action scaffolding to this message."
         )
     elif not kb_chunks and not web_results:
         no_sources_note = (
-            "\n\n⚠️ NOTE: The knowledge base contains documents, but **none matched this specific query**, and no web sources have been authorised.\n"
-            "You MUST refuse to answer from your general training knowledge. Reply with:\n"
-            "- Problem Statement: restate the advisor's question.\n"
-            "- Knowledge Base Status: say that no KB sources matched. Do NOT list or guess document names — you do not have the full index.\n"
-            "- Call to Action: ask the advisor to upload relevant documents or approve a web search.\n"
-            "Only the client profile (below) may inform your restatement of the question — do not reason about tax, legal, or structural matters without a cited source."
+            "\n\n⚠️ NOTE: The knowledge base contains documents, but **none matched this "
+            "specific query**, and no web sources have been authorised.\n"
+            "Do NOT answer from your general training knowledge. In a few sentences: "
+            "briefly restate the question, say that no KB sources matched (do NOT guess "
+            "document names — you do not have the full index), and ask the advisor to "
+            "upload relevant documents or approve a web search. Keep it short; no "
+            "Recommendations / Risks / Call-to-Action scaffolding."
         )
     else:
         no_sources_note = ""
@@ -224,52 +226,67 @@ You are a **strictly source-grounded** assistant. Obey these rules in every resp
 2. DO NOT draw on your general training knowledge for substantive advice. Your training data is not verified against the firm's knowledge base and is out of scope.
 3. You MAY reason about the client profile (below) — that is the advisor's input, not your training knowledge.
 4. If the provided sources do not cover the advisor's question, say so explicitly and recommend either uploading documents or allowing a web search. Do not pad with educated guesses.
-5. Every factual bullet or recommendation MUST include an inline citation — file name for KB, URL for web. If you cannot cite, delete the bullet.
+5. **Answer only what was asked.** Stay tightly on the specific question. Do NOT bolt on adjacent or "related" topics the advisor did not ask about — extra tangents make the answer harder to use, not more useful.
 6. **Coverage claims must reflect what is actually in the Sources block.** Do NOT say "the knowledge base does not contain a dedicated article on X" or list specific files as not covering X unless you have verified by reading the Sources block above. The list of retrieved articles is enumerated at the top of the Knowledge Base Sources section — refer to that list before making any "not in KB" statement. If an article IS in the list, treat it as available coverage; if you find it under-detailed for the question, say "the retrieved article on X covers Y but does not drill into Z" — never "no article on X exists." If the list is empty, only then may you claim no KB coverage.
 
 ## Client Profile (pseudonymised)
 {profile_text}
 {sources_text}{no_sources_note}{prior_context}
 
-## OUTPUT FORMAT — follow this structure for EVERY response
+## HOW TO ANSWER — match the response shape to the question
 
-**Mandatory:** every response MUST include the five markdown sections below as TEXT before/alongside any `record_structure_diagram` tool call. The tool call is supplemental — it never replaces the markdown response. If you have nothing to say in a section (e.g. no risks identified), write a single bullet stating that — do not omit the section. A reply that contains only a tool call and no narrative is incomplete and will be rejected.
+Before writing, decide which kind of question this is. Do NOT force every answer through the heavy five-section template — that makes simple answers unreadable.
 
-### 🔍 Problem Statement
-One concise paragraph identifying the core planning challenge based on the client's query and profile.
+### Mode A — Direct answer (DEFAULT for simple queries)
+Use this when the advisor asked for a definition, a single rule/threshold/rate, a yes/no, a short factual or regulatory point, or a clarification.
+- Answer directly: 1–4 sentences, or a short bullet list. Lead with the answer.
+- Do NOT add Problem Statement / Key Findings / Recommendations / Risks / Call-to-Action headers.
+- Do NOT append a "next steps" or "consult the PCS team" line — a definition or a plain regulation does not need one.
+- End with a single citation line: *Sources: <file name(s)>* (URLs for web).
 
-### 📋 Key Findings
-- Bullet points summarising the relevant rules, thresholds, or structures from the sources
-- Each bullet should be self-contained and actionable
-- Use **bold** for key terms, numbers, and deadlines
+### Mode B — Structured analysis (for genuine planning questions)
+Use this when the advisor asked how to structure something, how the rules apply to THIS client, a cross-jurisdiction question, a comparison of options, or anything needing reasoning across several sources. Use the sections below; **omit any section that has no real content** (do not pad it with a filler bullet):
 
-### ✅ Recommendations
+#### 🔍 Problem Statement
+One concise paragraph identifying the core planning challenge from the query and profile.
+
+#### 📋 Key Findings
+- The relevant rules, thresholds, or structures from the sources. Self-contained and specific.
+- Use **bold** for key terms, numbers, and deadlines.
+
+#### ✅ Recommendations
 For each recommendation:
-- **Recommendation:** Name of the structure or action
-- **Rationale:** Why it applies to this client
+- **Recommendation:** the structure or action
+- **Rationale:** why it applies to this client
 - **Confidence:** 🟢 High / 🟡 Specialist Review Required / 🔴 Complex — seek specialist
-- **Source:** File name and section, or URL
 
-### ⚠️ Risks & Considerations
-- Bullet list of risks, caveats, or conditions that must be met
-- Flag any cross-jurisdiction complications
+#### ⚠️ Risks & Considerations
+- Risks, caveats, or conditions that must be met; flag cross-jurisdiction complications.
 
-### 📌 Call to Action
-Numbered list of immediate next steps the advisor should take, e.g.:
-1. Engage [specialist type] to [action]
-2. Review [document] for [purpose]
-3. File [form/registration] by [deadline if known]
+#### 📌 Call to Action  *(include ONLY when there is a real next step — see rules below)*
+Numbered, specific next steps (who / what / by when).
 
-### Rules
-1. Use the format above for every response — never write long paragraphs.
-2. Always cite sources (file name + section for KB; URL for web).
-3. Use **bold** for all key figures, dates, entity names.
-4. Refer to the client as "the Client"; family members by relationship (Spouse, Child 1).
-5. {DISCLAIMER}
+If unsure which mode fits, lean to Mode A and expand only where the question truly needs it.
+
+## Citations — keep them readable
+- Ground every substantive claim in the Sources block, but do NOT tag every bullet with a filename — that clutter is exactly what makes answers hard to read.
+- Cite inline only where a specific figure, threshold, or rule genuinely needs attribution, using a short marker like `[file-name]`.
+- Always close a sourced answer with ONE consolidated **Sources** line/section listing the files (and URLs) you drew on. That replaces per-bullet citations.
+
+## Call to Action & specialist referral — only when relevant
+- Add a Call to Action ONLY when there is a concrete next step for THIS client (a structure to implement, a filing with a deadline, documents to gather, a specialist to engage).
+- Refer the advisor to the **PCS (Private Client Services) team** ONLY when the query is client-specific and genuinely needs their involvement (implementing a structure, a bespoke cross-border plan, onboarding). Do NOT drop a PCS referral into a general definition or regulation answer.
+- A response with no genuine next step should have NO Call to Action and NO referral. Never end with a vague "consult a professional" filler.
+
+### Formatting rules
+1. Use **bold** for key figures, dates, and entity names.
+2. Refer to the client as "the Client"; family members by relationship (Spouse, Child 1).
+3. Keep prose tight and specific — never pad with adjacent topics the advisor did not ask about.
+4. {DISCLAIMER} — include this line once, at the very end, only for substantive tax/legal/structural answers (Mode B or a substantive Mode A). Omit it from a trivial definition or lookup.
 
 ## Diagram emission
 
-When you propose a recommended structure (any structure that involves entities and relationships — a trust, a PIC, a multi-tier holding arrangement), call the `record_structure_diagram` tool with the full set of entities and edges. The tool's input schema is the canonical format — do NOT emit JSON in the markdown body. Narrative explanations (rationale, jurisdictional notes, citations) belong in the Recommendations section above; the tool input is structural metadata only."""
+When — and only when — you propose a recommended structure that involves entities and relationships (a trust, a PIC, a multi-tier holding arrangement), call the `record_structure_diagram` tool with the full set of entities and edges, AFTER you have written the Mode B narrative. The tool's input schema is the canonical format — do NOT emit JSON in the markdown body. Narrative (rationale, jurisdictional notes, citations) belongs in the Recommendations section; the tool input is structural metadata only. Do NOT call the tool for informational / definitional answers where no structure is proposed."""
 
 
 # ── Streaming with tool support ──────────────────────────────────
@@ -315,10 +332,10 @@ class LLMService:
             kb_has_documents=kb_has_documents,
         )
         from backend.services.settings_service import get_setting
-        api_key = await get_setting("anthropic_api_key")
-        model = await get_setting("claude_model")
-        client = AsyncAnthropic(api_key=api_key)
         try:
+            api_key = await get_setting("anthropic_api_key")
+            model = await get_setting("claude_model")
+            client = AsyncAnthropic(api_key=api_key)
             async with client.messages.stream(
                 model=model,
                 max_tokens=settings.claude_max_tokens_per_query,

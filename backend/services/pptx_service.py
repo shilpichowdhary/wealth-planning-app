@@ -692,4 +692,14 @@ def build_pptx(spec: dict, out_path: Path) -> Path:
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     prs.save(str(out_path))
+
+    # Embed the brand fonts so the deck renders on-brand even on machines that
+    # don't have Frank Ruhl Libre / Public Sans installed. Best-effort: a
+    # failure here is logged inside embed_fonts and never blocks generation.
+    try:
+        from backend.services.font_embed import embed_fonts
+        embed_fonts(out_path)
+    except Exception:  # noqa: BLE001
+        logger.warning("Font embedding step raised; deck saved without embedded fonts", exc_info=True)
+
     return out_path

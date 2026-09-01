@@ -37,6 +37,50 @@ async def test_replace_on_reupload(kb_manager):
     assert len(second_ids.intersection(first_ids)) == 0
     assert len(second_ids) > 0
 
+@pytest.mark.asyncio
+async def test_lexical_recall_for_number_and_acronym(kb_manager):
+    """Regression for the '2.5mn UK business relief' gap: a query using the
+    shorthand ('2.5mn') and a partial term ('business relief') must still
+    retrieve an article written with the full term and spaced number."""
+    await kb_manager.upload_kb_file(
+        content=(
+            "UK 2.5 Mn Business Property Relief (BPR). Business Property "
+            "Relief provides relief from inheritance tax on qualifying "
+            "business assets. The relevant threshold discussed here is "
+            "GBP 2.5 million of qualifying business assets."
+        ),
+        source_file="uk_bpr.txt",
+        jurisdiction="UK",
+        topic="Inheritance Tax",
+    )
+    # A decoy so the target isn't the only document in the store.
+    await kb_manager.upload_kb_file(
+        content="Singapore GST registration rules and thresholds for traders.",
+        source_file="sg_gst.txt",
+        jurisdiction="Singapore",
+        topic="GST",
+    )
+    results = await kb_manager.query("2.5mn UK business relief", n_results=3)
+    assert results, "hybrid retrieval returned nothing"
+    assert results[0]["source_file"] == "uk_bpr.txt"
+
+
+@pytest.mark.asyncio
+async def test_acronym_only_query_recall(kb_manager):
+    """A bare acronym query ('BPR') should retrieve the BPR article via the
+    lexical arm even though the embedding of a 3-letter token is weak."""
+    await kb_manager.upload_kb_file(
+        content="Business Property Relief (BPR) reduces inheritance tax.",
+        source_file="uk_bpr.txt", jurisdiction="UK", topic="IHT",
+    )
+    await kb_manager.upload_kb_file(
+        content="Singapore variable capital company fund structures overview.",
+        source_file="sg_vcc.txt", jurisdiction="Singapore", topic="Funds",
+    )
+    results = await kb_manager.query("BPR", n_results=3)
+    assert any(r["source_file"] == "uk_bpr.txt" for r in results)
+
+
 from unittest.mock import AsyncMock, patch
 from backend.services.rag_service import RAGService, RetrievalResult, RetrievalSource
 
