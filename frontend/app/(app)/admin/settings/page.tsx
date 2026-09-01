@@ -1,7 +1,7 @@
 "use client";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
-import { AlertTriangle, Check, PlugZap, Loader2 } from "lucide-react";
+import { AlertTriangle, Check, PlugZap, Loader2, Database, RefreshCw } from "lucide-react";
 
 interface SettingEntry {
   label: string;
@@ -19,6 +19,15 @@ interface TestResult {
   stop_reason?: string;
 }
 
+interface RechunkResult {
+  ok: boolean;
+  documents?: number;
+  total_old_chunks?: number;
+  total_new_chunks?: number;
+  failed?: string[];
+  detail?: string;
+}
+
 export default function AdminSettingsPage() {
   const { data: session } = useSession();
   const token = session?.accessToken ?? "";
@@ -34,6 +43,9 @@ export default function AdminSettingsPage() {
 
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<TestResult | null>(null);
+
+  const [rechunking, setRechunking] = useState(false);
+  const [rechunkResult, setRechunkResult] = useState<RechunkResult | null>(null);
 
   useEffect(() => {
     if (!token || session?.user?.role !== "admin") {
@@ -106,6 +118,36 @@ export default function AdminSettingsPage() {
       });
     } finally {
       setTesting(false);
+    }
+  }
+
+  async function handleRechunk() {
+    if (
+      !window.confirm(
+        "Re-chunk the entire knowledge base?\n\nEvery document is re-embedded at the current chunk size and its chunks are replaced. This can take a while on a large KB and briefly rebuilds each document. Run during a quiet window."
+      )
+    )
+      return;
+    setRechunking(true);
+    setRechunkResult(null);
+    try {
+      const res = await fetch(`${apiUrl}/kb/rechunk`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setRechunkResult({ ok: false, detail: data.detail || `Failed (${res.status})` });
+      } else {
+        setRechunkResult({ ok: true, ...data });
+      }
+    } catch (e: unknown) {
+      setRechunkResult({
+        ok: false,
+        detail: e instanceof Error ? e.message : "Request failed from the browser.",
+      });
+    } finally {
+      setRechunking(false);
     }
   }
 
@@ -246,6 +288,86 @@ export default function AdminSettingsPage() {
             )}
             {testResult.raw && (
               <p className="mt-1.5 text-[11px] text-ink-400 font-mono break-all">Raw: {testResult.raw}</p>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Knowledge base maintenance */}
+      <div
+        className="mt-6 rounded-2xl border border-ink-200 bg-white p-5 animate-fade-in-up"
+        style={{ animationDelay: "0.12s" }}
+      >
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.16em] text-ink-500 font-bold flex items-center gap-2">
+              <Database size={12} />
+              Knowledge base
+            </p>
+            <h2 className="mt-1 font-display text-lg text-lc-black">Re-chunk knowledge base</h2>
+            <p className="mt-1 text-[13px] text-ink-600 max-w-lg">
+              Re-embeds every document at the current chunk size. Documents added under the
+              older, larger chunking gain the sharper retrieval of the current chunking.
+              Lossless and safe to run more than once — but it re-embeds the whole KB, so run
+              it during a quiet window.
+            </p>
+          </div>
+          <button
+            onClick={handleRechunk}
+            disabled={rechunking}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-lc-black text-lc-white px-4 py-2 text-sm font-bold hover:bg-lc-black/90 transition disabled:opacity-50"
+          >
+            {rechunking ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+            {rechunking ? "Re-chunking…" : "Re-chunk KB"}
+          </button>
+        </div>
+
+        {rechunking && (
+          <p className="mt-3 text-[12px] text-ink-500">
+            This runs synchronously and may take a while on a large KB — keep this tab open.
+          </p>
+        )}
+
+        {rechunkResult && (
+          <div
+            className={`mt-4 rounded-lg border px-4 py-3 ${
+              rechunkResult.ok ? "border-jade-500/40 bg-jade-500/5" : "border-lc-red/50 bg-lc-red/5"
+            }`}
+          >
+            <div className="flex items-center gap-2 mb-1.5">
+              {rechunkResult.ok ? (
+                <Check size={14} className="text-jade-500" />
+              ) : (
+                <AlertTriangle size={14} className="text-lc-red" />
+              )}
+              <span
+                className={`text-[11px] uppercase tracking-[0.16em] font-bold ${
+                  rechunkResult.ok ? "text-jade-500" : "text-lc-red"
+                }`}
+              >
+                {rechunkResult.ok ? "Done" : "Failed"}
+              </span>
+            </div>
+            {rechunkResult.ok ? (
+              <>
+                <p className="text-[13px] text-ink-700">
+                  Re-chunked <strong>{rechunkResult.documents}</strong> document
+                  {rechunkResult.documents === 1 ? "" : "s"} —{" "}
+                  <span className="font-mono">
+                    {rechunkResult.total_old_chunks} → {rechunkResult.total_new_chunks}
+                  </span>{" "}
+                  chunks.
+                </p>
+                {rechunkResult.failed && rechunkResult.failed.length > 0 && (
+                  <p className="mt-1.5 text-[12px] text-lc-red">
+                    {rechunkResult.failed.length} document
+                    {rechunkResult.failed.length === 1 ? "" : "s"} failed:{" "}
+                    <span className="font-mono break-all">{rechunkResult.failed.join(", ")}</span>
+                  </p>
+                )}
+              </>
+            ) : (
+              <p className="text-[13px] text-ink-700">{rechunkResult.detail}</p>
             )}
           </div>
         )}
